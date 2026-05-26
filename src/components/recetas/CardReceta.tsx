@@ -19,6 +19,10 @@ type Props = {
   onToggleFavorita: (
     id: string
   ) => void
+
+  onDuplicar: (
+    id: string
+  ) => void
 }
 
 export default function CardReceta({
@@ -26,6 +30,7 @@ export default function CardReceta({
   onEditar,
   onEliminar,
   onToggleFavorita,
+  onDuplicar,
 }: Props) {
   const estrellas = (
     n: number
@@ -266,6 +271,7 @@ export default function CardReceta({
                 receta.id
               )
             }
+            title="Favorita"
           >
             {receta.favorita
               ? '❤️'
@@ -278,8 +284,22 @@ export default function CardReceta({
             onClick={() =>
               onEditar(receta)
             }
+            title="Editar"
           >
             ✏️
+          </button>
+
+          <button
+            type="button"
+            className="btn-secundario"
+            onClick={() =>
+              onDuplicar(
+                receta.id
+              )
+            }
+            title="Duplicar"
+          >
+            📄
           </button>
 
           <button
@@ -290,6 +310,7 @@ export default function CardReceta({
                 receta.id
               )
             }
+            title="Eliminar"
           >
             🗑️
           </button>

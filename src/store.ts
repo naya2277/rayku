@@ -19,13 +19,21 @@ const generarId = () => {
   }
 
   return (
-    Math.random().toString(36).substring(2) +
+    Math.random()
+      .toString(36)
+      .substring(2) +
     Date.now().toString(36)
   )
 }
 
-export type Dificultad = 'Fácil' | 'Media' | 'Elaborada'
-export type TipoComida = 'comida' | 'cena'
+export type Dificultad =
+  | 'Fácil'
+  | 'Media'
+  | 'Elaborada'
+
+export type TipoComida =
+  | 'comida'
+  | 'cena'
 
 export type Receta = {
   id: string
@@ -61,7 +69,10 @@ export type ItemInventario = {
   cantidad: number
   unidad: string
   categoria: string
-  ubicacion: 'nevera' | 'congelador' | 'despensa'
+  ubicacion:
+    | 'nevera'
+    | 'congelador'
+    | 'despensa'
   fechaCaducidad: string | null
   fechaDescongelar?: string | null
   necesitaDescongelar: boolean
@@ -75,15 +86,26 @@ type Estado = {
   inventario: ItemInventario[]
   recordatorios: any[]
 
-  addReceta: (receta: Receta) => void
+  addReceta: (
+    receta: Receta
+  ) => void
 
   updateReceta: (
     id: string,
     data: Partial<Receta>
   ) => void
 
-  deleteReceta: (id: string) => void
-  toggleFavorita: (id: string) => void
+  deleteReceta: (
+    id: string
+  ) => void
+
+  duplicarReceta: (
+    id: string
+  ) => void
+
+  toggleFavorita: (
+    id: string
+  ) => void
 
   sincronizarRecetasDesdeSupabase: (
     userId: string
@@ -110,7 +132,10 @@ type Estado = {
   ) => Promise<void>
 
   guardarHuecoPlanning: (
-    item: Omit<ItemPlanning, 'id'>
+    item: Omit<
+      ItemPlanning,
+      'id'
+    >
   ) => void
 
   limpiarHuecoPlanning: (
@@ -136,33 +161,67 @@ const normalizarReceta = (
   r: any
 ): Receta => ({
   id: r.id ?? generarId(),
+
   nombre: r.nombre ?? '',
+
   imagen: r.imagen ?? '',
-  favorita: r.favorita ?? false,
-  ingredientes: Array.isArray(r.ingredientes)
-    ? r.ingredientes
-    : [],
-  pasos: r.pasos ?? '',
-  tiposComida: Array.isArray(r.tiposComida)
-    ? r.tiposComida
-    : Array.isArray(r.tipo)
-      ? r.tipo
+
+  favorita:
+    r.favorita ?? false,
+
+  ingredientes:
+    Array.isArray(
+      r.ingredientes
+    )
+      ? r.ingredientes
       : [],
-  ingredientesBase: Array.isArray(r.ingredientesBase)
-    ? r.ingredientesBase
-    : [],
-  dietas: Array.isArray(r.dietas)
+
+  pasos: r.pasos ?? '',
+
+  tiposComida:
+    Array.isArray(
+      r.tiposComida
+    )
+      ? r.tiposComida
+      : [],
+
+  ingredientesBase:
+    Array.isArray(
+      r.ingredientesBase
+    )
+      ? r.ingredientesBase
+      : [],
+
+  dietas: Array.isArray(
+    r.dietas
+  )
     ? r.dietas
     : [],
-  caracteristicas: Array.isArray(r.caracteristicas)
-    ? r.caracteristicas
-    : [],
-  tiempo: Number(r.tiempo) || 0,
-  raciones: Number(r.raciones) || 1,
-  dificultad: r.dificultad ?? 'Fácil',
+
+  caracteristicas:
+    Array.isArray(
+      r.caracteristicas
+    )
+      ? r.caracteristicas
+      : [],
+
+  tiempo:
+    Number(r.tiempo) || 0,
+
+  raciones:
+    Number(r.raciones) || 1,
+
+  dificultad:
+    r.dificultad ??
+    'Fácil',
+
   requiereDescongelar:
-    r.requiereDescongelar ?? false,
-  valoracion: Number(r.valoracion) || 0,
+    r.requiereDescongelar ??
+    false,
+
+  valoracion:
+    Number(r.valoracion) || 0,
+
   nota: r.nota ?? '',
 })
 
@@ -170,25 +229,52 @@ const normalizarInventario = (
   item: any
 ): ItemInventario => ({
   id: item.id ?? generarId(),
+
   nombre: item.nombre ?? '',
-  cantidad: Number(item.cantidad) || 0,
-  unidad: item.unidad ?? 'g',
-  categoria: item.categoria ?? 'otros',
-  ubicacion: item.ubicacion ?? 'despensa',
-  fechaCaducidad: item.fechaCaducidad ?? null,
-  fechaDescongelar: item.fechaDescongelar ?? null,
+
+  cantidad:
+    Number(item.cantidad) || 0,
+
+  unidad:
+    item.unidad ?? 'g',
+
+  categoria:
+    item.categoria ?? 'otros',
+
+  ubicacion:
+    item.ubicacion ??
+    'despensa',
+
+  fechaCaducidad:
+    item.fechaCaducidad ??
+    null,
+
+  fechaDescongelar:
+    item.fechaDescongelar ??
+    null,
+
   necesitaDescongelar:
-    item.necesitaDescongelar ?? false,
+    item.necesitaDescongelar ??
+    false,
 })
 
 const normalizarPlanning = (
   item: any
 ): ItemPlanning => ({
   id: item.id ?? generarId(),
+
   fecha: item.fecha ?? '',
-  tipoComida: item.tipoComida ?? 'comida',
-  recetaId: item.recetaId ?? null,
-  comidaLibre: item.comidaLibre ?? '',
+
+  tipoComida:
+    item.tipoComida ??
+    'comida',
+
+  recetaId:
+    item.recetaId ?? null,
+
+  comidaLibre:
+    item.comidaLibre ?? '',
+
   nota: item.nota ?? '',
 })
 
@@ -197,13 +283,15 @@ const cargar = <T,>(
   fallback: T
 ): T => {
   try {
-    const raw = localStorage.getItem(key)
+    const raw =
+      localStorage.getItem(
+        key
+      )
 
-    if (!raw) return fallback
+    if (!raw)
+      return fallback
 
-    const data = JSON.parse(raw)
-
-    return data ?? fallback
+    return JSON.parse(raw)
   } catch {
     return fallback
   }
@@ -229,339 +317,462 @@ const guardar = (
 const guardarRecetasLocal = (
   recetas: Receta[]
 ) => {
-  guardar('rayku-recetas', recetas)
+  guardar(
+    'rayku-recetas',
+    recetas
+  )
 }
 
-const guardarInventarioLocal = (
-  inventario: ItemInventario[]
-) => {
-  guardar('rayku-inventario', inventario)
-}
+const guardarInventarioLocal =
+  (
+    inventario: ItemInventario[]
+  ) => {
+    guardar(
+      'rayku-inventario',
+      inventario
+    )
+  }
 
 const guardarPlanningLocal = (
   planning: ItemPlanning[]
 ) => {
-  guardar('rayku-planning', planning)
+  guardar(
+    'rayku-planning',
+    planning
+  )
 }
 
 export const useRaykuStore =
-  create<Estado>((set, get) => ({
-    recetas: cargar<any[]>(
-      'rayku-recetas',
-      []
-    ).map(normalizarReceta),
+  create<Estado>(
+    (set, get) => ({
+      recetas: cargar<any[]>(
+        'rayku-recetas',
+        []
+      ).map(normalizarReceta),
 
-    planning: cargar<any[]>(
-      'rayku-planning',
-      []
-    ).map(normalizarPlanning),
+      planning: cargar<any[]>(
+        'rayku-planning',
+        []
+      ).map(
+        normalizarPlanning
+      ),
 
-    semanas: [],
+      semanas: [],
 
-    listaCompra: [],
+      listaCompra: [],
 
-    inventario: cargar<any[]>(
-      'rayku-inventario',
-      []
-    ).map(normalizarInventario),
+      inventario:
+        cargar<any[]>(
+          'rayku-inventario',
+          []
+        ).map(
+          normalizarInventario
+        ),
 
-    recordatorios: [],
+      recordatorios: [],
 
-    addReceta: (receta) => {
-      const nuevaReceta =
-        normalizarReceta({
-          ...receta,
-          id: receta.id || generarId(),
+      addReceta: (
+        receta
+      ) => {
+        const nuevaReceta =
+          normalizarReceta({
+            ...receta,
+
+            id:
+              receta.id ||
+              generarId(),
+          })
+
+        const nuevas = [
+          ...get().recetas,
+          nuevaReceta,
+        ]
+
+        guardarRecetasLocal(
+          nuevas
+        )
+
+        set({
+          recetas: nuevas,
         })
+      },
 
-      const nuevas = [
-        ...get().recetas,
-        nuevaReceta,
-      ]
-
-      guardarRecetasLocal(nuevas)
-
-      set({
-        recetas: nuevas,
-      })
-    },
-
-    updateReceta: (id, data) => {
-      const nuevas =
-        get().recetas.map((r) =>
-          r.id === id
-            ? normalizarReceta({
-                ...r,
-                ...data,
-                id: r.id,
-              })
-            : r
-        )
-
-      guardarRecetasLocal(nuevas)
-
-      set({
-        recetas: nuevas,
-      })
-    },
-
-    deleteReceta: (id) => {
-      const nuevas =
-        get().recetas.filter(
-          (r) => r.id !== id
-        )
-
-      guardarRecetasLocal(nuevas)
-
-      set({
-        recetas: nuevas,
-      })
-    },
-
-    toggleFavorita: (id) => {
-      const nuevas =
-        get().recetas.map((r) =>
-          r.id === id
-            ? {
-                ...r,
-                favorita: !r.favorita,
-              }
-            : r
-        )
-
-      guardarRecetasLocal(nuevas)
-
-      set({
-        recetas: nuevas,
-      })
-    },
-
-    sincronizarRecetasDesdeSupabase:
-      async (userId) => {
-        const recetasSupabase =
-          await descargarRecetas(userId)
-
-        if (
-          Array.isArray(recetasSupabase)
-        ) {
-          const recetasNormalizadas =
-            recetasSupabase.map(
-              normalizarReceta
-            )
-
-          guardarRecetasLocal(
-            recetasNormalizadas
+      updateReceta: (
+        id,
+        data
+      ) => {
+        const nuevas =
+          get().recetas.map(
+            (r) =>
+              r.id === id
+                ? normalizarReceta(
+                    {
+                      ...r,
+                      ...data,
+                      id: r.id,
+                    }
+                  )
+                : r
           )
 
-          set({
-            recetas:
-              recetasNormalizadas,
+        guardarRecetasLocal(
+          nuevas
+        )
+
+        set({
+          recetas: nuevas,
+        })
+      },
+
+      deleteReceta: (
+        id
+      ) => {
+        const nuevas =
+          get().recetas.filter(
+            (r) =>
+              r.id !== id
+          )
+
+        guardarRecetasLocal(
+          nuevas
+        )
+
+        set({
+          recetas: nuevas,
+        })
+      },
+
+      duplicarReceta: (
+        id
+      ) => {
+        const receta =
+          get().recetas.find(
+            (r) =>
+              r.id === id
+          )
+
+        if (!receta)
+          return
+
+        const copia =
+          normalizarReceta({
+            ...receta,
+
+            id: generarId(),
+
+            nombre: `${receta.nombre} (copia)`,
+
+            favorita: false,
           })
-        }
-      },
 
-    guardarRecetasEnSupabase:
-      async (userId) => {
-        await subirRecetas(
-          get().recetas,
-          userId
+        const nuevas = [
+          copia,
+          ...get().recetas,
+        ]
+
+        guardarRecetasLocal(
+          nuevas
         )
+
+        set({
+          recetas: nuevas,
+        })
       },
 
-    sincronizarInventarioDesdeSupabase:
-      async (userId) => {
-        const inventarioSupabase =
-          await descargarInventario(userId)
-
-        if (
-          Array.isArray(
-            inventarioSupabase
+      toggleFavorita: (
+        id
+      ) => {
+        const nuevas =
+          get().recetas.map(
+            (r) =>
+              r.id === id
+                ? {
+                    ...r,
+                    favorita:
+                      !r.favorita,
+                  }
+                : r
           )
-        ) {
-          const inventarioNormalizado =
-            inventarioSupabase.map(
-              normalizarInventario
+
+        guardarRecetasLocal(
+          nuevas
+        )
+
+        set({
+          recetas: nuevas,
+        })
+      },
+
+      sincronizarRecetasDesdeSupabase:
+        async (
+          userId
+        ) => {
+          const recetasSupabase =
+            await descargarRecetas(
+              userId
             )
 
-          guardarInventarioLocal(
-            inventarioNormalizado
-          )
-
-          set({
-            inventario:
-              inventarioNormalizado,
-          })
-        }
-      },
-
-    guardarInventarioEnSupabase:
-      async (userId) => {
-        await subirInventario(
-          get().inventario,
-          userId
-        )
-      },
-
-    sincronizarPlanningDesdeSupabase:
-      async (userId) => {
-        const planningSupabase =
-          await descargarPlanning(userId)
-
-        if (
-          Array.isArray(planningSupabase)
-        ) {
-          const planningNormalizado =
-            planningSupabase.map(
-              normalizarPlanning
+          if (
+            Array.isArray(
+              recetasSupabase
             )
+          ) {
+            const recetasNormalizadas =
+              recetasSupabase.map(
+                normalizarReceta
+              )
+
+            guardarRecetasLocal(
+              recetasNormalizadas
+            )
+
+            set({
+              recetas:
+                recetasNormalizadas,
+            })
+          }
+        },
+
+      guardarRecetasEnSupabase:
+        async (
+          userId
+        ) => {
+          await subirRecetas(
+            get().recetas,
+            userId
+          )
+        },
+
+      sincronizarInventarioDesdeSupabase:
+        async (
+          userId
+        ) => {
+          const inventarioSupabase =
+            await descargarInventario(
+              userId
+            )
+
+          if (
+            Array.isArray(
+              inventarioSupabase
+            )
+          ) {
+            const inventarioNormalizado =
+              inventarioSupabase.map(
+                normalizarInventario
+              )
+
+            guardarInventarioLocal(
+              inventarioNormalizado
+            )
+
+            set({
+              inventario:
+                inventarioNormalizado,
+            })
+          }
+        },
+
+      guardarInventarioEnSupabase:
+        async (
+          userId
+        ) => {
+          await subirInventario(
+            get().inventario,
+            userId
+          )
+        },
+
+      sincronizarPlanningDesdeSupabase:
+        async (
+          userId
+        ) => {
+          const planningSupabase =
+            await descargarPlanning(
+              userId
+            )
+
+          if (
+            Array.isArray(
+              planningSupabase
+            )
+          ) {
+            const planningNormalizado =
+              planningSupabase.map(
+                normalizarPlanning
+              )
+
+            guardarPlanningLocal(
+              planningNormalizado
+            )
+
+            set({
+              planning:
+                planningNormalizado,
+            })
+          }
+        },
+
+      guardarPlanningEnSupabase:
+        async (
+          userId
+        ) => {
+          await subirPlanning(
+            get().planning,
+            userId
+          )
+        },
+
+      guardarHuecoPlanning:
+        (item) => {
+          const actual =
+            get().planning
+
+          const existe =
+            actual.find(
+              (h) =>
+                h.fecha ===
+                  item.fecha &&
+                h.tipoComida ===
+                  item.tipoComida
+            )
+
+          const nuevoPlanning =
+            existe
+              ? actual.map(
+                  (h) =>
+                    h.id ===
+                    existe.id
+                      ? normalizarPlanning(
+                          {
+                            ...h,
+                            ...item,
+                            id: h.id,
+                          }
+                        )
+                      : h
+                )
+              : [
+                  ...actual,
+                  normalizarPlanning(
+                    {
+                      ...item,
+                      id: generarId(),
+                    }
+                  ),
+                ]
 
           guardarPlanningLocal(
-            planningNormalizado
+            nuevoPlanning
           )
 
           set({
             planning:
-              planningNormalizado,
+              nuevoPlanning,
           })
-        }
-      },
+        },
 
-    guardarPlanningEnSupabase:
-      async (userId) => {
-        await subirPlanning(
-          get().planning,
-          userId
-        )
-      },
-
-    guardarHuecoPlanning: (
-      item
-    ) => {
-      const actual =
-        get().planning
-
-      const existe =
-        actual.find(
-          (h) =>
-            h.fecha === item.fecha &&
-            h.tipoComida ===
-              item.tipoComida
-        )
-
-      const nuevoPlanning =
-        existe
-          ? actual.map((h) =>
-              h.id === existe.id
-                ? normalizarPlanning({
-                    ...h,
-                    ...item,
-                    id: h.id,
-                  })
-                : h
+      limpiarHuecoPlanning:
+        (
+          fecha,
+          tipoComida
+        ) => {
+          const nuevoPlanning =
+            get().planning.filter(
+              (h) =>
+                !(
+                  h.fecha ===
+                    fecha &&
+                  h.tipoComida ===
+                    tipoComida
+                )
             )
-          : [
-              ...actual,
-              normalizarPlanning({
-                ...item,
-                id: generarId(),
-              }),
+
+          guardarPlanningLocal(
+            nuevoPlanning
+          )
+
+          set({
+            planning:
+              nuevoPlanning,
+          })
+        },
+
+      agregarItemInventario:
+        (item) => {
+          const nuevoInventario =
+            [
+              ...get()
+                .inventario,
+
+              normalizarInventario(
+                {
+                  ...item,
+                  id:
+                    item.id ||
+                    generarId(),
+                }
+              ),
             ]
 
-      guardarPlanningLocal(
-        nuevoPlanning
-      )
+          guardarInventarioLocal(
+            nuevoInventario
+          )
 
-      set({
-        planning: nuevoPlanning,
-      })
-    },
+          set({
+            inventario:
+              nuevoInventario,
+          })
+        },
 
-    limpiarHuecoPlanning: (
-      fecha,
-      tipoComida
-    ) => {
-      const nuevoPlanning =
-        get().planning.filter(
-          (h) =>
-            !(
-              h.fecha === fecha &&
-              h.tipoComida ===
-                tipoComida
+      editarItemInventario:
+        (
+          id,
+          data
+        ) => {
+          const nuevoInventario =
+            get().inventario.map(
+              (item) =>
+                item.id === id
+                  ? normalizarInventario(
+                      {
+                        ...item,
+                        ...data,
+                        id: item.id,
+                      }
+                    )
+                  : item
             )
-        )
 
-      guardarPlanningLocal(
-        nuevoPlanning
-      )
+          guardarInventarioLocal(
+            nuevoInventario
+          )
 
-      set({
-        planning: nuevoPlanning,
-      })
-    },
+          set({
+            inventario:
+              nuevoInventario,
+          })
+        },
 
-    agregarItemInventario: (
-      item
-    ) => {
-      const nuevoInventario = [
-        ...get().inventario,
-        normalizarInventario({
-          ...item,
-          id: item.id || generarId(),
-        }),
-      ]
+      eliminarItemInventario:
+        (id) => {
+          const nuevoInventario =
+            get().inventario.filter(
+              (
+                item
+              ) =>
+                item.id !==
+                id
+            )
 
-      guardarInventarioLocal(
-        nuevoInventario
-      )
+          guardarInventarioLocal(
+            nuevoInventario
+          )
 
-      set({
-        inventario:
-          nuevoInventario,
-      })
-    },
-
-    editarItemInventario: (
-      id,
-      data
-    ) => {
-      const nuevoInventario =
-        get().inventario.map(
-          (item) =>
-            item.id === id
-              ? normalizarInventario({
-                  ...item,
-                  ...data,
-                  id: item.id,
-                })
-              : item
-        )
-
-      guardarInventarioLocal(
-        nuevoInventario
-      )
-
-      set({
-        inventario:
-          nuevoInventario,
-      })
-    },
-
-    eliminarItemInventario: (
-      id
-    ) => {
-      const nuevoInventario =
-        get().inventario.filter(
-          (item) =>
-            item.id !== id
-        )
-
-      guardarInventarioLocal(
-        nuevoInventario
-      )
-
-      set({
-        inventario:
-          nuevoInventario,
-      })
-    },
-  }))
+          set({
+            inventario:
+              nuevoInventario,
+          })
+        },
+    })
+  )
