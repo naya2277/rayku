@@ -1,13 +1,14 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 
 import {
   useRaykuStore,
-  type Dificultad,
   type Receta,
 } from '../store'
 
 import FormularioReceta from '../components/recetas/FormularioReceta'
 import CardReceta from '../components/recetas/CardReceta'
+
+import { useFormularioReceta } from '../hooks/useFormularioReceta'
 
 const TIPOS_COMIDA = [
   '☀️ Comida',
@@ -59,9 +60,6 @@ const CARACTERISTICAS = [
   '🧺 Aprovechar sobras',
 ]
 
-const BORRADOR_KEY =
-  'rayku-borrador-receta'
-
 type Props = {
   recetaSeleccionadaId?:
     | string
@@ -83,237 +81,15 @@ export default function Recetas({
     duplicarReceta,
   } = useRaykuStore()
 
-  const ultimoGuardadoRef =
-    useRef(0)
-
   const [busqueda, setBusqueda] =
     useState('')
 
-  const [
-    mostrarFormulario,
-    setMostrarFormulario,
-  ] = useState(false)
-
-  const [
-    editandoId,
-    setEditandoId,
-  ] = useState<string | null>(
-    null
-  )
-
-  const [
-    borradorCargado,
-    setBorradorCargado,
-  ] = useState(false)
-
-  const [mensaje, setMensaje] =
-    useState('')
-
-  const [nombre, setNombre] =
-    useState('')
-
-  const [imagen, setImagen] =
-    useState('')
-
-  const [
-    ingredientes,
-    setIngredientes,
-  ] = useState('')
-
-  const [pasos, setPasos] =
-    useState('')
-
-  const [nota, setNota] =
-    useState('')
-
-  const [tiempo, setTiempo] =
-    useState(0)
-
-  const [raciones, setRaciones] =
-    useState(1)
-
-  const [
-    dificultad,
-    setDificultad,
-  ] = useState<Dificultad>(
-    'Fácil'
-  )
-
-  const [
-    requiereDescongelar,
-    setRequiereDescongelar,
-  ] = useState(false)
-
-  const [
-    valoracion,
-    setValoracion,
-  ] = useState(0)
-
-  const [
-    tiposComida,
-    setTiposComida,
-  ] = useState<string[]>([])
-
-  const [
-    ingredientesBase,
-    setIngredientesBase,
-  ] = useState<string[]>([])
-
-  const [dietas, setDietas] =
-    useState<string[]>([])
-
-  const [
-    caracteristicas,
-    setCaracteristicas,
-  ] = useState<string[]>([])
-
-  const [customTipo, setCustomTipo] =
-    useState('')
-
-  const [customBase, setCustomBase] =
-    useState('')
-
-  const [
-    customDieta,
-    setCustomDieta,
-  ] = useState('')
-
-  const [
-    customCaracteristica,
-    setCustomCaracteristica,
-  ] = useState('')
-
-  useEffect(() => {
-    const borrador =
-      localStorage.getItem(
-        BORRADOR_KEY
-      )
-
-    if (!borrador) {
-      setBorradorCargado(true)
-      return
-    }
-
-    try {
-      const data =
-        JSON.parse(borrador)
-
-      setNombre(data.nombre || '')
-      setImagen(data.imagen || '')
-      setIngredientes(
-        data.ingredientes || ''
-      )
-      setPasos(data.pasos || '')
-      setNota(data.nota || '')
-      setTiempo(data.tiempo || 0)
-      setRaciones(
-        data.raciones || 1
-      )
-
-      setDificultad(
-        data.dificultad ||
-          'Fácil'
-      )
-
-      setRequiereDescongelar(
-        data.requiereDescongelar ||
-          false
-      )
-
-      setValoracion(
-        data.valoracion || 0
-      )
-
-      setTiposComida(
-        data.tiposComida || []
-      )
-
-      setIngredientesBase(
-        data.ingredientesBase ||
-          []
-      )
-
-      setDietas(data.dietas || [])
-
-      setCaracteristicas(
-        data.caracteristicas ||
-          []
-      )
-
-      if (
-        data.nombre ||
-        data.ingredientes ||
-        data.pasos ||
-        data.nota
-      ) {
-        setMostrarFormulario(true)
-      }
-    } catch {
-      localStorage.removeItem(
-        BORRADOR_KEY
-      )
-    } finally {
-      setBorradorCargado(true)
-    }
-  }, [])
-
-  useEffect(() => {
-    if (
-      !borradorCargado ||
-      editandoId
-    )
-      return
-
-    const hayAlgo =
-      nombre ||
-      imagen ||
-      ingredientes ||
-      pasos ||
-      nota ||
-      tiposComida.length ||
-      ingredientesBase.length ||
-      dietas.length ||
-      caracteristicas.length
-
-    if (!hayAlgo) return
-
-    localStorage.setItem(
-      BORRADOR_KEY,
-      JSON.stringify({
-        nombre,
-        imagen,
-        ingredientes,
-        pasos,
-        nota,
-        tiempo,
-        raciones,
-        dificultad,
-        requiereDescongelar,
-        valoracion,
-        tiposComida,
-        ingredientesBase,
-        dietas,
-        caracteristicas,
-      })
-    )
-  }, [
-    borradorCargado,
-    editandoId,
-    nombre,
-    imagen,
-    ingredientes,
-    pasos,
-    nota,
-    tiempo,
-    raciones,
-    dificultad,
-    requiereDescongelar,
-    valoracion,
-    tiposComida,
-    ingredientesBase,
-    dietas,
-    caracteristicas,
-  ])
+  const formulario =
+    useFormularioReceta({
+      addReceta,
+      updateReceta,
+      setBusqueda,
+    })
 
   useEffect(() => {
     if (!recetaSeleccionadaId)
@@ -328,9 +104,11 @@ export default function Recetas({
     if (receta) {
       setBusqueda(receta.nombre)
 
-      setMostrarFormulario(false)
+      formulario.setMostrarFormulario(
+        false
+      )
 
-      limpiarFormulario()
+      formulario.limpiarFormulario()
 
       onRecetaSeleccionadaLeida?.()
 
@@ -347,219 +125,18 @@ export default function Recetas({
     onRecetaSeleccionadaLeida,
   ])
 
-  const limpiarFormulario = () => {
-    setEditandoId(null)
-    setNombre('')
-    setImagen('')
-    setIngredientes('')
-    setPasos('')
-    setNota('')
-    setTiempo(0)
-    setRaciones(1)
-    setDificultad('Fácil')
-
-    setRequiereDescongelar(false)
-
-    setValoracion(0)
-
-    setTiposComida([])
-
-    setIngredientesBase([])
-
-    setDietas([])
-
-    setCaracteristicas([])
-
-    setCustomTipo('')
-    setCustomBase('')
-    setCustomDieta('')
-    setCustomCaracteristica('')
-
-    localStorage.removeItem(
-      BORRADOR_KEY
-    )
-  }
-
-  const cargarRecetaEnFormulario =
-    (receta: Receta) => {
-      setEditandoId(receta.id)
-
-      setNombre(receta.nombre)
-
-      setImagen(receta.imagen)
-
-      setIngredientes(
-        receta.ingredientes.join(
-          ', '
-        )
-      )
-
-      setPasos(receta.pasos)
-
-      setNota(receta.nota)
-
-      setTiempo(receta.tiempo)
-
-      setRaciones(
-        receta.raciones
-      )
-
-      setDificultad(
-        receta.dificultad
-      )
-
-      setRequiereDescongelar(
-        receta.requiereDescongelar
-      )
-
-      setValoracion(
-        receta.valoracion
-      )
-
-      setTiposComida(
-        receta.tiposComida
-      )
-
-      setIngredientesBase(
-        receta.ingredientesBase
-      )
-
-      setDietas(receta.dietas)
-
-      setCaracteristicas(
-        receta.caracteristicas
-      )
-
-      setMostrarFormulario(true)
-    }
-
-  const guardarReceta = () => {
-    const ahora = Date.now()
-
-    if (
-      ahora -
-        ultimoGuardadoRef.current <
-      600
-    ) {
-      return
-    }
-
-    ultimoGuardadoRef.current =
-      ahora
-
-    const nombreLimpio =
-      nombre.trim()
-
-    if (!nombreLimpio) {
-      setMensaje(
-        'Ponle nombre a la receta 💕'
-      )
-
-      return
-    }
-
-    const datosReceta = {
-      nombre: nombreLimpio,
-
-      imagen: imagen.trim(),
-
-      ingredientes: ingredientes
-        .split(',')
-        .map((i) => i.trim())
-        .filter(Boolean),
-
-      pasos,
-
-      tiposComida,
-
-      ingredientesBase,
-
-      dietas,
-
-      caracteristicas,
-
-      tiempo,
-
-      raciones,
-
-      dificultad,
-
-      requiereDescongelar,
-
-      valoracion,
-
-      nota,
-    }
-
-    try {
-      if (editandoId) {
-        updateReceta(
-          editandoId,
-          datosReceta
-        )
-
-        setMensaje(
-          '✅ Cambios guardados'
-        )
-      } else {
-        addReceta({
-          id:
-            typeof crypto !==
-              'undefined' &&
-            crypto.randomUUID
-              ? crypto.randomUUID()
-              : `${Date.now()}-${Math.random()}`,
-
-          favorita: false,
-
-          ...datosReceta,
-        })
-
-        setMensaje(
-          '✅ Receta guardada'
-        )
-      }
-
-      setBusqueda('')
-
-      limpiarFormulario()
-
-      setMostrarFormulario(false)
-
-      setTimeout(() => {
-        setMensaje('')
-      }, 2500)
-    } catch (error) {
-      console.error(
-        'Error guardando receta:',
-        error
-      )
-
-      setMensaje(
-        'No se ha podido guardar 💔'
-      )
-    }
-  }
-
   const recetasFiltradas =
     recetas.filter((r) => {
       const texto = [
         r.nombre,
-
         r.ingredientes.join(' '),
-
         r.pasos,
-
         r.nota,
-
         r.tiposComida.join(' '),
-
         r.ingredientesBase.join(
           ' '
         ),
-
         r.dietas.join(' '),
-
         r.caracteristicas.join(
           ' '
         ),
@@ -572,21 +149,24 @@ export default function Recetas({
       )
     })
 
+  const editarReceta = (
+    receta: Receta
+  ) => {
+    formulario.cargarRecetaEnFormulario(
+      receta
+    )
+  }
+
   return (
     <div>
       <div
         style={{
           display: 'flex',
-
           justifyContent:
             'space-between',
-
           alignItems: 'center',
-
           marginBottom: 20,
-
           flexWrap: 'wrap',
-
           gap: 12,
         }}
       >
@@ -610,8 +190,8 @@ export default function Recetas({
           type="button"
           className="btn-principal"
           onClick={() =>
-            setMostrarFormulario(
-              !mostrarFormulario
+            formulario.setMostrarFormulario(
+              !formulario.mostrarFormulario
             )
           }
         >
@@ -619,18 +199,16 @@ export default function Recetas({
         </button>
       </div>
 
-      {mensaje && (
+      {formulario.mensaje && (
         <div
           className="card"
           style={{
             marginBottom: 20,
-
             color: '#8f7080',
-
             textAlign: 'center',
           }}
         >
-          {mensaje}
+          {formulario.mensaje}
         </div>
       )}
 
@@ -638,7 +216,6 @@ export default function Recetas({
         className="card"
         style={{
           marginBottom: 20,
-
           background:
             'linear-gradient(135deg, #ffe4ec 0%, #f6e9ff 100%)',
         }}
@@ -646,14 +223,10 @@ export default function Recetas({
         <div
           style={{
             display: 'flex',
-
             justifyContent:
               'space-between',
-
             alignItems: 'center',
-
             gap: 16,
-
             flexWrap: 'wrap',
           }}
         >
@@ -712,84 +285,110 @@ export default function Recetas({
         />
       </div>
 
-      {mostrarFormulario && (
+      {formulario.mostrarFormulario && (
         <FormularioReceta
-          editandoId={editandoId}
-          nombre={nombre}
-          setNombre={setNombre}
-          imagen={imagen}
-          setImagen={setImagen}
-          ingredientes={ingredientes}
-          setIngredientes={
-            setIngredientes
+          editandoId={
+            formulario.editandoId
           }
-          pasos={pasos}
-          setPasos={setPasos}
-          nota={nota}
-          setNota={setNota}
-          tiempo={tiempo}
-          setTiempo={setTiempo}
-          raciones={raciones}
-          setRaciones={setRaciones}
-          dificultad={dificultad}
+          nombre={formulario.nombre}
+          setNombre={
+            formulario.setNombre
+          }
+          imagen={formulario.imagen}
+          setImagen={
+            formulario.setImagen
+          }
+          ingredientes={
+            formulario.ingredientes
+          }
+          setIngredientes={
+            formulario.setIngredientes
+          }
+          pasos={formulario.pasos}
+          setPasos={
+            formulario.setPasos
+          }
+          nota={formulario.nota}
+          setNota={formulario.setNota}
+          tiempo={formulario.tiempo}
+          setTiempo={
+            formulario.setTiempo
+          }
+          raciones={
+            formulario.raciones
+          }
+          setRaciones={
+            formulario.setRaciones
+          }
+          dificultad={
+            formulario.dificultad
+          }
           setDificultad={
-            setDificultad
+            formulario.setDificultad
           }
           requiereDescongelar={
-            requiereDescongelar
+            formulario.requiereDescongelar
           }
           setRequiereDescongelar={
-            setRequiereDescongelar
+            formulario.setRequiereDescongelar
           }
-          valoracion={valoracion}
+          valoracion={
+            formulario.valoracion
+          }
           setValoracion={
-            setValoracion
+            formulario.setValoracion
           }
           tiposComida={
-            tiposComida
+            formulario.tiposComida
           }
           setTiposComida={
-            setTiposComida
+            formulario.setTiposComida
           }
           ingredientesBase={
-            ingredientesBase
+            formulario.ingredientesBase
           }
           setIngredientesBase={
-            setIngredientesBase
+            formulario.setIngredientesBase
           }
-          dietas={dietas}
-          setDietas={setDietas}
+          dietas={formulario.dietas}
+          setDietas={
+            formulario.setDietas
+          }
           caracteristicas={
-            caracteristicas
+            formulario.caracteristicas
           }
           setCaracteristicas={
-            setCaracteristicas
+            formulario.setCaracteristicas
           }
-          customTipo={customTipo}
+          customTipo={
+            formulario.customTipo
+          }
           setCustomTipo={
-            setCustomTipo
+            formulario.setCustomTipo
           }
-          customBase={customBase}
+          customBase={
+            formulario.customBase
+          }
           setCustomBase={
-            setCustomBase
+            formulario.setCustomBase
           }
           customDieta={
-            customDieta
+            formulario.customDieta
           }
           setCustomDieta={
-            setCustomDieta
+            formulario.setCustomDieta
           }
           customCaracteristica={
-            customCaracteristica
+            formulario.customCaracteristica
           }
           setCustomCaracteristica={
-            setCustomCaracteristica
+            formulario.setCustomCaracteristica
           }
           guardarReceta={
-            guardarReceta
+            formulario.guardarReceta
           }
           limpiarFormulario={
-            limpiarFormulario
+            formulario.limpiarFormulario
           }
           TIPOS_COMIDA={
             TIPOS_COMIDA
@@ -817,9 +416,7 @@ export default function Recetas({
             style={{
               textAlign:
                 'center',
-
-              color:
-                '#9e7d90',
+              color: '#9e7d90',
             }}
           >
             Todavía no hay
@@ -832,9 +429,7 @@ export default function Recetas({
             <CardReceta
               key={receta.id}
               receta={receta}
-              onEditar={
-                cargarRecetaEnFormulario
-              }
+              onEditar={editarReceta}
               onEliminar={
                 deleteReceta
               }
