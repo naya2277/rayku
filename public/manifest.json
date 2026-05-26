@@ -1,0 +1,17 @@
+{
+  "name": "Rayku",
+  "short_name": "Rayku",
+  "description": "Planning de comidas, recetas, compra e inventario",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#fffaf8",
+  "theme_color": "#f4a7b9",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}
