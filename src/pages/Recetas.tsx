@@ -7,6 +7,7 @@ import {
 
 import FormularioReceta from '../components/recetas/FormularioReceta'
 import CardReceta from '../components/recetas/CardReceta'
+import BuscadorRecetas from '../components/recetas/BuscadorRecetas'
 
 import { useFormularioReceta } from '../hooks/useFormularioReceta'
 
@@ -61,9 +62,7 @@ const CARACTERISTICAS = [
 ]
 
 type Props = {
-  recetaSeleccionadaId?:
-    | string
-    | null
+  recetaSeleccionadaId?: string | null
 
   onRecetaSeleccionadaLeida?: () => void
 }
@@ -83,6 +82,15 @@ export default function Recetas({
 
   const [busqueda, setBusqueda] =
     useState('')
+
+  const [filtros, setFiltros] =
+    useState({
+      favoritas: false,
+      keto: false,
+      rapidas: false,
+      economicas: false,
+      airFryer: false,
+    })
 
   const formulario =
     useFormularioReceta({
@@ -144,8 +152,58 @@ export default function Recetas({
         .join(' ')
         .toLowerCase()
 
-      return texto.includes(
-        busqueda.toLowerCase()
+      const coincideBusqueda =
+        texto.includes(
+          busqueda.toLowerCase()
+        )
+
+      const coincideFavoritas =
+        !filtros.favoritas ||
+        r.favorita
+
+      const coincideKeto =
+        !filtros.keto ||
+        r.dietas.some((d) =>
+          d
+            .toLowerCase()
+            .includes('keto')
+        )
+
+      const coincideRapidas =
+        !filtros.rapidas ||
+        r.caracteristicas.some((c) =>
+          c
+            .toLowerCase()
+            .includes('rápida')
+        )
+
+      const coincideEconomicas =
+        !filtros.economicas ||
+        r.caracteristicas.some((c) =>
+          c
+            .toLowerCase()
+            .includes(
+              'económica'
+            )
+        )
+
+      const coincideAirFryer =
+        !filtros.airFryer ||
+        r.caracteristicas.some((c) =>
+          c
+            .toLowerCase()
+            .includes(
+              'air fryer'
+            )
+        )
+
+      return (
+        coincideBusqueda &&
+        coincideFavoritas &&
+        coincideKeto &&
+        coincideRapidas &&
+        coincideEconomicas &&
+        coincideAirFryer
       )
     })
 
@@ -162,11 +220,16 @@ export default function Recetas({
       <div
         style={{
           display: 'flex',
+
           justifyContent:
             'space-between',
+
           alignItems: 'center',
+
           marginBottom: 20,
+
           flexWrap: 'wrap',
+
           gap: 12,
         }}
       >
@@ -204,7 +267,9 @@ export default function Recetas({
           className="card"
           style={{
             marginBottom: 20,
+
             color: '#8f7080',
+
             textAlign: 'center',
           }}
         >
@@ -216,6 +281,7 @@ export default function Recetas({
         className="card"
         style={{
           marginBottom: 20,
+
           background:
             'linear-gradient(135deg, #ffe4ec 0%, #f6e9ff 100%)',
         }}
@@ -223,10 +289,14 @@ export default function Recetas({
         <div
           style={{
             display: 'flex',
+
             justifyContent:
               'space-between',
+
             alignItems: 'center',
+
             gap: 16,
+
             flexWrap: 'wrap',
           }}
         >
@@ -259,31 +329,12 @@ export default function Recetas({
         </div>
       </div>
 
-      <div
-        className="card"
-        style={{
-          marginBottom: 20,
-        }}
-      >
-        <h3
-          style={{
-            marginBottom: 14,
-          }}
-        >
-          🔎 Buscar y filtrar
-        </h3>
-
-        <input
-          type="text"
-          placeholder="Busca por receta, ingrediente, dieta, etiqueta..."
-          value={busqueda}
-          onChange={(e) =>
-            setBusqueda(
-              e.target.value
-            )
-          }
-        />
-      </div>
+      <BuscadorRecetas
+        busqueda={busqueda}
+        setBusqueda={setBusqueda}
+        filtros={filtros}
+        setFiltros={setFiltros}
+      />
 
       {formulario.mostrarFormulario && (
         <FormularioReceta
@@ -416,11 +467,13 @@ export default function Recetas({
             style={{
               textAlign:
                 'center',
-              color: '#9e7d90',
+
+              color:
+                '#9e7d90',
             }}
           >
-            Todavía no hay
-            recetas 💕
+            No hay recetas con
+            esos filtros 💕
           </div>
         )}
 
@@ -429,7 +482,9 @@ export default function Recetas({
             <CardReceta
               key={receta.id}
               receta={receta}
-              onEditar={editarReceta}
+              onEditar={
+                editarReceta
+              }
               onEliminar={
                 deleteReceta
               }
