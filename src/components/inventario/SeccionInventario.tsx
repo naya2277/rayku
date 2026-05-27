@@ -33,46 +33,24 @@ export default function SeccionInventario({
   editarItemInventario,
   eliminarItemInventario,
 }: Props) {
-  const [
-    itemConsumoActivo,
-    setItemConsumoActivo,
-  ] = useState<string | null>(null)
+  const [itemConsumoActivo, setItemConsumoActivo] = useState<string | null>(
+    null
+  )
 
-  const [
-    cantidadConsumida,
-    setCantidadConsumida,
-  ] = useState('')
+  const [cantidadConsumida, setCantidadConsumida] = useState('')
 
-  const consumirProducto = (
-    itemId: string,
-    cantidadActual: number
-  ) => {
-    const cantidadRestar =
-      parseFloat(
-        cantidadConsumida
-      )
+  const consumirProducto = (itemId: string, cantidadActual: number) => {
+    const cantidadRestar = parseFloat(cantidadConsumida)
 
-    if (
-      isNaN(cantidadRestar) ||
-      cantidadRestar <= 0
-    ) {
+    if (isNaN(cantidadRestar) || cantidadRestar <= 0) {
       return
     }
 
-    const nuevaCantidad =
-      Math.max(
-        0,
-        cantidadActual -
-          cantidadRestar
-      )
+    const nuevaCantidad = Math.max(0, cantidadActual - cantidadRestar)
 
-    editarItemInventario(
-      itemId,
-      {
-        cantidad:
-          nuevaCantidad,
-      }
-    )
+    editarItemInventario(itemId, {
+      cantidad: nuevaCantidad,
+    })
 
     setCantidadConsumida('')
     setItemConsumoActivo(null)
@@ -83,22 +61,19 @@ export default function SeccionInventario({
       <div
         style={{
           background: color,
-          borderRadius:
-            '16px 16px 0 0',
-          padding: '12px 18px',
+          borderRadius: '16px 16px 0 0',
+          padding: '10px 14px',
           display: 'flex',
           alignItems: 'center',
-          justifyContent:
-            'space-between',
-          border:
-            '1.5px solid var(--borde)',
+          justifyContent: 'space-between',
+          border: '1.5px solid var(--borde)',
           borderBottom: 'none',
         }}
       >
         <div
           style={{
             fontWeight: '800',
-            fontSize: '15px',
+            fontSize: '14px',
             display: 'flex',
             alignItems: 'center',
             gap: '8px',
@@ -109,7 +84,7 @@ export default function SeccionInventario({
 
         <span
           style={{
-            fontSize: '12px',
+            fontSize: '11px',
             color: 'var(--txt2)',
             fontWeight: '700',
           }}
@@ -121,18 +96,16 @@ export default function SeccionInventario({
       <div
         style={{
           background: 'var(--card)',
-          border:
-            '1.5px solid var(--borde)',
+          border: '1.5px solid var(--borde)',
           borderTop: 'none',
-          borderRadius:
-            '0 0 16px 16px',
+          borderRadius: '0 0 16px 16px',
           overflow: 'hidden',
         }}
       >
         {items.length === 0 ? (
           <div
             style={{
-              padding: '20px',
+              padding: '18px',
               textAlign: 'center',
               color: 'var(--txt3)',
               fontSize: '13px',
@@ -143,27 +116,19 @@ export default function SeccionInventario({
           </div>
         ) : (
           items.map((item, idx) => {
-            const estado =
-              detectarCaducidad(
-                item.fechaCaducidad
-              )
-
-            const consumoActivo =
-              itemConsumoActivo ===
-              item.id
+            const estado = detectarCaducidad(item.fechaCaducidad)
+            const consumoActivo = itemConsumoActivo === item.id
 
             return (
               <div
                 key={item.id}
                 style={{
                   display: 'grid',
-                  gridTemplateColumns:
-                    '1fr auto',
-                  gap: '12px',
-                  padding: '12px 18px',
+                  gridTemplateColumns: '1fr',
+                  gap: '10px',
+                  padding: '11px 14px',
                   borderBottom:
-                    idx <
-                    items.length - 1
+                    idx < items.length - 1
                       ? '1px solid var(--borde)'
                       : 'none',
                 }}
@@ -172,27 +137,28 @@ export default function SeccionInventario({
                   <div
                     style={{
                       display: 'flex',
-                      gap: '8px',
+                      gap: '7px',
                       flexWrap: 'wrap',
                       alignItems: 'center',
-                      marginBottom: '6px',
+                      marginBottom: '5px',
                     }}
                   >
                     <span
-                      className={`pill ${claseIngrediente(
-                        item.nombre
-                      )}`}
+                      className={`pill ${claseIngrediente(item.nombre)}`}
                     >
-                      {emojiIngrediente(
-                        item.nombre
-                      )}{' '}
-                      {item.nombre}
+                      {emojiIngrediente(item.nombre)} {item.nombre}
                     </span>
 
                     <span className="pill pill-rosa">
                       📦 {item.cantidad}
                       {item.unidad}
                     </span>
+
+                    {item.cantidad <= 0 && (
+                      <span className="pill pill-naranja">
+                        ⚠️ Sin stock
+                      </span>
+                    )}
 
                     {item.necesitaDescongelar && (
                       <span className="pill pill-teal">
@@ -204,10 +170,8 @@ export default function SeccionInventario({
                       <span
                         className="pill"
                         style={{
-                          background:
-                            estado.fondo,
-                          color:
-                            estado.color,
+                          background: estado.fondo,
+                          color: estado.color,
                           border: `1px solid ${estado.color}`,
                         }}
                       >
@@ -219,29 +183,27 @@ export default function SeccionInventario({
                   {item.fechaCaducidad && (
                     <div
                       style={{
-                        fontSize: '11px',
+                        fontSize: '10.5px',
                         color: 'var(--txt2)',
                         marginTop: '2px',
                       }}
                     >
-                      Caduca:{' '}
-                      {item.fechaCaducidad}
+                      Caduca: {item.fechaCaducidad}
                     </div>
                   )}
 
                   {consumoActivo && (
                     <div
                       style={{
-                        marginTop: '12px',
+                        marginTop: '10px',
                         display: 'flex',
-                        gap: '8px',
+                        gap: '7px',
                         flexWrap: 'wrap',
                         alignItems: 'center',
                         background: '#fff8fb',
-                        border:
-                          '1.5px solid #f5dde8',
+                        border: '1.5px solid #f5dde8',
                         borderRadius: '14px',
-                        padding: '10px',
+                        padding: '8px',
                       }}
                     >
                       <input
@@ -250,16 +212,15 @@ export default function SeccionInventario({
                         min="0"
                         step="0.1"
                         placeholder="Cantidad"
-                        value={
-                          cantidadConsumida
-                        }
+                        value={cantidadConsumida}
                         onChange={(e) =>
-                          setCantidadConsumida(
-                            e.target.value
-                          )
+                          setCantidadConsumida(e.target.value)
                         }
                         style={{
-                          width: '100px',
+                          width: '86px',
+                          minHeight: 34,
+                          fontSize: 13,
+                          padding: '6px 8px',
                         }}
                       />
 
@@ -270,11 +231,13 @@ export default function SeccionInventario({
                       <button
                         className="btn-principal"
                         onClick={() =>
-                          consumirProducto(
-                            item.id,
-                            item.cantidad
-                          )
+                          consumirProducto(item.id, item.cantidad)
                         }
+                        style={{
+                          minHeight: 34,
+                          fontSize: 12,
+                          padding: '6px 10px',
+                        }}
                       >
                         💕 Aplicar
                       </button>
@@ -286,21 +249,25 @@ export default function SeccionInventario({
                   style={{
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '8px',
+                    gap: '7px',
                     flexWrap: 'wrap',
-                    justifyContent:
-                      'flex-end',
+                    justifyContent: 'flex-start',
+                    background: '#fffafc',
+                    border: '1px solid #f5dde8',
+                    borderRadius: 14,
+                    padding: '7px',
                   }}
                 >
                   <button
                     onClick={() =>
-                      setItemConsumoActivo(
-                        consumoActivo
-                          ? null
-                          : item.id
-                      )
+                      setItemConsumoActivo(consumoActivo ? null : item.id)
                     }
                     className="btn-secundario"
+                    style={{
+                      minHeight: 32,
+                      fontSize: 11.5,
+                      padding: '5px 9px',
+                    }}
                   >
                     ➖ Consumir
                   </button>
@@ -312,84 +279,68 @@ export default function SeccionInventario({
                     step="0.1"
                     value={item.cantidad}
                     onChange={(e) =>
-                      editarItemInventario(
-                        item.id,
-                        {
-                          cantidad:
-                            parseFloat(
-                              e.target
-                                .value
-                            ) || 0,
-                        }
-                      )
+                      editarItemInventario(item.id, {
+                        cantidad: parseFloat(e.target.value) || 0,
+                      })
                     }
                     style={{
-                      width: '76px',
-                      appearance:
-                        'textfield',
+                      width: '64px',
+                      minHeight: 32,
+                      appearance: 'textfield',
                       textAlign: 'center',
+                      fontSize: 12,
+                      padding: '5px 7px',
                     }}
                   />
 
                   <select
                     value={item.unidad}
                     onChange={(e) =>
-                      editarItemInventario(
-                        item.id,
-                        {
-                          unidad:
-                            e.target.value,
-                        }
-                      )
+                      editarItemInventario(item.id, {
+                        unidad: e.target.value,
+                      })
                     }
                     style={{
-                      width: '95px',
+                      width: '76px',
+                      minHeight: 32,
+                      fontSize: 12,
+                      padding: '5px 7px',
                     }}
                   >
                     <option value="g">g</option>
-                    <option value="kg">
-                      kg
-                    </option>
-                    <option value="ml">
-                      ml
-                    </option>
+                    <option value="kg">kg</option>
+                    <option value="ml">ml</option>
                     <option value="l">l</option>
-                    <option value="u.">
-                      u.
-                    </option>
-                    <option value="paquete">
-                      paquete
-                    </option>
-                    <option value="lata">
-                      lata
-                    </option>
+                    <option value="u.">u.</option>
+                    <option value="paquete">paquete</option>
+                    <option value="lata">lata</option>
                   </select>
 
                   <button
                     onClick={() =>
-                      editarItemInventario(
-                        item.id,
-                        {
-                          necesitaDescongelar:
-                            !item.necesitaDescongelar,
-                        }
-                      )
+                      editarItemInventario(item.id, {
+                        necesitaDescongelar: !item.necesitaDescongelar,
+                      })
                     }
                     className="btn-secundario"
                     title="Marcar/desmarcar descongelar"
+                    style={{
+                      minHeight: 32,
+                      fontSize: 12,
+                      padding: '5px 9px',
+                    }}
                   >
-                    {item.necesitaDescongelar
-                      ? '❄️'
-                      : '⬜'}
+                    {item.necesitaDescongelar ? '❄️' : '⬜'}
                   </button>
 
                   <button
-                    onClick={() =>
-                      eliminarItemInventario(
-                        item.id
-                      )
-                    }
+                    onClick={() => eliminarItemInventario(item.id)}
                     className="btn-secundario"
+                    style={{
+                      minHeight: 32,
+                      fontSize: 12,
+                      padding: '5px 9px',
+                    }}
                   >
                     ✕
                   </button>

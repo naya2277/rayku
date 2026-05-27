@@ -36,9 +36,9 @@ type Props = {
 export default function Planning({ onAbrirReceta }: Props) {
   const [semanaBase, setSemanaBase] = useState(new Date())
   const [busquedas, setBusquedas] = useState<Record<string, string>>({})
-  const [editandoHuecos, setEditandoHuecos] = useState<
-    Record<string, boolean>
-  >({})
+  const [editandoHuecos, setEditandoHuecos] = useState<Record<string, boolean>>(
+    {}
+  )
 
   const {
     recetas,
@@ -73,6 +73,20 @@ export default function Planning({ onAbrirReceta }: Props) {
       ))}
     </div>
   )
+
+  const activarEdicion = (clave: string) => {
+    setEditandoHuecos((actual) => ({
+      ...actual,
+      [clave]: true,
+    }))
+  }
+
+  const cerrarEdicion = (clave: string) => {
+    setEditandoHuecos((actual) => ({
+      ...actual,
+      [clave]: false,
+    }))
+  }
 
   const renderIngredientes = (texto: string) => (
     <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 10 }}>
@@ -160,12 +174,7 @@ export default function Planning({ onAbrirReceta }: Props) {
             <button
               type="button"
               className="btn-secundario"
-              onClick={() =>
-                setEditandoHuecos({
-                  ...editandoHuecos,
-                  [clave]: true,
-                })
-              }
+              onClick={() => activarEdicion(clave)}
             >
               ➕ Añadir
             </button>
@@ -192,12 +201,14 @@ export default function Planning({ onAbrirReceta }: Props) {
             <input
               placeholder="🔎 Buscar receta..."
               value={busqueda}
-              onChange={(e) =>
+              onFocus={() => activarEdicion(clave)}
+              onChange={(e) => {
+                activarEdicion(clave)
                 setBusquedas({
                   ...busquedas,
                   [clave]: e.target.value,
                 })
-              }
+              }}
             />
 
             {sugerencias.length > 0 && (
@@ -233,6 +244,8 @@ export default function Planning({ onAbrirReceta }: Props) {
                         ...busquedas,
                         [clave]: '',
                       })
+
+                      activarEdicion(clave)
                     }}
                   >
                     📖 {r.nombre}
@@ -244,7 +257,10 @@ export default function Planning({ onAbrirReceta }: Props) {
             <input
               placeholder="🥬 Ingredientes extra o comida rápida..."
               value={hueco?.comidaLibre || ''}
-              onChange={(e) =>
+              onFocus={() => activarEdicion(clave)}
+              onChange={(e) => {
+                activarEdicion(clave)
+
                 guardarHuecoPlanning({
                   fecha,
                   tipoComida,
@@ -252,14 +268,17 @@ export default function Planning({ onAbrirReceta }: Props) {
                   comidaLibre: e.target.value,
                   nota: hueco?.nota || '',
                 })
-              }
+              }}
               style={{ marginTop: 10 }}
             />
 
             <input
               placeholder="📝 Nota de esta comida..."
               value={hueco?.nota || ''}
-              onChange={(e) =>
+              onFocus={() => activarEdicion(clave)}
+              onChange={(e) => {
+                activarEdicion(clave)
+
                 guardarHuecoPlanning({
                   fecha,
                   tipoComida,
@@ -267,7 +286,7 @@ export default function Planning({ onAbrirReceta }: Props) {
                   comidaLibre: hueco?.comidaLibre || '',
                   nota: e.target.value,
                 })
-              }
+              }}
               style={{
                 marginTop: 10,
                 color: '#8f7080',
@@ -280,12 +299,7 @@ export default function Planning({ onAbrirReceta }: Props) {
             <button
               className="btn-principal"
               style={{ marginTop: 12 }}
-              onClick={() =>
-                setEditandoHuecos({
-                  ...editandoHuecos,
-                  [clave]: false,
-                })
-              }
+              onClick={() => cerrarEdicion(clave)}
             >
               💕 Guardar
             </button>
@@ -387,12 +401,7 @@ export default function Planning({ onAbrirReceta }: Props) {
           >
             <button
               className="btn-secundario"
-              onClick={() =>
-                setEditandoHuecos({
-                  ...editandoHuecos,
-                  [clave]: true,
-                })
-              }
+              onClick={() => activarEdicion(clave)}
             >
               ✏️ Editar
             </button>
