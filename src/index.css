@@ -606,3 +606,92 @@ input[type='number'] {
   appearance: textfield;
   -moz-appearance: textfield;
 }
+/* ===================================== */
+/* 📱 COMPACT MODE — COMPRA + INVENTARIO */
+/* ===================================== */
+
+@media (max-width: 768px) {
+  .contenido-principal h1 {
+    font-size: 21px;
+  }
+
+  .contenido-principal h2 {
+    font-size: 18px;
+  }
+
+  .contenido-principal h3 {
+    font-size: 16px;
+  }
+
+  .card {
+    padding: 13px;
+  }
+
+  .pill {
+    font-size: 10px;
+    padding: 3px 8px;
+    line-height: 1.25;
+  }
+
+  .btn-principal,
+  .btn-secundario {
+    min-height: 38px;
+    padding: 7px 12px;
+    font-size: 12px;
+    border-radius: 16px;
+  }
+
+  input,
+  textarea,
+  select {
+    min-height: 40px;
+    font-size: 14px;
+    padding: 7px 10px;
+  }
+
+  .notif-descongelar {
+    padding: 10px 12px;
+  }
+
+  .notif-ico {
+    font-size: 18px;
+  }
+
+  .notif-titulo {
+    font-size: 12px;
+  }
+
+  .notif-sub {
+    font-size: 10.5px;
+  }
+}
+
+@media (max-width: 480px) {
+  .contenido-principal {
+    padding: 9px;
+  }
+
+  .card {
+    padding: 12px;
+    border-radius: 16px;
+  }
+
+  .pill {
+    font-size: 9.5px;
+    padding: 3px 7px;
+  }
+
+  .btn-principal,
+  .btn-secundario {
+    min-height: 36px;
+    font-size: 11.5px;
+    padding: 6px 10px;
+  }
+
+  input,
+  textarea,
+  select {
+    min-height: 38px;
+    font-size: 13.5px;
+  }
+}
