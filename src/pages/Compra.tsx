@@ -18,12 +18,9 @@ export default function Compra() {
     planning,
     recetas,
     inventario,
-
     compraManual,
-
     agregarItemCompraManual,
     eliminarItemCompraManual,
-
     checksCompra,
     toggleCheckCompra,
     limpiarChecksCompra,
@@ -51,13 +48,20 @@ export default function Compra() {
       () =>
         compraManual.map(
           (item) => ({
-            nombre: item.nombre,
+            nombre:
+              item.cantidad
+                ? `${item.nombre} (${item.cantidad})`
+                : item.nombre,
+
             veces: 1,
-            cantidad:
-              item.cantidad,
-            unidad: item.unidad,
+
+            cantidad: null,
+
+            unidad: null,
+
             cantidadDisponible:
               null,
+
             cantidadFaltante:
               null,
           })

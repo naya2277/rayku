@@ -4,8 +4,7 @@ type Props = {
   onAgregar: (item: {
     id: string
     nombre: string
-    cantidad: number | null
-    unidad: string | null
+    cantidad: string | null
   }) => void
 }
 
@@ -18,31 +17,21 @@ export default function FormularioCompraManual({
   const [cantidad, setCantidad] =
     useState('')
 
-  const [unidad, setUnidad] =
-    useState('')
-
   const agregar = () => {
     const nombreLimpio =
       nombre.trim()
 
-    if (!nombreLimpio) {
-      return
-    }
+    if (!nombreLimpio) return
 
     onAgregar({
       id: '',
       nombre: nombreLimpio,
       cantidad:
-        cantidad.trim()
-          ? Number(cantidad) || null
-          : null,
-      unidad:
-        unidad.trim() || null,
+        cantidad.trim() || null,
     })
 
     setNombre('')
     setCantidad('')
-    setUnidad('')
   }
 
   return (
@@ -67,7 +56,7 @@ export default function FormularioCompraManual({
         style={{
           display: 'grid',
           gridTemplateColumns:
-            'minmax(180px, 1fr) 110px 110px auto',
+            'minmax(180px, 1fr) minmax(120px, 180px) auto',
           gap: 10,
           alignItems: 'center',
         }}
@@ -79,37 +68,18 @@ export default function FormularioCompraManual({
             setNombre(e.target.value)
           }
           onKeyDown={(e) => {
-            if (e.key === 'Enter') {
-              agregar()
-            }
+            if (e.key === 'Enter') agregar()
           }}
         />
 
         <input
-          placeholder="Cantidad"
-          type="number"
-          min={0}
+          placeholder="Cantidad opcional..."
           value={cantidad}
           onChange={(e) =>
             setCantidad(e.target.value)
           }
           onKeyDown={(e) => {
-            if (e.key === 'Enter') {
-              agregar()
-            }
-          }}
-        />
-
-        <input
-          placeholder="Unidad"
-          value={unidad}
-          onChange={(e) =>
-            setUnidad(e.target.value)
-          }
-          onKeyDown={(e) => {
-            if (e.key === 'Enter') {
-              agregar()
-            }
+            if (e.key === 'Enter') agregar()
           }}
         />
 
