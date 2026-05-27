@@ -64,6 +64,13 @@ export type ItemPlanning = {
   racionesOverride?: number | null
 }
 
+export type ItemCompraManual = {
+  id: string
+  nombre: string
+  cantidad: number | null
+  unidad: string | null
+}
+
 export type ItemInventario = {
   id: string
   nombre: string
@@ -84,7 +91,13 @@ type Estado = {
   planning: ItemPlanning[]
   semanas: any[]
   listaCompra: any[]
+
+  compraManual: ItemCompraManual[]
+
+  checksCompra: string[]
+
   inventario: ItemInventario[]
+
   recordatorios: any[]
 
   addReceta: (
@@ -156,6 +169,20 @@ type Estado = {
   eliminarItemInventario: (
     id: string
   ) => void
+
+  agregarItemCompraManual: (
+    item: ItemCompraManual
+  ) => void
+
+  eliminarItemCompraManual: (
+    id: string
+  ) => void
+
+  toggleCheckCompra: (
+    id: string
+  ) => void
+
+  limpiarChecksCompra: () => void
 }
 
 const normalizarReceta = (
@@ -259,6 +286,24 @@ const normalizarInventario = (
     false,
 })
 
+const normalizarCompraManual = (
+  item: any
+): ItemCompraManual => ({
+  id: item.id ?? generarId(),
+
+  nombre: item.nombre ?? '',
+
+  cantidad:
+    item.cantidad === null ||
+    item.cantidad === undefined ||
+    item.cantidad === ''
+      ? null
+      : Number(item.cantidad) || null,
+
+  unidad:
+    item.unidad ?? null,
+})
+
 const normalizarPlanning = (
   item: any
 ): ItemPlanning => ({
@@ -293,8 +338,7 @@ const cargar = <T,>(
         key
       )
 
-    if (!raw)
-      return fallback
+    if (!raw) return fallback
 
     return JSON.parse(raw)
   } catch {
@@ -347,6 +391,24 @@ const guardarPlanningLocal = (
   )
 }
 
+const guardarCompraManualLocal = (
+  compraManual: ItemCompraManual[]
+) => {
+  guardar(
+    'rayku-compra-manual',
+    compraManual
+  )
+}
+
+const guardarChecksCompraLocal = (
+  checks: string[]
+) => {
+  guardar(
+    'rayku-checks-compra',
+    checks
+  )
+}
+
 export const useRaykuStore =
   create<Estado>(
     (set, get) => ({
@@ -366,6 +428,20 @@ export const useRaykuStore =
 
       listaCompra: [],
 
+      compraManual:
+        cargar<any[]>(
+          'rayku-compra-manual',
+          []
+        ).map(
+          normalizarCompraManual
+        ),
+
+      checksCompra:
+        cargar<string[]>(
+          'rayku-checks-compra',
+          []
+        ),
+
       inventario:
         cargar<any[]>(
           'rayku-inventario',
@@ -382,7 +458,6 @@ export const useRaykuStore =
         const nuevaReceta =
           normalizarReceta({
             ...receta,
-
             id:
               receta.id ||
               generarId(),
@@ -456,17 +531,13 @@ export const useRaykuStore =
               r.id === id
           )
 
-        if (!receta)
-          return
+        if (!receta) return
 
         const copia =
           normalizarReceta({
             ...receta,
-
             id: generarId(),
-
             nombre: `${receta.nombre} (copia)`,
-
             favorita: false,
           })
 
@@ -777,6 +848,89 @@ export const useRaykuStore =
           set({
             inventario:
               nuevoInventario,
+          })
+        },
+
+      agregarItemCompraManual:
+        (item) => {
+          const nuevaLista =
+            [
+              ...get()
+                .compraManual,
+
+              normalizarCompraManual(
+                {
+                  ...item,
+                  id:
+                    item.id ||
+                    generarId(),
+                }
+              ),
+            ]
+
+          guardarCompraManualLocal(
+            nuevaLista
+          )
+
+          set({
+            compraManual:
+              nuevaLista,
+          })
+        },
+
+      eliminarItemCompraManual:
+        (id) => {
+          const nuevaLista =
+            get()
+              .compraManual
+              .filter(
+                (item) =>
+                  item.id !== id
+              )
+
+          guardarCompraManualLocal(
+            nuevaLista
+          )
+
+          set({
+            compraManual:
+              nuevaLista,
+          })
+        },
+
+      toggleCheckCompra:
+        (id) => {
+          const checks =
+            get().checksCompra
+
+          const nuevosChecks =
+            checks.includes(id)
+              ? checks.filter(
+                  (c) => c !== id
+                )
+              : [
+                  ...checks,
+                  id,
+                ]
+
+          guardarChecksCompraLocal(
+            nuevosChecks
+          )
+
+          set({
+            checksCompra:
+              nuevosChecks,
+          })
+        },
+
+      limpiarChecksCompra:
+        () => {
+          guardarChecksCompraLocal(
+            []
+          )
+
+          set({
+            checksCompra: [],
           })
         },
     })

@@ -11,123 +11,215 @@ export type CategoriaIngrediente =
 
 export { normalizarIngrediente }
 
+const CATEGORIAS: Record<
+  CategoriaIngrediente,
+  string[]
+> = {
+  proteina: [
+    'pollo',
+    'pavo',
+    'ternera',
+    'cerdo',
+    'vaca',
+    'buey',
+    'res',
+    'carne',
+    'carne picada',
+    'picada',
+    'lomo',
+    'solomillo',
+    'chuleta',
+    'costilla',
+    'secreto',
+    'presa',
+    'jamon',
+    'jamon york',
+    'jamon serrano',
+    'bacon',
+    'panceta',
+    'chorizo',
+    'salchicha',
+    'longaniza',
+    'hamburguesa',
+    'hamburguesas',
+    'albondiga',
+    'albondigas',
+    'huevo',
+    'huevos',
+    'atun',
+    'salmon',
+    'merluza',
+    'bacalao',
+    'sardina',
+    'caballa',
+    'pescado',
+    'gamba',
+    'gambas',
+    'langostino',
+    'langostinos',
+    'mejillon',
+    'mejillones',
+    'calamar',
+    'sepia',
+    'tofu',
+    'tempeh',
+  ],
+
+  carbohidrato: [
+    'arroz',
+    'pasta',
+    'macarron',
+    'macarrones',
+    'espagueti',
+    'espaguetis',
+    'patata',
+    'patatas',
+    'boniato',
+    'pan',
+    'avena',
+    'lenteja',
+    'lentejas',
+    'garbanzo',
+    'garbanzos',
+    'alubia',
+    'alubias',
+    'quinoa',
+    'tortilla',
+    'wrap',
+    'harina',
+    'maiz',
+    'cuscus',
+    'fideo',
+    'fideos',
+  ],
+
+  grasa: [
+    'aceite',
+    'mantequilla',
+    'ghee',
+    'nata',
+    'queso',
+    'mozzarella',
+    'parmesano',
+    'cheddar',
+    'emmental',
+    'yogur griego',
+    'aguacate',
+    'nueces',
+    'almendra',
+    'almendras',
+    'cacahuete',
+    'cacahuetes',
+    'mayonesa',
+    'crema',
+    'crema de cacahuete',
+  ],
+
+  salsa: [
+    'salsa',
+    'pesto',
+    'tomate frito',
+    'alioli',
+    'bechamel',
+    'mostaza',
+    'ketchup',
+    'soja',
+    'caldo',
+    'vinagreta',
+    'barbacoa',
+    'bbq',
+    'chimichurri',
+  ],
+
+  verdura: [
+    'brocoli',
+    'calabacin',
+    'lechuga',
+    'espinaca',
+    'espinacas',
+    'zanahoria',
+    'pepino',
+    'pimiento',
+    'cebolla',
+    'tomate',
+    'tomates',
+    'cherry',
+    'berenjena',
+    'coliflor',
+    'esparrago',
+    'esparragos',
+    'champinon',
+    'champinones',
+    'seta',
+    'setas',
+    'judia verde',
+    'judias verdes',
+    'apio',
+    'puerro',
+    'ajo',
+    'col',
+    'repollo',
+    'rucula',
+    'canonigos',
+    'alcachofa',
+    'alcachofas',
+    'pepino',
+    'calabaza',
+  ],
+
+  fruta: [
+    'fresa',
+    'fresas',
+    'limon',
+    'manzana',
+    'platano',
+    'naranja',
+    'kiwi',
+    'arandano',
+    'arandanos',
+    'frambuesa',
+    'frambuesas',
+    'pera',
+    'melon',
+    'sandia',
+    'mora',
+    'moras',
+  ],
+
+  otros: [],
+}
+
+const ORDEN_CATEGORIAS: CategoriaIngrediente[] = [
+  'proteina',
+  'verdura',
+  'grasa',
+  'salsa',
+  'carbohidrato',
+  'fruta',
+  'otros',
+]
+
 export const detectarCategoriaIngrediente = (
   ingrediente: string
 ): CategoriaIngrediente => {
-  const i = normalizarIngrediente(ingrediente)
+  const i =
+    normalizarIngrediente(
+      ingrediente
+    )
 
-  if (
-    [
-      'pollo',
-      'pavo',
-      'ternera',
-      'cerdo',
-      'huevo',
-      'atun',
-      'salmon',
-      'merluza',
-      'gamba',
-      'pescado',
-      'carne',
-      'lomo',
-      'jamon',
-      'bacon',
-    ].some((p) => i.includes(p))
-  ) {
-    return 'proteina'
-  }
-
-  if (
-    [
-      'arroz',
-      'pasta',
-      'macarron',
-      'espagueti',
-      'patata',
-      'pan',
-      'avena',
-      'lenteja',
-      'garbanzo',
-      'alubia',
-      'quinoa',
-      'tortilla',
-      'wrap',
-      'harina',
-    ].some((p) => i.includes(p))
-  ) {
-    return 'carbohidrato'
-  }
-
-  if (
-    [
-      'aceite',
-      'mantequilla',
-      'nata',
-      'queso',
-      'aguacate',
-      'nueces',
-      'almendra',
-      'mayonesa',
-      'crema',
-    ].some((p) => i.includes(p))
-  ) {
-    return 'grasa'
-  }
-
-  if (
-    [
-      'salsa',
-      'pesto',
-      'tomate frito',
-      'alioli',
-      'bechamel',
-      'mostaza',
-      'ketchup',
-      'soja',
-      'caldo',
-    ].some((p) => i.includes(p))
-  ) {
-    return 'salsa'
-  }
-
-  if (
-    [
-      'brocoli',
-      'calabacin',
-      'lechuga',
-      'espinaca',
-      'zanahoria',
-      'pepino',
-      'pimiento',
-      'cebolla',
-      'tomate',
-      'berenjena',
-      'coliflor',
-      'esparrago',
-      'champinon',
-      'seta',
-      'judia verde',
-    ].some((p) => i.includes(p))
-  ) {
-    return 'verdura'
-  }
-
-  if (
-    [
-      'fresa',
-      'limon',
-      'manzana',
-      'platano',
-      'naranja',
-      'kiwi',
-      'arandano',
-      'frambuesa',
-      'pera',
-      'melon',
-      'sandia',
-    ].some((p) => i.includes(p))
-  ) {
-    return 'fruta'
+  for (const categoria of ORDEN_CATEGORIAS) {
+    if (
+      CATEGORIAS[categoria].some(
+        (palabra) =>
+          i.includes(
+            normalizarIngrediente(
+              palabra
+            )
+          )
+      )
+    ) {
+      return categoria
+    }
   }
 
   return 'otros'
@@ -137,9 +229,14 @@ export const emojiIngrediente = (
   ingrediente: string
 ) => {
   const categoria =
-    detectarCategoriaIngrediente(ingrediente)
+    detectarCategoriaIngrediente(
+      ingrediente
+    )
 
-  const emojis: Record<CategoriaIngrediente, string> = {
+  const emojis: Record<
+    CategoriaIngrediente,
+    string
+  > = {
     proteina: '🥩',
     carbohidrato: '🍚',
     grasa: '🧈',
@@ -156,9 +253,14 @@ export const claseIngrediente = (
   ingrediente: string
 ) => {
   const categoria =
-    detectarCategoriaIngrediente(ingrediente)
+    detectarCategoriaIngrediente(
+      ingrediente
+    )
 
-  const clases: Record<CategoriaIngrediente, string> = {
+  const clases: Record<
+    CategoriaIngrediente,
+    string
+  > = {
     proteina: 'pill-naranja',
     carbohidrato: 'pill-malva',
     grasa: 'pill-rosa',
