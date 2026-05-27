@@ -1,4 +1,10 @@
-import { useEffect, useRef, useState } from 'react'
+import {
+  useEffect,
+  useRef,
+  useState,
+} from 'react'
+
+import { separarTextoIngredientes } from '../lib/cantidadesIngredientes'
 
 import type {
   Dificultad,
@@ -286,9 +292,7 @@ export function useFormularioReceta({
       setImagen(receta.imagen)
 
       setIngredientes(
-        receta.ingredientes.join(
-          ', '
-        )
+        receta.ingredientes.join('\n')
       )
 
       setPasos(receta.pasos)
@@ -357,10 +361,10 @@ export function useFormularioReceta({
 
       imagen: imagen.trim(),
 
-      ingredientes: ingredientes
-        .split(',')
-        .map((i) => i.trim())
-        .filter(Boolean),
+      ingredientes:
+        separarTextoIngredientes(
+          ingredientes
+        ),
 
       pasos,
 

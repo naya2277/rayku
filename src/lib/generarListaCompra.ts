@@ -3,6 +3,11 @@ import {
   normalizarIngrediente,
 } from './ingredientes'
 
+import {
+  parsearIngredienteConCantidad,
+  separarTextoIngredientes,
+} from './cantidadesIngredientes'
+
 type RecetaListaCompra = {
   id: string
   ingredientes: string[]
@@ -22,6 +27,19 @@ type ItemInventarioListaCompra = {
 export type IngredienteCompra = {
   nombre: string
   veces: number
+  cantidad: number | null
+  unidad: string | null
+  cantidadDisponible: number | null
+  cantidadFaltante: number | null
+}
+
+function unidadesCompatibles(
+  unidadA: string | null,
+  unidadB: string | null
+) {
+  if (!unidadA || !unidadB) return false
+
+  return unidadA === unidadB
 }
 
 export function generarIngredientesCompra(
@@ -31,39 +49,74 @@ export function generarIngredientesCompra(
   const mapa = new Map<string, IngredienteCompra>()
 
   const añadirIngrediente = (ingrediente: string) => {
-    const normalizado = normalizarIngrediente(ingrediente)
+    const parseado =
+      parsearIngredienteConCantidad(
+        ingrediente
+      )
+
+    const normalizado =
+      normalizarIngrediente(
+        parseado.nombre
+      )
 
     if (!normalizado) return
 
-    const existente = mapa.get(normalizado)
+    const existente =
+      mapa.get(normalizado)
 
     if (existente) {
       existente.veces += 1
+
+      if (
+        parseado.cantidad !== null &&
+        parseado.unidad &&
+        unidadesCompatibles(
+          existente.unidad,
+          parseado.unidad
+        )
+      ) {
+        existente.cantidad =
+          (existente.cantidad || 0) +
+          parseado.cantidad
+      }
+
+      if (
+        existente.cantidad === null &&
+        parseado.cantidad !== null
+      ) {
+        existente.cantidad =
+          parseado.cantidad
+        existente.unidad =
+          parseado.unidad
+      }
     } else {
       mapa.set(normalizado, {
         nombre: normalizado,
         veces: 1,
+        cantidad:
+          parseado.cantidad,
+        unidad: parseado.unidad,
+        cantidadDisponible: null,
+        cantidadFaltante: null,
       })
     }
   }
 
   planning.forEach((hueco) => {
     if (hueco.recetaId) {
-      const receta = recetas.find((r) => r.id === hueco.recetaId)
+      const receta = recetas.find(
+        (r) => r.id === hueco.recetaId
+      )
 
-      receta?.ingredientes.forEach((ingrediente) => {
-        añadirIngrediente(ingrediente)
-      })
+      receta?.ingredientes.forEach(
+        añadirIngrediente
+      )
     }
 
     if (hueco.comidaLibre) {
-      hueco.comidaLibre
-        .split(/,|\+|\n/)
-        .map((i) => i.trim())
-        .filter(Boolean)
-        .forEach((ingrediente) => {
-          añadirIngrediente(ingrediente)
-        })
+      separarTextoIngredientes(
+        hueco.comidaLibre
+      ).forEach(añadirIngrediente)
     }
   })
 
@@ -75,7 +128,10 @@ export function agruparIngredientesCompra(
 ) {
   return ingredientes.reduce(
     (acc, item) => {
-      const categoria = detectarCategoriaIngrediente(item.nombre)
+      const categoria =
+        detectarCategoriaIngrediente(
+          item.nombre
+        )
 
       if (!acc[categoria]) {
         acc[categoria] = []
@@ -85,7 +141,10 @@ export function agruparIngredientesCompra(
 
       return acc
     },
-    {} as Record<string, IngredienteCompra[]>
+    {} as Record<
+      string,
+      IngredienteCompra[]
+    >
   )
 }
 
@@ -93,14 +152,22 @@ export function ingredienteEnInventario(
   ingrediente: string,
   inventario: ItemInventarioListaCompra[]
 ) {
-  const ingredienteNormalizado = normalizarIngrediente(ingrediente)
+  const ingredienteNormalizado =
+    normalizarIngrediente(ingrediente)
 
   return inventario.some((item) => {
-    const itemNormalizado = normalizarIngrediente(item.nombre)
+    const itemNormalizado =
+      normalizarIngrediente(
+        item.nombre
+      )
 
     return (
-      itemNormalizado.includes(ingredienteNormalizado) ||
-      ingredienteNormalizado.includes(itemNormalizado)
+      itemNormalizado.includes(
+        ingredienteNormalizado
+      ) ||
+      ingredienteNormalizado.includes(
+        itemNormalizado
+      )
     )
   })
 }
@@ -109,19 +176,77 @@ export function cantidadesInventario(
   ingrediente: string,
   inventario: ItemInventarioListaCompra[]
 ) {
-  const ingredienteNormalizado = normalizarIngrediente(ingrediente)
+  const ingredienteNormalizado =
+    normalizarIngrediente(ingrediente)
 
   return inventario
     .filter((item) => {
-      const itemNormalizado = normalizarIngrediente(item.nombre)
+      const itemNormalizado =
+        normalizarIngrediente(
+          item.nombre
+        )
 
       return (
-        itemNormalizado.includes(ingredienteNormalizado) ||
-        ingredienteNormalizado.includes(itemNormalizado)
+        itemNormalizado.includes(
+          ingredienteNormalizado
+        ) ||
+        ingredienteNormalizado.includes(
+          itemNormalizado
+        )
       )
     })
-    .map((item) => `${item.cantidad}${item.unidad}`)
+    .map(
+      (item) =>
+        `${item.cantidad}${item.unidad}`
+    )
     .join(' + ')
+}
+
+function calcularDisponible(
+  ingrediente: IngredienteCompra,
+  inventario: ItemInventarioListaCompra[]
+) {
+  if (
+    ingrediente.cantidad === null ||
+    !ingrediente.unidad
+  ) {
+    return null
+  }
+
+  const ingredienteNormalizado =
+    normalizarIngrediente(
+      ingrediente.nombre
+    )
+
+  return inventario.reduce(
+    (total, item) => {
+      const itemNormalizado =
+        normalizarIngrediente(
+          item.nombre
+        )
+
+      const coincide =
+        itemNormalizado.includes(
+          ingredienteNormalizado
+        ) ||
+        ingredienteNormalizado.includes(
+          itemNormalizado
+        )
+
+      if (!coincide) return total
+
+      if (
+        item.unidad !== ingrediente.unidad
+      ) {
+        return total
+      }
+
+      return (
+        total + Number(item.cantidad || 0)
+      )
+    },
+    0
+  )
 }
 
 export function separarIngredientesPorInventario(
@@ -132,10 +257,55 @@ export function separarIngredientesPorInventario(
   const yaDisponibles: IngredienteCompra[] = []
 
   ingredientes.forEach((ingrediente) => {
-    if (ingredienteEnInventario(ingrediente.nombre, inventario)) {
-      yaDisponibles.push(ingrediente)
+    const disponible =
+      calcularDisponible(
+        ingrediente,
+        inventario
+      )
+
+    if (
+      ingrediente.cantidad !== null &&
+      ingrediente.unidad &&
+      disponible !== null
+    ) {
+      const faltante =
+        ingrediente.cantidad -
+        disponible
+
+      const ingredienteCalculado = {
+        ...ingrediente,
+        cantidadDisponible:
+          disponible,
+        cantidadFaltante:
+          Math.max(0, faltante),
+      }
+
+      if (faltante > 0) {
+        paraComprar.push(
+          ingredienteCalculado
+        )
+      } else {
+        yaDisponibles.push(
+          ingredienteCalculado
+        )
+      }
+
+      return
+    }
+
+    if (
+      ingredienteEnInventario(
+        ingrediente.nombre,
+        inventario
+      )
+    ) {
+      yaDisponibles.push(
+        ingrediente
+      )
     } else {
-      paraComprar.push(ingrediente)
+      paraComprar.push(
+        ingrediente
+      )
     }
   })
 

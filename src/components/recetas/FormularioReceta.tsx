@@ -198,16 +198,44 @@ export default function FormularioReceta({
           }
         />
 
-        <textarea
-          placeholder="🥬 Ingredientes separados por coma"
-          value={ingredientes}
-          onChange={(e) =>
-            setIngredientes(
-              e.target.value
-            )
-          }
-          rows={3}
-        />
+        <div
+          style={{
+            display: 'grid',
+            gap: 8,
+          }}
+        >
+          <textarea
+            placeholder={`🥬 Ingredientes (uno por línea)
+
+50 g champiñones
+100 g queso
+2 u. huevos
+brócoli`}
+            value={ingredientes}
+            onChange={(e) =>
+              setIngredientes(
+                e.target.value
+              )
+            }
+            rows={6}
+          />
+
+          <div
+            style={{
+              fontSize: 12,
+              color: '#9e7d90',
+              lineHeight: 1.45,
+              background:
+                'rgba(255,255,255,0.55)',
+              borderRadius: 14,
+              padding: '10px 12px',
+            }}
+          >
+            💡 Puedes poner cantidades reales
+            para futuras matemáticas automáticas
+            de compra e inventario.
+          </div>
+        </div>
 
         <textarea
           placeholder="👩‍🍳 Preparación / pasos"

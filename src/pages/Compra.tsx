@@ -33,10 +33,14 @@ export default function Compra() {
     inventario,
   } = useRaykuStore()
 
-  const [comprados, setComprados] = useState<string[]>([])
+  const [comprados, setComprados] =
+    useState<string[]>([])
 
   const ingredientes = useMemo(() => {
-    return generarIngredientesCompra(planning, recetas)
+    return generarIngredientesCompra(
+      planning,
+      recetas
+    )
   }, [planning, recetas])
 
   const {
@@ -49,21 +53,39 @@ export default function Compra() {
     )
   }, [ingredientes, inventario])
 
-  const agrupadosComprar = useMemo(() => {
-    return agruparIngredientesCompra(paraComprar)
-  }, [paraComprar])
+  const agrupadosComprar =
+    useMemo(() => {
+      return agruparIngredientesCompra(
+        paraComprar
+      )
+    }, [paraComprar])
 
-  const agrupadosDisponibles = useMemo(() => {
-    return agruparIngredientesCompra(yaDisponibles)
-  }, [yaDisponibles])
+  const agrupadosDisponibles =
+    useMemo(() => {
+      return agruparIngredientesCompra(
+        yaDisponibles
+      )
+    }, [yaDisponibles])
 
-  const toggleComprado = (ingrediente: string) => {
-    if (comprados.includes(ingrediente)) {
+  const toggleComprado = (
+    ingrediente: string
+  ) => {
+    if (
+      comprados.includes(
+        ingrediente
+      )
+    ) {
       setComprados(
-        comprados.filter((i) => i !== ingrediente)
+        comprados.filter(
+          (i) =>
+            i !== ingrediente
+        )
       )
     } else {
-      setComprados([...comprados, ingrediente])
+      setComprados([
+        ...comprados,
+        ingrediente,
+      ])
     }
   }
 
@@ -71,68 +93,183 @@ export default function Compra() {
     setComprados([])
   }
 
+  const renderCantidad = (
+    item: IngredienteCompra
+  ) => {
+    if (
+      item.cantidad === null ||
+      !item.unidad
+    ) {
+      return null
+    }
+
+    return (
+      <span className="pill pill-rosa">
+        📏 {item.cantidad}
+        {item.unidad}
+      </span>
+    )
+  }
+
+  const renderFaltante = (
+    item: IngredienteCompra
+  ) => {
+    if (
+      item.cantidadFaltante ===
+        null ||
+      !item.unidad
+    ) {
+      return null
+    }
+
+    if (
+      item.cantidadFaltante <= 0
+    ) {
+      return (
+        <span className="pill pill-verde">
+          ✅ Completo
+        </span>
+      )
+    }
+
+    return (
+      <span className="pill pill-naranja">
+        ⚠️ Faltan{' '}
+        {item.cantidadFaltante}
+        {item.unidad}
+      </span>
+    )
+  }
+
+  const renderDisponible = (
+    item: IngredienteCompra
+  ) => {
+    if (
+      item.cantidadDisponible ===
+        null ||
+      !item.unidad
+    ) {
+      return null
+    }
+
+    return (
+      <span className="pill pill-verde">
+        📦 Tienes{' '}
+        {
+          item.cantidadDisponible
+        }
+        {item.unidad}
+      </span>
+    )
+  }
+
   const renderItem = (
     item: IngredienteCompra,
-    modo: 'comprar' | 'disponible'
+    modo:
+      | 'comprar'
+      | 'disponible'
   ) => {
-    const comprado = comprados.includes(item.nombre)
+    const comprado =
+      comprados.includes(
+        item.nombre
+      )
 
-    const yaTienes = ingredienteEnInventario(
-      item.nombre,
-      inventario
-    )
+    const yaTienes =
+      ingredienteEnInventario(
+        item.nombre,
+        inventario
+      )
 
-    const cantidad = cantidadesInventario(
-      item.nombre,
-      inventario
-    )
+    const cantidad =
+      cantidadesInventario(
+        item.nombre,
+        inventario
+      )
 
-    const esDisponible = modo === 'disponible'
+    const esDisponible =
+      modo === 'disponible'
 
     return (
       <div
         key={item.nombre}
         style={{
           display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
+          alignItems:
+            'center',
+          justifyContent:
+            'space-between',
           gap: '10px',
           flexWrap: 'wrap',
-          background: esDisponible
-            ? '#f7fff8'
-            : '#fffaf8',
-          border: esDisponible
-            ? '1.5px solid #cfead2'
-            : '1.5px solid #f5dde8',
-          borderRadius: '14px',
-          padding: '10px 12px',
-          opacity: esDisponible ? 0.9 : 1,
+          background:
+            esDisponible
+              ? '#f7fff8'
+              : '#fffaf8',
+          border:
+            esDisponible
+              ? '1.5px solid #cfead2'
+              : '1.5px solid #f5dde8',
+          borderRadius:
+            '14px',
+          padding:
+            '10px 12px',
+          opacity:
+            esDisponible
+              ? 0.9
+              : 1,
         }}
       >
         <button
           type="button"
           onClick={() => {
-            if (!esDisponible) {
-              toggleComprado(item.nombre)
+            if (
+              !esDisponible
+            ) {
+              toggleComprado(
+                item.nombre
+              )
             }
           }}
-          className={`pill ${claseIngrediente(item.nombre)}`}
+          className={`pill ${claseIngrediente(
+            item.nombre
+          )}`}
           style={{
-            opacity: comprado ? 0.45 : 1,
-            textDecoration: comprado ? 'line-through' : 'none',
-            cursor: esDisponible ? 'default' : 'pointer',
-            border: comprado ? '2px solid #9e9e9e' : undefined,
+            opacity: comprado
+              ? 0.45
+              : 1,
+
+            textDecoration:
+              comprado
+                ? 'line-through'
+                : 'none',
+
+            cursor:
+              esDisponible
+                ? 'default'
+                : 'pointer',
+
+            border: comprado
+              ? '2px solid #9e9e9e'
+              : undefined,
+
+            fontSize: 15,
+            padding:
+              '10px 14px',
           }}
         >
           {esDisponible
             ? '📦'
             : comprado
               ? '✅'
-              : emojiIngrediente(item.nombre)}{' '}
+              : emojiIngrediente(
+                  item.nombre
+                )}{' '}
           {item.nombre}
 
           {item.veces > 1 && (
-            <span> x{item.veces}</span>
+            <span>
+              {' '}
+              x{item.veces}
+            </span>
           )}
         </button>
 
@@ -143,17 +280,29 @@ export default function Compra() {
             flexWrap: 'wrap',
           }}
         >
-          {yaTienes && (
-            <span className="pill pill-verde">
-              📦 Tienes {cantidad}
-            </span>
+          {renderCantidad(item)}
+
+          {renderDisponible(
+            item
           )}
 
-          {!esDisponible && !comprado && (
-            <span className="pill pill-rosa">
-              🛒 Comprar
-            </span>
-          )}
+          {renderFaltante(item)}
+
+          {yaTienes &&
+            item.cantidad ===
+              null && (
+              <span className="pill pill-verde">
+                📦 Tienes{' '}
+                {cantidad}
+              </span>
+            )}
+
+          {!esDisponible &&
+            !comprado && (
+              <span className="pill pill-rosa">
+                🛒 Comprar
+              </span>
+            )}
 
           {comprado && (
             <span className="pill pill-verde">
@@ -167,20 +316,30 @@ export default function Compra() {
 
   const renderGrupo = (
     titulo: string,
-    grupos: Record<string, IngredienteCompra[]>,
-    modo: 'comprar' | 'disponible'
+    grupos: Record<
+      string,
+      IngredienteCompra[]
+    >,
+    modo:
+      | 'comprar'
+      | 'disponible'
   ) => {
-    const entradas = Object.entries(grupos)
+    const entradas =
+      Object.entries(grupos)
 
-    if (entradas.length === 0) {
+    if (
+      entradas.length === 0
+    ) {
       return (
         <div className="card">
           <p
             style={{
-              color: '#9e7d90',
+              color:
+                '#9e7d90',
             }}
           >
-            {modo === 'comprar'
+            {modo ===
+            'comprar'
               ? 'No hay nada pendiente para comprar 💕'
               : 'No hay ingredientes cubiertos por inventario todavía 📦'}
           </p>
@@ -195,29 +354,44 @@ export default function Compra() {
           gap: '18px',
         }}
       >
-        {entradas.map(([categoria, items]) => (
-          <div
-            key={`${titulo}-${categoria}`}
-            className="card"
-          >
-            <h2
-              style={{
-                marginBottom: '14px',
-              }}
-            >
-              {TITULOS[categoria] || '✨ Otros'}
-            </h2>
-
+        {entradas.map(
+          ([
+            categoria,
+            items,
+          ]) => (
             <div
-              style={{
-                display: 'grid',
-                gap: '10px',
-              }}
+              key={`${titulo}-${categoria}`}
+              className="card"
             >
-              {items.map((item) => renderItem(item, modo))}
+              <h2
+                style={{
+                  marginBottom:
+                    '14px',
+                }}
+              >
+                {TITULOS[
+                  categoria
+                ] || '✨ Otros'}
+              </h2>
+
+              <div
+                style={{
+                  display:
+                    'grid',
+                  gap: '10px',
+                }}
+              >
+                {items.map(
+                  (item) =>
+                    renderItem(
+                      item,
+                      modo
+                    )
+                )}
+              </div>
             </div>
-          </div>
-        ))}
+          )
+        )}
       </div>
     )
   }
@@ -227,30 +401,41 @@ export default function Compra() {
       <div
         style={{
           display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
+          justifyContent:
+            'space-between',
+          alignItems:
+            'center',
           flexWrap: 'wrap',
           gap: '12px',
-          marginBottom: '20px',
+          marginBottom:
+            '20px',
         }}
       >
         <div>
-          <h1>🛒 Compra</h1>
+          <h1>
+            🛒 Compra
+          </h1>
 
           <p
             style={{
-              color: '#9e7d90',
+              color:
+                '#9e7d90',
             }}
           >
-            Lista inteligente desde tu planning 💕
+            Lista inteligente
+            desde tu planning
+            💕
           </p>
         </div>
 
         <button
           className="btn-secundario"
-          onClick={limpiarTodo}
+          onClick={
+            limpiarTodo
+          }
         >
-          🧹 Limpiar checks
+          🧹 Limpiar
+          checks
         </button>
       </div>
 
@@ -267,36 +452,51 @@ export default function Compra() {
             display: 'flex',
             gap: 12,
             flexWrap: 'wrap',
-            alignItems: 'center',
+            alignItems:
+              'center',
           }}
         >
           <span className="pill pill-rosa">
-            🛍️ Total: {ingredientes.length}
+            🛍️ Total:{' '}
+            {
+              ingredientes.length
+            }
           </span>
 
           <span className="pill pill-naranja">
-            🛒 Comprar: {paraComprar.length}
+            🛒 Comprar:{' '}
+            {
+              paraComprar.length
+            }
           </span>
 
           <span className="pill pill-verde">
-            📦 Ya tienes: {yaDisponibles.length}
+            📦 Ya tienes:{' '}
+            {
+              yaDisponibles.length
+            }
           </span>
         </div>
       </div>
 
-      {ingredientes.length === 0 && (
+      {ingredientes.length ===
+        0 && (
         <div className="card">
           <p
             style={{
-              color: '#9e7d90',
+              color:
+                '#9e7d90',
             }}
           >
-            Aún no hay ingredientes en el planning 💕
+            Aún no hay
+            ingredientes en el
+            planning 💕
           </p>
         </div>
       )}
 
-      {ingredientes.length > 0 && (
+      {ingredientes.length >
+        0 && (
         <div
           style={{
             display: 'grid',
@@ -307,10 +507,12 @@ export default function Compra() {
             <h2
               style={{
                 marginBottom: 14,
-                color: '#c45b86',
+                color:
+                  '#c45b86',
               }}
             >
-              🛒 Necesitas comprar
+              🛒 Necesitas
+              comprar
             </h2>
 
             {renderGrupo(
@@ -324,10 +526,12 @@ export default function Compra() {
             <h2
               style={{
                 marginBottom: 14,
-                color: '#8f7080',
+                color:
+                  '#8f7080',
               }}
             >
-              📦 Ya tienes en inventario
+              📦 Ya tienes
+              en inventario
             </h2>
 
             {renderGrupo(
