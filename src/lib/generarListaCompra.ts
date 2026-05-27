@@ -123,3 +123,24 @@ export function cantidadesInventario(
     .map((item) => `${item.cantidad}${item.unidad}`)
     .join(' + ')
 }
+
+export function separarIngredientesPorInventario(
+  ingredientes: IngredienteCompra[],
+  inventario: ItemInventarioListaCompra[]
+) {
+  const paraComprar: IngredienteCompra[] = []
+  const yaDisponibles: IngredienteCompra[] = []
+
+  ingredientes.forEach((ingrediente) => {
+    if (ingredienteEnInventario(ingrediente.nombre, inventario)) {
+      yaDisponibles.push(ingrediente)
+    } else {
+      paraComprar.push(ingrediente)
+    }
+  })
+
+  return {
+    paraComprar,
+    yaDisponibles,
+  }
+}
