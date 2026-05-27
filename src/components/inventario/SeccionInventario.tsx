@@ -33,27 +33,53 @@ export default function SeccionInventario({
   editarItemInventario,
   eliminarItemInventario,
 }: Props) {
-  const [itemConsumoActivo, setItemConsumoActivo] = useState<string | null>(
+  const [
+    itemConsumoActivo,
+    setItemConsumoActivo,
+  ] = useState<string | null>(
     null
   )
 
-  const [cantidadConsumida, setCantidadConsumida] = useState('')
+  const [
+    cantidadConsumida,
+    setCantidadConsumida,
+  ] = useState('')
 
-  const consumirProducto = (itemId: string, cantidadActual: number) => {
-    const cantidadRestar = parseFloat(cantidadConsumida)
+  const consumirProducto = (
+    itemId: string,
+    cantidadActual: number
+  ) => {
+    const cantidadRestar =
+      parseFloat(
+        cantidadConsumida
+      )
 
-    if (isNaN(cantidadRestar) || cantidadRestar <= 0) {
+    if (
+      isNaN(cantidadRestar) ||
+      cantidadRestar <= 0
+    ) {
       return
     }
 
-    const nuevaCantidad = Math.max(0, cantidadActual - cantidadRestar)
+    const nuevaCantidad =
+      Math.max(
+        0,
+        cantidadActual -
+          cantidadRestar
+      )
 
-    editarItemInventario(itemId, {
-      cantidad: nuevaCantidad,
-    })
+    editarItemInventario(
+      itemId,
+      {
+        cantidad:
+          nuevaCantidad,
+      }
+    )
 
     setCantidadConsumida('')
-    setItemConsumoActivo(null)
+    setItemConsumoActivo(
+      null
+    )
   }
 
   return (
@@ -61,12 +87,15 @@ export default function SeccionInventario({
       <div
         style={{
           background: color,
-          borderRadius: '16px 16px 0 0',
+          borderRadius:
+            '16px 16px 0 0',
           padding: '10px 14px',
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'space-between',
-          border: '1.5px solid var(--borde)',
+          justifyContent:
+            'space-between',
+          border:
+            '1.5px solid var(--borde)',
           borderBottom: 'none',
         }}
       >
@@ -96,9 +125,11 @@ export default function SeccionInventario({
       <div
         style={{
           background: 'var(--card)',
-          border: '1.5px solid var(--borde)',
+          border:
+            '1.5px solid var(--borde)',
           borderTop: 'none',
-          borderRadius: '0 0 16px 16px',
+          borderRadius:
+            '0 0 16px 16px',
           overflow: 'hidden',
         }}
       >
@@ -115,239 +146,424 @@ export default function SeccionInventario({
             Vacío 🌸
           </div>
         ) : (
-          items.map((item, idx) => {
-            const estado = detectarCaducidad(item.fechaCaducidad)
-            const consumoActivo = itemConsumoActivo === item.id
+          items.map(
+            (item, idx) => {
+              const estado =
+                detectarCaducidad(
+                  item.fechaCaducidad
+                )
 
-            return (
-              <div
-                key={item.id}
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: '1fr',
-                  gap: '10px',
-                  padding: '11px 14px',
-                  borderBottom:
-                    idx < items.length - 1
-                      ? '1px solid var(--borde)'
-                      : 'none',
-                }}
-              >
-                <div>
-                  <div
-                    style={{
-                      display: 'flex',
-                      gap: '7px',
-                      flexWrap: 'wrap',
-                      alignItems: 'center',
-                      marginBottom: '5px',
-                    }}
-                  >
-                    <span
-                      className={`pill ${claseIngrediente(item.nombre)}`}
+              const consumoActivo =
+                itemConsumoActivo ===
+                item.id
+
+              return (
+                <div
+                  key={item.id}
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns:
+                      '1fr',
+                    gap: '10px',
+                    padding:
+                      '12px 14px',
+                    borderBottom:
+                      idx <
+                      items.length - 1
+                        ? '1px solid var(--borde)'
+                        : 'none',
+                  }}
+                >
+                  <div>
+                    <div
+                      style={{
+                        display:
+                          'flex',
+                        gap: '8px',
+                        flexWrap:
+                          'wrap',
+                        alignItems:
+                          'center',
+                        marginBottom:
+                          '6px',
+                      }}
                     >
-                      {emojiIngrediente(item.nombre)} {item.nombre}
-                    </span>
-
-                    <span className="pill pill-rosa">
-                      📦 {item.cantidad}
-                      {item.unidad}
-                    </span>
-
-                    {item.cantidad <= 0 && (
-                      <span className="pill pill-naranja">
-                        ⚠️ Sin stock
-                      </span>
-                    )}
-
-                    {item.necesitaDescongelar && (
-                      <span className="pill pill-teal">
-                        ❄️ Descongelar
-                      </span>
-                    )}
-
-                    {estado && (
                       <span
-                        className="pill"
+                        className={`pill ${claseIngrediente(
+                          item.nombre
+                        )}`}
                         style={{
-                          background: estado.fondo,
-                          color: estado.color,
-                          border: `1px solid ${estado.color}`,
+                          fontSize:
+                            '16px',
+                          padding:
+                            '10px 16px',
+                          fontWeight:
+                            800,
+                          borderRadius:
+                            '999px',
                         }}
                       >
-                        {estado.texto}
+                        {emojiIngrediente(
+                          item.nombre
+                        )}{' '}
+                        {
+                          item.nombre
+                        }
                       </span>
+
+                      <span
+                        className="pill pill-rosa"
+                        style={{
+                          fontSize:
+                            '13px',
+                          padding:
+                            '6px 10px',
+                        }}
+                      >
+                        📦{' '}
+                        {
+                          item.cantidad
+                        }
+                        {
+                          item.unidad
+                        }
+                      </span>
+
+                      {item.cantidad <=
+                        0 && (
+                        <span className="pill pill-naranja">
+                          ⚠️ Sin
+                          stock
+                        </span>
+                      )}
+
+                      {item.necesitaDescongelar && (
+                        <span className="pill pill-teal">
+                          ❄️
+                          Descongelar
+                        </span>
+                      )}
+
+                      {estado && (
+                        <span
+                          className="pill"
+                          style={{
+                            background:
+                              estado.fondo,
+                            color:
+                              estado.color,
+                            border: `1px solid ${estado.color}`,
+                            fontSize:
+                              '13px',
+                            padding:
+                              '6px 10px',
+                          }}
+                        >
+                          {
+                            estado.texto
+                          }
+                        </span>
+                      )}
+                    </div>
+
+                    {item.fechaCaducidad && (
+                      <div
+                        style={{
+                          fontSize:
+                            '12px',
+                          color:
+                            'var(--txt2)',
+                          marginTop:
+                            '3px',
+                          marginLeft:
+                            '6px',
+                        }}
+                      >
+                        📅 Caduca:{' '}
+                        {
+                          item.fechaCaducidad
+                        }
+                      </div>
+                    )}
+
+                    {consumoActivo && (
+                      <div
+                        style={{
+                          marginTop:
+                            '12px',
+                          display:
+                            'flex',
+                          gap: '6px',
+                          flexWrap:
+                            'wrap',
+                          alignItems:
+                            'center',
+                          background:
+                            '#fff8fb',
+                          border:
+                            '1.5px solid #f5dde8',
+                          borderRadius:
+                            '14px',
+                          padding:
+                            '8px',
+                        }}
+                      >
+                        <input
+                          type="number"
+                          inputMode="decimal"
+                          min="0"
+                          step="0.1"
+                          placeholder="Cantidad"
+                          value={
+                            cantidadConsumida
+                          }
+                          onChange={(
+                            e
+                          ) =>
+                            setCantidadConsumida(
+                              e
+                                .target
+                                .value
+                            )
+                          }
+                          style={{
+                            width:
+                              '72px',
+                            minHeight:
+                              32,
+                            fontSize:
+                              12,
+                            padding:
+                              '5px 7px',
+                          }}
+                        />
+
+                        <span
+                          className="pill pill-rosa"
+                          style={{
+                            fontSize:
+                              '11px',
+                            padding:
+                              '4px 7px',
+                          }}
+                        >
+                          {
+                            item.unidad
+                          }
+                        </span>
+
+                        <button
+                          className="btn-principal"
+                          onClick={() =>
+                            consumirProducto(
+                              item.id,
+                              item.cantidad
+                            )
+                          }
+                          style={{
+                            minHeight:
+                              32,
+                            fontSize:
+                              11,
+                            padding:
+                              '5px 9px',
+                          }}
+                        >
+                          💕
+                          Aplicar
+                        </button>
+                      </div>
                     )}
                   </div>
 
-                  {item.fechaCaducidad && (
-                    <div
+                  <div
+                    style={{
+                      display:
+                        'flex',
+                      alignItems:
+                        'center',
+                      gap: '6px',
+                      flexWrap:
+                        'wrap',
+                      justifyContent:
+                        'flex-start',
+                      background:
+                        '#fffafc',
+                      border:
+                        '1px solid #f5dde8',
+                      borderRadius:
+                        14,
+                      padding:
+                        '6px',
+                    }}
+                  >
+                    <button
+                      onClick={() =>
+                        setItemConsumoActivo(
+                          consumoActivo
+                            ? null
+                            : item.id
+                        )
+                      }
+                      className="btn-secundario"
                       style={{
-                        fontSize: '10.5px',
-                        color: 'var(--txt2)',
-                        marginTop: '2px',
+                        minHeight:
+                          30,
+                        fontSize:
+                          10.5,
+                        padding:
+                          '4px 8px',
                       }}
                     >
-                      Caduca: {item.fechaCaducidad}
-                    </div>
-                  )}
+                      ➖
+                      Consumir
+                    </button>
 
-                  {consumoActivo && (
-                    <div
+                    <input
+                      type="number"
+                      inputMode="decimal"
+                      min="0"
+                      step="0.1"
+                      value={
+                        item.cantidad
+                      }
+                      onChange={(
+                        e
+                      ) =>
+                        editarItemInventario(
+                          item.id,
+                          {
+                            cantidad:
+                              parseFloat(
+                                e
+                                  .target
+                                  .value
+                              ) || 0,
+                          }
+                        )
+                      }
                       style={{
-                        marginTop: '10px',
-                        display: 'flex',
-                        gap: '7px',
-                        flexWrap: 'wrap',
-                        alignItems: 'center',
-                        background: '#fff8fb',
-                        border: '1.5px solid #f5dde8',
-                        borderRadius: '14px',
-                        padding: '8px',
+                        width:
+                          '56px',
+                        minHeight:
+                          30,
+                        appearance:
+                          'textfield',
+                        textAlign:
+                          'center',
+                        fontSize:
+                          11,
+                        padding:
+                          '4px 6px',
+                      }}
+                    />
+
+                    <select
+                      value={
+                        item.unidad
+                      }
+                      onChange={(
+                        e
+                      ) =>
+                        editarItemInventario(
+                          item.id,
+                          {
+                            unidad:
+                              e
+                                .target
+                                .value,
+                          }
+                        )
+                      }
+                      style={{
+                        width:
+                          '68px',
+                        minHeight:
+                          30,
+                        fontSize:
+                          11,
+                        padding:
+                          '4px 6px',
                       }}
                     >
-                      <input
-                        type="number"
-                        inputMode="decimal"
-                        min="0"
-                        step="0.1"
-                        placeholder="Cantidad"
-                        value={cantidadConsumida}
-                        onChange={(e) =>
-                          setCantidadConsumida(e.target.value)
-                        }
-                        style={{
-                          width: '86px',
-                          minHeight: 34,
-                          fontSize: 13,
-                          padding: '6px 8px',
-                        }}
-                      />
+                      <option value="g">
+                        g
+                      </option>
 
-                      <span className="pill pill-rosa">
-                        {item.unidad}
-                      </span>
+                      <option value="kg">
+                        kg
+                      </option>
 
-                      <button
-                        className="btn-principal"
-                        onClick={() =>
-                          consumirProducto(item.id, item.cantidad)
-                        }
-                        style={{
-                          minHeight: 34,
-                          fontSize: 12,
-                          padding: '6px 10px',
-                        }}
-                      >
-                        💕 Aplicar
-                      </button>
-                    </div>
-                  )}
+                      <option value="ml">
+                        ml
+                      </option>
+
+                      <option value="l">
+                        l
+                      </option>
+
+                      <option value="u.">
+                        u.
+                      </option>
+
+                      <option value="paquete">
+                        paquete
+                      </option>
+
+                      <option value="lata">
+                        lata
+                      </option>
+                    </select>
+
+                    <button
+                      onClick={() =>
+                        editarItemInventario(
+                          item.id,
+                          {
+                            necesitaDescongelar:
+                              !item.necesitaDescongelar,
+                          }
+                        )
+                      }
+                      className="btn-secundario"
+                      title="Marcar/desmarcar descongelar"
+                      style={{
+                        minHeight:
+                          30,
+                        fontSize:
+                          11,
+                        padding:
+                          '4px 7px',
+                      }}
+                    >
+                      {item.necesitaDescongelar
+                        ? '❄️'
+                        : '⬜'}
+                    </button>
+
+                    <button
+                      onClick={() =>
+                        eliminarItemInventario(
+                          item.id
+                        )
+                      }
+                      className="btn-secundario"
+                      style={{
+                        minHeight:
+                          30,
+                        fontSize:
+                          11,
+                        padding:
+                          '4px 7px',
+                      }}
+                    >
+                      ✕
+                    </button>
+                  </div>
                 </div>
-
-                <div
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '7px',
-                    flexWrap: 'wrap',
-                    justifyContent: 'flex-start',
-                    background: '#fffafc',
-                    border: '1px solid #f5dde8',
-                    borderRadius: 14,
-                    padding: '7px',
-                  }}
-                >
-                  <button
-                    onClick={() =>
-                      setItemConsumoActivo(consumoActivo ? null : item.id)
-                    }
-                    className="btn-secundario"
-                    style={{
-                      minHeight: 32,
-                      fontSize: 11.5,
-                      padding: '5px 9px',
-                    }}
-                  >
-                    ➖ Consumir
-                  </button>
-
-                  <input
-                    type="number"
-                    inputMode="decimal"
-                    min="0"
-                    step="0.1"
-                    value={item.cantidad}
-                    onChange={(e) =>
-                      editarItemInventario(item.id, {
-                        cantidad: parseFloat(e.target.value) || 0,
-                      })
-                    }
-                    style={{
-                      width: '64px',
-                      minHeight: 32,
-                      appearance: 'textfield',
-                      textAlign: 'center',
-                      fontSize: 12,
-                      padding: '5px 7px',
-                    }}
-                  />
-
-                  <select
-                    value={item.unidad}
-                    onChange={(e) =>
-                      editarItemInventario(item.id, {
-                        unidad: e.target.value,
-                      })
-                    }
-                    style={{
-                      width: '76px',
-                      minHeight: 32,
-                      fontSize: 12,
-                      padding: '5px 7px',
-                    }}
-                  >
-                    <option value="g">g</option>
-                    <option value="kg">kg</option>
-                    <option value="ml">ml</option>
-                    <option value="l">l</option>
-                    <option value="u.">u.</option>
-                    <option value="paquete">paquete</option>
-                    <option value="lata">lata</option>
-                  </select>
-
-                  <button
-                    onClick={() =>
-                      editarItemInventario(item.id, {
-                        necesitaDescongelar: !item.necesitaDescongelar,
-                      })
-                    }
-                    className="btn-secundario"
-                    title="Marcar/desmarcar descongelar"
-                    style={{
-                      minHeight: 32,
-                      fontSize: 12,
-                      padding: '5px 9px',
-                    }}
-                  >
-                    {item.necesitaDescongelar ? '❄️' : '⬜'}
-                  </button>
-
-                  <button
-                    onClick={() => eliminarItemInventario(item.id)}
-                    className="btn-secundario"
-                    style={{
-                      minHeight: 32,
-                      fontSize: 12,
-                      padding: '5px 9px',
-                    }}
-                  >
-                    ✕
-                  </button>
-                </div>
-              </div>
-            )
-          })
+              )
+            }
+          )
         )}
       </div>
     </div>
