@@ -13,11 +13,18 @@ import {
   isSameMonth,
 } from 'date-fns'
 import { es } from 'date-fns/locale'
-import { useRaykuStore, type TipoComida } from '../store'
+
+import {
+  useRaykuStore,
+  type TipoComida,
+} from '../store'
+
 import { separarIngredientes } from '../lib/ingredientes'
 
 type Props = {
-  onAbrirReceta?: (recetaId: string) => void
+  onAbrirReceta?: (
+    recetaId: string
+  ) => void
 }
 
 const COLORES_DIA = [
@@ -30,36 +37,65 @@ const COLORES_DIA = [
   '#e8f4ff',
 ]
 
-const EMOJIS_DIA = ['🌸', '🧁', '💖', '🌿', '✨', '🩷', '🎀']
+export default function CalendarioPlanning({
+  onAbrirReceta,
+}: Props) {
+  const [fechaBase, setFechaBase] =
+    useState(new Date())
 
-export default function CalendarioPlanning({ onAbrirReceta }: Props) {
-  const [fechaBase, setFechaBase] = useState(new Date())
-  const [vista, setVista] = useState<'semana' | 'mes'>('semana')
+  const [vista, setVista] =
+    useState<'semana' | 'mes'>(
+      'mes'
+    )
 
-  const { recetas, planning } = useRaykuStore()
+  const { recetas, planning } =
+    useRaykuStore()
 
-  const hoy = format(new Date(), 'yyyy-MM-dd')
+  const hoy = format(
+    new Date(),
+    'yyyy-MM-dd'
+  )
 
-  const obtenerHueco = (fecha: string, tipoComida: TipoComida) =>
-    planning.find((h) => h.fecha === fecha && h.tipoComida === tipoComida)
+  const obtenerHueco = (
+    fecha: string,
+    tipoComida: TipoComida
+  ) =>
+    planning.find(
+      (h) =>
+        h.fecha === fecha &&
+        h.tipoComida === tipoComida
+    )
 
-  const resumenComida = (fecha: string, tipoComida: TipoComida) => {
-    const hueco = obtenerHueco(fecha, tipoComida)
+  const resumenComida = (
+    fecha: string,
+    tipoComida: TipoComida
+  ) => {
+    const hueco = obtenerHueco(
+      fecha,
+      tipoComida
+    )
 
     if (!hueco) return null
 
-    const receta = recetas.find((r) => r.id === hueco.recetaId)
+    const receta = recetas.find(
+      (r) =>
+        r.id === hueco.recetaId
+    )
 
-    const extras = hueco.comidaLibre
-      ? separarIngredientes(hueco.comidaLibre)
-      : []
+    const extras =
+      hueco.comidaLibre
+        ? separarIngredientes(
+            hueco.comidaLibre
+          )
+        : []
 
     const partes = [
       receta?.nombre,
       ...extras,
     ].filter(Boolean)
 
-    if (partes.length === 0) return null
+    if (partes.length === 0)
+      return null
 
     return {
       receta,
@@ -67,128 +103,245 @@ export default function CalendarioPlanning({ onAbrirReceta }: Props) {
     }
   }
 
-  const renderLinea = (fecha: string, tipoComida: TipoComida) => {
-    const resumen = resumenComida(fecha, tipoComida)
-
-    const esComida = tipoComida === 'comida'
-
-    if (!resumen) {
-      return (
-        <div
-          style={{
-            color: '#b99bad',
-            fontSize: 13,
-            fontWeight: 600,
-            background: 'rgba(255, 255, 255, 0.55)',
-            borderRadius: 12,
-            padding: '8px 10px',
-          }}
-        >
-          {esComida ? '☀️ Comida:' : '🌙 Cena:'} sin plan
-        </div>
+  const renderLinea = (
+    fecha: string,
+    tipoComida: TipoComida
+  ) => {
+    const resumen =
+      resumenComida(
+        fecha,
+        tipoComida
       )
-    }
+
+    const esComida =
+      tipoComida === 'comida'
+
+    if (!resumen) return null
 
     const contenido = (
       <span>
-        <strong style={{ color: esComida ? '#c45b86' : '#8a6ec7' }}>
-          {esComida ? '☀️ Comida: ' : '🌙 Cena: '}
-        </strong>
         {resumen.texto}
       </span>
     )
 
-    if (resumen.receta && onAbrirReceta) {
+    const estilosBase = {
+      width: '100%',
+      textAlign: 'left' as const,
+      color: '#8f7080',
+      fontSize: 11,
+      fontWeight: 700,
+      lineHeight: 1.25,
+      borderRadius: 10,
+      padding: '6px 8px',
+      background: esComida
+        ? '#ffd1df'
+        : '#e6d6ff',
+      border: esComida
+        ? '1px solid #f3a9c1'
+        : '1px solid #cdb8f0',
+      boxSizing: 'border-box' as const,
+    }
+
+    if (
+      resumen.receta &&
+      onAbrirReceta
+    ) {
       return (
         <button
           type="button"
-          onClick={() => onAbrirReceta(resumen.receta!.id)}
+          onClick={() =>
+            onAbrirReceta(
+              resumen.receta!.id
+            )
+          }
           style={{
-            width: '100%',
-            border: 'none',
-            textAlign: 'left',
+            ...estilosBase,
+            borderRadius: 10,
             cursor: 'pointer',
-            color: '#8f7080',
-            fontSize: 13,
-            fontWeight: 700,
-            lineHeight: 1.35,
-            background: 'rgba(255, 255, 255, 0.72)',
-            borderRadius: 12,
-            padding: '8px 10px',
           }}
         >
+          <strong>
+            {esComida
+              ? '☀️ '
+              : '🌙 '}
+          </strong>
+
           {contenido}
         </button>
       )
     }
 
     return (
-      <div
-        style={{
-          color: '#8f7080',
-          fontSize: 13,
-          fontWeight: 700,
-          lineHeight: 1.35,
-          background: 'rgba(255, 255, 255, 0.72)',
-          borderRadius: 12,
-          padding: '8px 10px',
-        }}
-      >
+      <div style={estilosBase}>
+        <strong>
+          {esComida
+            ? '☀️ '
+            : '🌙 '}
+        </strong>
+
         {contenido}
       </div>
     )
   }
 
-  const renderDia = (dia: Date, indice: number, compacto = false) => {
-    const fecha = format(dia, 'yyyy-MM-dd')
-    const esHoy = fecha === hoy
-    const fueraDelMes = vista === 'mes' && !isSameMonth(dia, fechaBase)
+  const renderDiaMensual = (
+    dia: Date,
+    indice: number
+  ) => {
+    const fecha = format(
+      dia,
+      'yyyy-MM-dd'
+    )
+
+    const esHoy =
+      fecha === hoy
+
+    const fueraDelMes =
+      !isSameMonth(
+        dia,
+        fechaBase
+      )
+
+    return (
+      <div
+        key={fecha}
+        style={{
+          background:
+            COLORES_DIA[
+              indice % 7
+            ],
+          borderRadius: 18,
+          minHeight: 150,
+          padding: 10,
+          opacity:
+            fueraDelMes
+              ? 0.45
+              : 1,
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 8,
+          border: esHoy
+            ? '2px solid #c45b86'
+            : '2px solid transparent',
+        }}
+      >
+        <div
+          style={{
+            display: 'flex',
+            justifyContent:
+              'space-between',
+            alignItems: 'center',
+          }}
+        >
+          <span
+            style={{
+              fontSize: 13,
+              fontWeight: 800,
+              color: '#8f7080',
+            }}
+          >
+            {format(dia, 'd')}
+          </span>
+
+          {esHoy && (
+            <span
+              className="pill pill-rosa"
+              style={{
+                fontSize: 10,
+                padding:
+                  '3px 7px',
+              }}
+            >
+              Hoy
+            </span>
+          )}
+        </div>
+
+        <div
+          style={{
+            display: 'grid',
+            gap: 6,
+          }}
+        >
+          {renderLinea(
+            fecha,
+            'comida'
+          )}
+
+          {renderLinea(
+            fecha,
+            'cena'
+          )}
+        </div>
+      </div>
+    )
+  }
+
+  const renderDiaSemanal = (
+    dia: Date,
+    indice: number
+  ) => {
+    const fecha = format(
+      dia,
+      'yyyy-MM-dd'
+    )
+
+    const esHoy =
+      fecha === hoy
 
     return (
       <div
         key={fecha}
         className="card"
         style={{
-          background: fueraDelMes ? '#fff8fb' : COLORES_DIA[indice % 7],
-          opacity: fueraDelMes ? 0.55 : 1,
-          padding: compacto ? 12 : 16,
+          background:
+            COLORES_DIA[
+              indice % 7
+            ],
         }}
       >
         <div
           style={{
             display: 'flex',
+            justifyContent:
+              'space-between',
             alignItems: 'center',
-            gap: 8,
-            marginBottom: 10,
+            marginBottom: 12,
           }}
         >
-          <span style={{ fontSize: compacto ? 18 : 22 }}>
-            {EMOJIS_DIA[indice % 7]}
-          </span>
-
-          <div style={{ flex: 1 }}>
+          <div>
             <h3
               style={{
-                fontSize: compacto ? 14 : 17,
-                color: '#8f7080',
-                textTransform: 'capitalize',
+                color:
+                  '#8f7080',
+                textTransform:
+                  'capitalize',
               }}
             >
-              {compacto
-                ? format(dia, 'EEE d', { locale: es })
-                : format(dia, 'EEEE', { locale: es })}
+              {format(
+                dia,
+                'EEEE',
+                {
+                  locale: es,
+                }
+              )}
             </h3>
 
-            {!compacto && (
-              <p
-                style={{
-                  color: '#9e7d90',
-                  fontSize: 13,
-                }}
-              >
-                {format(dia, "d 'de' MMMM", { locale: es })}
-              </p>
-            )}
+            <p
+              style={{
+                color:
+                  '#9e7d90',
+                fontSize: 13,
+              }}
+            >
+              {format(
+                dia,
+                "d 'de' MMMM",
+                {
+                  locale: es,
+                }
+              )}
+            </p>
           </div>
 
           {esHoy && (
@@ -201,30 +354,64 @@ export default function CalendarioPlanning({ onAbrirReceta }: Props) {
         <div
           style={{
             display: 'grid',
-            gap: 8,
+            gap: 10,
           }}
         >
-          {renderLinea(fecha, 'comida')}
-          {renderLinea(fecha, 'cena')}
+          {renderLinea(
+            fecha,
+            'comida'
+          )}
+
+          {renderLinea(
+            fecha,
+            'cena'
+          )}
         </div>
       </div>
     )
   }
 
-  const inicioSemana = startOfWeek(fechaBase, { weekStartsOn: 1 })
-  const diasSemana = Array.from({ length: 7 }, (_, i) =>
-    addDays(inicioSemana, i)
+  const inicioSemana =
+    startOfWeek(fechaBase, {
+      weekStartsOn: 1,
+    })
+
+  const diasSemana =
+    Array.from(
+      { length: 7 },
+      (_, i) =>
+        addDays(
+          inicioSemana,
+          i
+        )
+    )
+
+  const inicioMes =
+    startOfWeek(
+      startOfMonth(fechaBase),
+      {
+        weekStartsOn: 1,
+      }
+    )
+
+  const finMes = endOfWeek(
+    endOfMonth(fechaBase),
+    {
+      weekStartsOn: 1,
+    }
   )
 
-  const inicioMes = startOfWeek(startOfMonth(fechaBase), { weekStartsOn: 1 })
-  const finMes = endOfWeek(endOfMonth(fechaBase), { weekStartsOn: 1 })
-
   const diasMes = []
+
   let diaActual = inicioMes
 
   while (diaActual <= finMes) {
     diasMes.push(diaActual)
-    diaActual = addDays(diaActual, 1)
+
+    diaActual = addDays(
+      diaActual,
+      1
+    )
   }
 
   return (
@@ -232,7 +419,8 @@ export default function CalendarioPlanning({ onAbrirReceta }: Props) {
       <div
         style={{
           display: 'flex',
-          justifyContent: 'space-between',
+          justifyContent:
+            'space-between',
           alignItems: 'center',
           marginBottom: 20,
           flexWrap: 'wrap',
@@ -240,10 +428,18 @@ export default function CalendarioPlanning({ onAbrirReceta }: Props) {
         }}
       >
         <div>
-          <h1>📅 Calendario</h1>
+          <h1>
+            📅 Calendario
+          </h1>
 
-          <p style={{ color: '#9e7d90' }}>
-            Vista rápida de tus comidas y cenas 💕
+          <p
+            style={{
+              color:
+                '#9e7d90',
+            }}
+          >
+            Vista rápida de
+            tus comidas 💕
           </p>
         </div>
 
@@ -256,16 +452,32 @@ export default function CalendarioPlanning({ onAbrirReceta }: Props) {
         >
           <button
             type="button"
-            className={vista === 'semana' ? 'btn-principal' : 'btn-secundario'}
-            onClick={() => setVista('semana')}
+            className={
+              vista ===
+              'semana'
+                ? 'btn-principal'
+                : 'btn-secundario'
+            }
+            onClick={() =>
+              setVista(
+                'semana'
+              )
+            }
           >
             Semana
           </button>
 
           <button
             type="button"
-            className={vista === 'mes' ? 'btn-principal' : 'btn-secundario'}
-            onClick={() => setVista('mes')}
+            className={
+              vista ===
+              'mes'
+                ? 'btn-principal'
+                : 'btn-secundario'
+            }
+            onClick={() =>
+              setVista('mes')
+            }
           >
             Mes
           </button>
@@ -276,13 +488,15 @@ export default function CalendarioPlanning({ onAbrirReceta }: Props) {
         className="card"
         style={{
           marginBottom: 18,
-          background: 'linear-gradient(135deg, #ffe4ec 0%, #f6e9ff 100%)',
+          background:
+            'linear-gradient(135deg, #ffe4ec 0%, #f6e9ff 100%)',
         }}
       >
         <div
           style={{
             display: 'flex',
-            justifyContent: 'space-between',
+            justifyContent:
+              'space-between',
             alignItems: 'center',
             gap: 12,
             flexWrap: 'wrap',
@@ -293,9 +507,16 @@ export default function CalendarioPlanning({ onAbrirReceta }: Props) {
             className="btn-secundario"
             onClick={() =>
               setFechaBase(
-                vista === 'semana'
-                  ? subWeeks(fechaBase, 1)
-                  : subMonths(fechaBase, 1)
+                vista ===
+                  'semana'
+                  ? subWeeks(
+                      fechaBase,
+                      1
+                    )
+                  : subMonths(
+                      fechaBase,
+                      1
+                    )
               )
             }
           >
@@ -304,16 +525,31 @@ export default function CalendarioPlanning({ onAbrirReceta }: Props) {
 
           <h2
             style={{
-              fontSize: 19,
-              color: '#c77d95',
-              textAlign: 'center',
+              fontSize: 20,
+              color:
+                '#c77d95',
+              textAlign:
+                'center',
+              textTransform:
+                'capitalize',
             }}
           >
-            {vista === 'semana'
-              ? `🗓️ ${format(inicioSemana, "'Semana del' d 'de' MMMM", {
-                  locale: es,
-                })}`
-              : `🗓️ ${format(fechaBase, 'MMMM yyyy', { locale: es })}`}
+            {vista ===
+            'semana'
+              ? `🗓️ ${format(
+                  inicioSemana,
+                  "'Semana del' d 'de' MMMM",
+                  {
+                    locale: es,
+                  }
+                )}`
+              : format(
+                  fechaBase,
+                  'MMMM yyyy',
+                  {
+                    locale: es,
+                  }
+                )}
           </h2>
 
           <button
@@ -321,9 +557,16 @@ export default function CalendarioPlanning({ onAbrirReceta }: Props) {
             className="btn-secundario"
             onClick={() =>
               setFechaBase(
-                vista === 'semana'
-                  ? addWeeks(fechaBase, 1)
-                  : addMonths(fechaBase, 1)
+                vista ===
+                  'semana'
+                  ? addWeeks(
+                      fechaBase,
+                      1
+                    )
+                  : addMonths(
+                      fechaBase,
+                      1
+                    )
               )
             }
           >
@@ -332,27 +575,90 @@ export default function CalendarioPlanning({ onAbrirReceta }: Props) {
         </div>
       </div>
 
-      {vista === 'semana' && (
+      {vista ===
+        'semana' && (
         <div
           style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))',
+            gridTemplateColumns:
+              'repeat(auto-fit, minmax(230px, 1fr))',
             gap: 14,
           }}
         >
-          {diasSemana.map((dia, i) => renderDia(dia, i))}
+          {diasSemana.map(
+            (dia, i) =>
+              renderDiaSemanal(
+                dia,
+                i
+              )
+          )}
         </div>
       )}
 
-      {vista === 'mes' && (
+      {vista ===
+        'mes' && (
         <div
           style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))',
-            gap: 12,
+            overflowX:
+              'auto',
           }}
         >
-          {diasMes.map((dia, i) => renderDia(dia, i, true))}
+          <div
+            style={{
+              minWidth: 950,
+            }}
+          >
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns:
+                  'repeat(7, minmax(120px, 1fr))',
+                gap: 10,
+                marginBottom: 10,
+              }}
+            >
+              {[
+                'Lun',
+                'Mar',
+                'Mié',
+                'Jue',
+                'Vie',
+                'Sáb',
+                'Dom',
+              ].map((dia) => (
+                <div
+                  key={dia}
+                  style={{
+                    textAlign:
+                      'center',
+                    fontWeight: 800,
+                    color:
+                      '#8f7080',
+                    paddingBottom: 6,
+                  }}
+                >
+                  {dia}
+                </div>
+              ))}
+            </div>
+
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns:
+                  'repeat(7, minmax(120px, 1fr))',
+                gap: 10,
+              }}
+            >
+              {diasMes.map(
+                (dia, i) =>
+                  renderDiaMensual(
+                    dia,
+                    i
+                  )
+              )}
+            </div>
+          </div>
         </div>
       )}
     </div>

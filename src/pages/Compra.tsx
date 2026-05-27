@@ -5,9 +5,14 @@ import { useRaykuStore } from '../store'
 import {
   emojiIngrediente,
   claseIngrediente,
-  detectarCategoriaIngrediente,
-  normalizarIngrediente,
 } from '../lib/ingredientes'
+
+import {
+  generarIngredientesCompra,
+  agruparIngredientesCompra,
+  ingredienteEnInventario,
+  cantidadesInventario,
+} from '../lib/generarListaCompra'
 
 export default function Compra() {
   const {
@@ -23,210 +28,16 @@ export default function Compra() {
 
   const ingredientes =
     useMemo(() => {
-      const mapa =
-        new Map<
-          string,
-          {
-            nombre: string
-            veces: number
-          }
-        >()
-
-      planning.forEach(
-        (hueco) => {
-          if (hueco.recetaId) {
-            const receta =
-              recetas.find(
-                (r) =>
-                  r.id ===
-                  hueco.recetaId
-              )
-
-            if (receta) {
-              receta.ingredientes.forEach(
-                (
-                  ingrediente
-                ) => {
-                  const normalizado =
-                    normalizarIngrediente(
-                      ingrediente
-                    )
-
-                  if (
-                    !normalizado
-                  )
-                    return
-
-                  const existente =
-                    mapa.get(
-                      normalizado
-                    )
-
-                  if (
-                    existente
-                  ) {
-                    existente.veces +=
-                      1
-                  } else {
-                    mapa.set(
-                      normalizado,
-                      {
-                        nombre:
-                          normalizado,
-                        veces: 1,
-                      }
-                    )
-                  }
-                }
-              )
-            }
-          }
-
-          if (
-            hueco.comidaLibre
-          ) {
-            hueco.comidaLibre
-              .split(
-                /,|\+|\n/
-              )
-              .map((i) =>
-                i.trim()
-              )
-              .filter(Boolean)
-              .forEach(
-                (
-                  ingrediente
-                ) => {
-                  const normalizado =
-                    normalizarIngrediente(
-                      ingrediente
-                    )
-
-                  if (
-                    !normalizado
-                  )
-                    return
-
-                  const existente =
-                    mapa.get(
-                      normalizado
-                    )
-
-                  if (
-                    existente
-                  ) {
-                    existente.veces +=
-                      1
-                  } else {
-                    mapa.set(
-                      normalizado,
-                      {
-                        nombre:
-                          normalizado,
-                        veces: 1,
-                      }
-                    )
-                  }
-                }
-              )
-          }
-        }
-      )
-
-      return Array.from(
-        mapa.values()
+      return generarIngredientesCompra(
+        planning,
+        recetas
       )
     }, [planning, recetas])
 
-  const ingredienteEnInventario =
-    (
-      ingrediente: string
-    ) => {
-      const ingredienteNormalizado =
-        normalizarIngrediente(
-          ingrediente
-        )
-
-      return inventario.some(
-        (item) => {
-          const itemNormalizado =
-            normalizarIngrediente(
-              item.nombre
-            )
-
-          return (
-            itemNormalizado.includes(
-              ingredienteNormalizado
-            ) ||
-            ingredienteNormalizado.includes(
-              itemNormalizado
-            )
-          )
-        }
-      )
-    }
-
-  const cantidadesInventario =
-    (
-      ingrediente: string
-    ) => {
-      const ingredienteNormalizado =
-        normalizarIngrediente(
-          ingrediente
-        )
-
-      return inventario
-        .filter((item) => {
-          const itemNormalizado =
-            normalizarIngrediente(
-              item.nombre
-            )
-
-          return (
-            itemNormalizado.includes(
-              ingredienteNormalizado
-            ) ||
-            ingredienteNormalizado.includes(
-              itemNormalizado
-            )
-          )
-        })
-        .map(
-          (item) =>
-            `${item.cantidad}${item.unidad}`
-        )
-        .join(' + ')
-    }
-
   const agrupados =
     useMemo(() => {
-      return ingredientes.reduce(
-        (acc, item) => {
-          const categoria =
-            detectarCategoriaIngrediente(
-              item.nombre
-            )
-
-          if (
-            !acc[categoria]
-          ) {
-            acc[categoria] =
-              []
-          }
-
-          acc[categoria].push(
-            item
-          )
-
-          return acc
-        },
-        {} as Record<
-          string,
-          {
-            nombre: string
-            veces: number
-          }[]
-        >
+      return agruparIngredientesCompra(
+        ingredientes
       )
     }, [ingredientes])
 
@@ -387,7 +198,8 @@ export default function Compra() {
                 {
                   TITULOS[
                     categoria
-                  ]
+                  ] ||
+                  '✨ Otros'
                 }
               </h2>
 
@@ -410,12 +222,14 @@ export default function Compra() {
 
                     const yaTienes =
                       ingredienteEnInventario(
-                        item.nombre
+                        item.nombre,
+                        inventario
                       )
 
                     const cantidad =
                       cantidadesInventario(
-                        item.nombre
+                        item.nombre,
+                        inventario
                       )
 
                     return (
