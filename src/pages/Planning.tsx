@@ -1,4 +1,5 @@
 import { useState } from 'react'
+
 import {
   format,
   startOfWeek,
@@ -11,14 +12,9 @@ import { es } from 'date-fns/locale'
 
 import {
   useRaykuStore,
-  type TipoComida,
 } from '../store'
 
-import {
-  separarIngredientes,
-  emojiIngrediente,
-  claseIngrediente,
-} from '../lib/ingredientes'
+import DiaPlanning from '../components/planning/DiaPlanning'
 
 const EMOJIS_DIA = [
   '🌸',
@@ -99,49 +95,6 @@ export default function Planning({
     'yyyy-MM-dd'
   )
 
-  const estrellas = (
-    valoracion: number,
-    recetaId: string
-  ) => (
-    <div
-      style={{
-        display: 'flex',
-        gap: 3,
-        marginTop: 6,
-      }}
-    >
-      {Array.from(
-        { length: 5 },
-        (_, i) => (
-          <span
-            key={i}
-            style={{
-              cursor:
-                'pointer',
-              fontSize: 18,
-              color:
-                i <
-                valoracion
-                  ? '#ffb347'
-                  : '#ddd',
-            }}
-            onClick={() =>
-              updateReceta(
-                recetaId,
-                {
-                  valoracion:
-                    i + 1,
-                }
-              )
-            }
-          >
-            ★
-          </span>
-        )
-      )}
-    </div>
-  )
-
   const activarEdicion = (
     clave: string
   ) => {
@@ -164,720 +117,15 @@ export default function Planning({
     )
   }
 
-  const renderIngredientes = (
-    texto: string
-  ) => (
-    <div
-      style={{
-        display: 'flex',
-        gap: 8,
-        flexWrap: 'wrap',
-        marginTop: 10,
-      }}
-    >
-      {separarIngredientes(
-        texto
-      ).map(
-        (
-          ingrediente
-        ) => (
-          <span
-            key={
-              ingrediente
-            }
-            className={`pill ${claseIngrediente(
-              ingrediente
-            )}`}
-            style={{
-              fontSize: 15,
-              padding:
-                '8px 12px',
-            }}
-          >
-            {emojiIngrediente(
-              ingrediente
-            )}{' '}
-            {ingrediente}
-          </span>
-        )
-      )}
-    </div>
-  )
-
-  const renderHueco = (
-    fecha: string,
-    tipoComida: TipoComida
+  const setBusqueda = (
+    clave: string,
+    valor: string
   ) => {
-    const clave = `${fecha}-${tipoComida}`
-
-    const estaEditando =
-      editandoHuecos[
-        clave
-      ] ?? false
-
-    const hueco =
-      planning.find(
-        (h) =>
-          h.fecha ===
-            fecha &&
-          h.tipoComida ===
-            tipoComida
-      )
-
-    const receta =
-      recetas.find(
-        (r) =>
-          r.id ===
-          hueco?.recetaId
-      )
-
-    const hayContenido =
-      Boolean(
-        hueco?.recetaId ||
-          hueco?.comidaLibre ||
-          hueco?.nota
-      )
-
-    const busqueda =
-      busquedas[
-        clave
-      ] ?? ''
-
-    const sugerencias =
-      busqueda.trim()
-        ? recetas
-            .filter((r) => {
-              const texto =
-                [
-                  r.nombre,
-                  r.ingredientes.join(
-                    ' '
-                  ),
-                  r.dietas.join(
-                    ' '
-                  ),
-                  r.ingredientesBase.join(
-                    ' '
-                  ),
-                  r.caracteristicas.join(
-                    ' '
-                  ),
-                ]
-                  .join(' ')
-                  .toLowerCase()
-
-              return texto.includes(
-                busqueda.toLowerCase()
-              )
-            })
-            .slice(0, 5)
-        : []
-
-    const esComida =
-      tipoComida ===
-      'comida'
-
-    return (
-      <div
-        style={{
-          background:
-            esComida
-              ? '#fffafc'
-              : '#fbf7ff',
-
-          borderRadius: 18,
-
-          padding: 14,
-
-          border:
-            esComida
-              ? '2px solid #f3bfd2'
-              : '2px solid #d7c3f3',
-
-          boxShadow:
-            '0 8px 20px rgba(170, 120, 145, 0.08)',
-
-          minHeight: 170,
-        }}
-      >
-        <div
-          style={{
-            display:
-              'flex',
-
-            justifyContent:
-              'space-between',
-
-            alignItems:
-              'center',
-
-            gap: 10,
-
-            marginBottom: 10,
-          }}
-        >
-          <strong
-            style={{
-              color:
-                esComida
-                  ? '#c45b86'
-                  : '#8a6ec7',
-
-              fontSize: 16,
-            }}
-          >
-            {esComida
-              ? '☀️ Comida'
-              : '🌙 Cena'}
-          </strong>
-
-          {!hayContenido &&
-            !estaEditando && (
-              <button
-                type="button"
-                className="btn-secundario"
-                onClick={() =>
-                  activarEdicion(
-                    clave
-                  )
-                }
-              >
-                ➕ Añadir
-              </button>
-            )}
-        </div>
-
-        {!hayContenido &&
-          !estaEditando && (
-            <div
-              style={{
-                color:
-                  '#9e7d90',
-
-                fontWeight: 700,
-
-                background:
-                  'rgba(255, 255, 255, 0.7)',
-
-                borderRadius: 14,
-
-                padding: 14,
-
-                textAlign:
-                  'center',
-              }}
-            >
-              Huequito libre 💕
-            </div>
-          )}
-
-        {(!hayContenido ||
-          estaEditando) && (
-          <div
-            style={{
-              marginTop: 10,
-            }}
-          >
-            <input
-              placeholder="🔎 Buscar receta..."
-              value={
-                busqueda
-              }
-              onFocus={() =>
-                activarEdicion(
-                  clave
-                )
-              }
-              onChange={(e) => {
-                activarEdicion(
-                  clave
-                )
-
-                setBusquedas(
-                  {
-                    ...busquedas,
-                    [clave]:
-                      e.target
-                        .value,
-                  }
-                )
-              }}
-            />
-
-            {sugerencias.length >
-              0 && (
-              <div
-                className="card"
-                style={{
-                  marginTop: 8,
-                  padding: 10,
-                  display:
-                    'grid',
-                  gap: 8,
-                  background:
-                    '#fffaf8',
-                }}
-              >
-                {sugerencias.map(
-                  (r) => (
-                    <button
-                      key={
-                        r.id
-                      }
-                      type="button"
-                      className="btn-secundario"
-                      style={{
-                        justifyContent:
-                          'flex-start',
-                        width:
-                          '100%',
-                      }}
-                      onClick={() => {
-                        guardarHuecoPlanning(
-                          {
-                            fecha,
-
-                            tipoComida,
-
-                            recetaId:
-                              r.id,
-
-                            comidaLibre:
-                              hueco?.comidaLibre ||
-                              '',
-
-                            nota:
-                              hueco?.nota ||
-                              '',
-
-                            racionesOverride:
-                              hueco?.racionesOverride ??
-                              r.raciones,
-                          }
-                        )
-
-                        setBusquedas(
-                          {
-                            ...busquedas,
-                            [clave]:
-                              '',
-                          }
-                        )
-
-                        activarEdicion(
-                          clave
-                        )
-                      }}
-                    >
-                      📖{' '}
-                      {
-                        r.nombre
-                      }
-                    </button>
-                  )
-                )}
-              </div>
-            )}
-
-            {receta && (
-              <div
-                style={{
-                  marginTop: 10,
-                  background:
-                    'rgba(255,255,255,0.65)',
-                  border:
-                    '1.5px solid #f5dde8',
-                  borderRadius: 14,
-                  padding: 10,
-                }}
-              >
-                <label
-                  style={{
-                    display:
-                      'flex',
-                    flexDirection:
-                      'column',
-                    gap: 6,
-                    color:
-                      '#8f7080',
-                    fontSize: 13,
-                    fontWeight: 700,
-                  }}
-                >
-                  🍽️ Raciones
-                  <input
-                    type="number"
-                    min={1}
-                    value={
-                      hueco?.racionesOverride ??
-                      receta.raciones
-                    }
-                    onChange={(
-                      e
-                    ) => {
-                      guardarHuecoPlanning(
-                        {
-                          fecha,
-
-                          tipoComida,
-
-                          recetaId:
-                            receta.id,
-
-                          comidaLibre:
-                            hueco?.comidaLibre ||
-                            '',
-
-                          nota:
-                            hueco?.nota ||
-                            '',
-
-                          racionesOverride:
-                            Number(
-                              e
-                                .target
-                                .value
-                            ) ||
-                            1,
-                        }
-                      )
-                    }}
-                    style={{
-                      maxWidth: 110,
-                    }}
-                  />
-                </label>
-
-                <div
-                  style={{
-                    marginTop: 8,
-                    fontSize: 12,
-                    color:
-                      '#9e7d90',
-                    lineHeight: 1.45,
-                  }}
-                >
-                  💡 La compra se
-                  ajustará
-                  automáticamente
-                  según las
-                  raciones.
-                </div>
-              </div>
-            )}
-
-            <input
-              placeholder="🥬 Ingredientes extra o comida rápida..."
-              value={
-                hueco?.comidaLibre ||
-                ''
-              }
-              onFocus={() =>
-                activarEdicion(
-                  clave
-                )
-              }
-              onChange={(e) => {
-                activarEdicion(
-                  clave
-                )
-
-                guardarHuecoPlanning(
-                  {
-                    fecha,
-
-                    tipoComida,
-
-                    recetaId:
-                      hueco?.recetaId ||
-                      null,
-
-                    comidaLibre:
-                      e.target
-                        .value,
-
-                    nota:
-                      hueco?.nota ||
-                      '',
-
-                    racionesOverride:
-                      hueco?.racionesOverride ??
-                      null,
-                  }
-                )
-              }}
-              style={{
-                marginTop: 10,
-              }}
-            />
-
-            <input
-              placeholder="📝 Nota de esta comida..."
-              value={
-                hueco?.nota ||
-                ''
-              }
-              onFocus={() =>
-                activarEdicion(
-                  clave
-                )
-              }
-              onChange={(e) => {
-                activarEdicion(
-                  clave
-                )
-
-                guardarHuecoPlanning(
-                  {
-                    fecha,
-
-                    tipoComida,
-
-                    recetaId:
-                      hueco?.recetaId ||
-                      null,
-
-                    comidaLibre:
-                      hueco?.comidaLibre ||
-                      '',
-
-                    nota:
-                      e.target
-                        .value,
-
-                    racionesOverride:
-                      hueco?.racionesOverride ??
-                      null,
-                  }
-                )
-              }}
-              style={{
-                marginTop: 10,
-                color:
-                  '#8f7080',
-                fontSize: 13,
-                fontWeight: 600,
-                lineHeight: 1.4,
-              }}
-            />
-
-            <button
-              className="btn-principal"
-              style={{
-                marginTop: 12,
-              }}
-              onClick={() =>
-                cerrarEdicion(
-                  clave
-                )
-              }
-            >
-              💕 Guardar
-            </button>
-          </div>
-        )}
-
-        {receta && (
-          <div
-            style={{
-              marginTop: 10,
-              display:
-                'grid',
-              gap: 8,
-            }}
-          >
-            <div
-              style={{
-                background:
-                  'white',
-
-                border:
-                  '1.5px solid #f5dde8',
-
-                borderRadius: 16,
-
-                padding:
-                  '10px 12px',
-              }}
-            >
-              <button
-                type="button"
-                onClick={() =>
-                  onAbrirReceta(
-                    receta.id
-                  )
-                }
-                style={{
-                  border:
-                    'none',
-
-                  background:
-                    'transparent',
-
-                  padding: 0,
-
-                  cursor:
-                    'pointer',
-
-                  textAlign:
-                    'left',
-
-                  width:
-                    '100%',
-                }}
-              >
-                <span
-                  style={{
-                    color:
-                      '#c45b86',
-
-                    fontWeight: 800,
-
-                    fontSize: 16,
-
-                    textDecoration:
-                      'underline',
-
-                    textUnderlineOffset: 3,
-                  }}
-                >
-                  📖{' '}
-                  {
-                    receta.nombre
-                  }
-                </span>
-              </button>
-
-              <div
-                style={{
-                  marginTop: 6,
-                  color:
-                    '#9e7d90',
-                  fontSize: 13,
-                  fontWeight: 700,
-                }}
-              >
-                🍽️{' '}
-                {hueco?.racionesOverride ??
-                  receta.raciones}{' '}
-                raciones
-              </div>
-
-              {estrellas(
-                receta.valoracion,
-                receta.id
-              )}
-
-              <input
-                placeholder="📝 Nota de la receta..."
-                value={
-                  receta.nota ||
-                  ''
-                }
-                onChange={(
-                  e
-                ) =>
-                  updateReceta(
-                    receta.id,
-                    {
-                      nota:
-                        e
-                          .target
-                          .value,
-                    }
-                  )
-                }
-                style={{
-                  marginTop: 10,
-                  background:
-                    '#fffafc',
-                  color:
-                    '#8f7080',
-                  fontSize: 13,
-                  fontWeight: 600,
-                  lineHeight: 1.4,
-                }}
-              />
-            </div>
-          </div>
-        )}
-
-        {hueco?.comidaLibre &&
-          renderIngredientes(
-            hueco.comidaLibre
-          )}
-
-        {hueco?.nota && (
-          <p
-            style={{
-              marginTop: 10,
-
-              color:
-                '#8f7080',
-
-              fontSize: 13,
-
-              lineHeight: 1.45,
-
-              fontWeight: 600,
-
-              background:
-                'rgba(255, 255, 255, 0.65)',
-
-              borderRadius: 14,
-
-              padding:
-                '8px 10px',
-
-              whiteSpace:
-                'pre-wrap',
-            }}
-          >
-            📝{' '}
-            {hueco.nota}
-          </p>
-        )}
-
-        {hayContenido &&
-          !estaEditando && (
-            <div
-              style={{
-                display:
-                  'flex',
-
-                gap: 10,
-
-                flexWrap:
-                  'wrap',
-
-                marginTop: 12,
-              }}
-            >
-              <button
-                className="btn-secundario"
-                onClick={() =>
-                  activarEdicion(
-                    clave
-                  )
-                }
-              >
-                ✏️ Editar
-              </button>
-
-              <button
-                className="btn-secundario"
-                onClick={() =>
-                  limpiarHuecoPlanning(
-                    fecha,
-                    tipoComida
-                  )
-                }
-              >
-                🧹 Limpiar
-              </button>
-            </div>
-          )}
-      </div>
+    setBusquedas(
+      (actual) => ({
+        ...actual,
+        [clave]: valor,
+      })
     )
   }
 
@@ -885,8 +133,7 @@ export default function Planning({
     <div>
       <div
         style={{
-          display:
-            'flex',
+          display: 'flex',
 
           justifyContent:
             'space-between',
@@ -956,8 +203,7 @@ export default function Planning({
 
       <div
         style={{
-          display:
-            'grid',
+          display: 'grid',
 
           gap: '18px',
         }}
@@ -970,122 +216,50 @@ export default function Planning({
                 'yyyy-MM-dd'
               )
 
-            const esHoy =
-              fecha === hoy
-
             return (
-              <div
+              <DiaPlanning
                 key={fecha}
-                className="card"
-                style={{
-                  background:
-                    COLORES_DIA[
-                      i
-                    ],
-                }}
-              >
-                <div
-                  style={{
-                    display:
-                      'flex',
-
-                    alignItems:
-                      'center',
-
-                    gap: '10px',
-
-                    marginBottom:
-                      '14px',
-                  }}
-                >
-                  <span
-                    style={{
-                      fontSize:
-                        '24px',
-                    }}
-                  >
-                    {
-                      EMOJIS_DIA[
-                        i
-                      ]
-                    }
-                  </span>
-
-                  <div>
-                    <h3
-                      style={{
-                        fontSize:
-                          '18px',
-                      }}
-                    >
-                      {format(
-                        dia,
-                        'EEEE',
-                        {
-                          locale:
-                            es,
-                        }
-                      )}
-                    </h3>
-
-                    <p
-                      style={{
-                        color:
-                          '#8f7080',
-
-                        fontSize:
-                          '14px',
-                      }}
-                    >
-                      {format(
-                        dia,
-                        "d 'de' MMMM",
-                        {
-                          locale:
-                            es,
-                        }
-                      )}
-                    </p>
-                  </div>
-
-                  {esHoy && (
-                    <span
-                      className="pill pill-rosa"
-                      style={{
-                        marginLeft:
-                          'auto',
-                      }}
-                    >
-                      💕 Hoy
-                    </span>
-                  )}
-                </div>
-
-                <div
-                  style={{
-                    display:
-                      'grid',
-
-                    gridTemplateColumns:
-                      'repeat(auto-fit, minmax(260px, 1fr))',
-
-                    gap: '14px',
-
-                    alignItems:
-                      'stretch',
-                  }}
-                >
-                  {renderHueco(
-                    fecha,
-                    'comida'
-                  )}
-
-                  {renderHueco(
-                    fecha,
-                    'cena'
-                  )}
-                </div>
-              </div>
+                dia={dia}
+                indice={i}
+                esHoy={
+                  fecha === hoy
+                }
+                emojiDia={
+                  EMOJIS_DIA[i]
+                }
+                colorDia={
+                  COLORES_DIA[i]
+                }
+                recetas={recetas}
+                planning={planning}
+                busquedas={
+                  busquedas
+                }
+                editandoHuecos={
+                  editandoHuecos
+                }
+                onAbrirReceta={
+                  onAbrirReceta
+                }
+                activarEdicion={
+                  activarEdicion
+                }
+                cerrarEdicion={
+                  cerrarEdicion
+                }
+                setBusqueda={
+                  setBusqueda
+                }
+                guardarHuecoPlanning={
+                  guardarHuecoPlanning
+                }
+                limpiarHuecoPlanning={
+                  limpiarHuecoPlanning
+                }
+                updateReceta={
+                  updateReceta
+                }
+              />
             )
           }
         )}

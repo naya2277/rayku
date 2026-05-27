@@ -61,6 +61,7 @@ export type ItemPlanning = {
   recetaId: string | null
   comidaLibre: string
   nota: string
+  racionesOverride?: number | null
 }
 
 export type ItemInventario = {
@@ -276,6 +277,10 @@ const normalizarPlanning = (
     item.comidaLibre ?? '',
 
   nota: item.nota ?? '',
+
+  racionesOverride:
+    item.racionesOverride ??
+    null,
 })
 
 const cargar = <T,>(
