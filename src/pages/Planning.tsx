@@ -1,7 +1,16 @@
 import { useState } from 'react'
-import { format, startOfWeek, addDays, addWeeks, subWeeks } from 'date-fns'
+import {
+  format,
+  startOfWeek,
+  addDays,
+  addWeeks,
+  subWeeks,
+} from 'date-fns'
 import { es } from 'date-fns/locale'
-import { useRaykuStore, type TipoComida } from '../store'
+import {
+  useRaykuStore,
+  type TipoComida,
+} from '../store'
 import {
   separarIngredientes,
   emojiIngrediente,
@@ -27,7 +36,9 @@ type Props = {
 export default function Planning({ onAbrirReceta }: Props) {
   const [semanaBase, setSemanaBase] = useState(new Date())
   const [busquedas, setBusquedas] = useState<Record<string, string>>({})
-  const [editandoHuecos, setEditandoHuecos] = useState<Record<string, boolean>>({})
+  const [editandoHuecos, setEditandoHuecos] = useState<
+    Record<string, boolean>
+  >({})
 
   const {
     recetas,
@@ -42,7 +53,7 @@ export default function Planning({ onAbrirReceta }: Props) {
   const hoy = format(new Date(), 'yyyy-MM-dd')
 
   const estrellas = (valoracion: number, recetaId: string) => (
-    <div style={{ display: 'flex', gap: 3, marginTop: 8 }}>
+    <div style={{ display: 'flex', gap: 3, marginTop: 6 }}>
       {Array.from({ length: 5 }, (_, i) => (
         <span
           key={i}
@@ -64,9 +75,16 @@ export default function Planning({ onAbrirReceta }: Props) {
   )
 
   const renderIngredientes = (texto: string) => (
-    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 12 }}>
+    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 10 }}>
       {separarIngredientes(texto).map((ingrediente) => (
-        <span key={ingrediente} className={`pill ${claseIngrediente(ingrediente)}`}>
+        <span
+          key={ingrediente}
+          className={`pill ${claseIngrediente(ingrediente)}`}
+          style={{
+            fontSize: 15,
+            padding: '8px 12px',
+          }}
+        >
           {emojiIngrediente(ingrediente)} {ingrediente}
         </span>
       ))}
@@ -82,7 +100,11 @@ export default function Planning({ onAbrirReceta }: Props) {
     )
 
     const receta = recetas.find((r) => r.id === hueco?.recetaId)
-    const hayContenido = Boolean(hueco?.recetaId || hueco?.comidaLibre || hueco?.nota)
+
+    const hayContenido = Boolean(
+      hueco?.recetaId || hueco?.comidaLibre || hueco?.nota
+    )
+
     const busqueda = busquedas[clave] ?? ''
 
     const sugerencias = busqueda.trim()
@@ -103,19 +125,67 @@ export default function Planning({ onAbrirReceta }: Props) {
           .slice(0, 5)
       : []
 
+    const esComida = tipoComida === 'comida'
+
     return (
       <div
         style={{
-          background: 'white',
-          borderRadius: '16px',
-          padding: '14px',
-          border:
-            tipoComida === 'comida'
-              ? '2px dashed #f2bdd0'
-              : '2px dashed #d8c5f4',
+          background: esComida ? '#fffafc' : '#fbf7ff',
+          borderRadius: 18,
+          padding: 14,
+          border: esComida ? '2px solid #f3bfd2' : '2px solid #d7c3f3',
+          boxShadow: '0 8px 20px rgba(170, 120, 145, 0.08)',
+          minHeight: 170,
         }}
       >
-        <strong>{tipoComida === 'comida' ? '☀️ Comida' : '🌙 Cena'}</strong>
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            gap: 10,
+            marginBottom: 10,
+          }}
+        >
+          <strong
+            style={{
+              color: esComida ? '#c45b86' : '#8a6ec7',
+              fontSize: 16,
+            }}
+          >
+            {esComida ? '☀️ Comida' : '🌙 Cena'}
+          </strong>
+
+          {!hayContenido && !estaEditando && (
+            <button
+              type="button"
+              className="btn-secundario"
+              onClick={() =>
+                setEditandoHuecos({
+                  ...editandoHuecos,
+                  [clave]: true,
+                })
+              }
+            >
+              ➕ Añadir
+            </button>
+          )}
+        </div>
+
+        {!hayContenido && !estaEditando && (
+          <div
+            style={{
+              color: '#9e7d90',
+              fontWeight: 700,
+              background: 'rgba(255, 255, 255, 0.7)',
+              borderRadius: 14,
+              padding: 14,
+              textAlign: 'center',
+            }}
+          >
+            Huequito libre 💕
+          </div>
+        )}
 
         {(!hayContenido || estaEditando) && (
           <div style={{ marginTop: 10 }}>
@@ -172,7 +242,7 @@ export default function Planning({ onAbrirReceta }: Props) {
             )}
 
             <input
-              placeholder="🥬 Ingredientes extra o comida rápida: pollo + brócoli..."
+              placeholder="🥬 Ingredientes extra o comida rápida..."
               value={hueco?.comidaLibre || ''}
               onChange={(e) =>
                 guardarHuecoPlanning({
@@ -187,7 +257,7 @@ export default function Planning({ onAbrirReceta }: Props) {
             />
 
             <input
-              placeholder="📝 Nota opcional..."
+              placeholder="📝 Nota de esta comida..."
               value={hueco?.nota || ''}
               onChange={(e) =>
                 guardarHuecoPlanning({
@@ -198,96 +268,123 @@ export default function Planning({ onAbrirReceta }: Props) {
                   nota: e.target.value,
                 })
               }
-              style={{ marginTop: 10 }}
+              style={{
+                marginTop: 10,
+                color: '#8f7080',
+                fontSize: 13,
+                fontWeight: 600,
+                lineHeight: 1.4,
+              }}
             />
 
-            {hayContenido && (
-              <button
-                className="btn-principal"
-                style={{ marginTop: 12 }}
-                onClick={() =>
-                  setEditandoHuecos({
-                    ...editandoHuecos,
-                    [clave]: false,
-                  })
-                }
-              >
-                💕 Guardar
-              </button>
-            )}
+            <button
+              className="btn-principal"
+              style={{ marginTop: 12 }}
+              onClick={() =>
+                setEditandoHuecos({
+                  ...editandoHuecos,
+                  [clave]: false,
+                })
+              }
+            >
+              💕 Guardar
+            </button>
           </div>
         )}
 
         {receta && (
           <div
             style={{
-              marginTop: 12,
-              background: '#fff5f8',
-              border: '1.5px solid #f5dde8',
-              borderRadius: 16,
-              padding: 12,
+              marginTop: 10,
+              display: 'grid',
+              gap: 8,
             }}
           >
-            <button
-              type="button"
-              onClick={() => onAbrirReceta(receta.id)}
+            <div
               style={{
-                border: 'none',
-                background: 'transparent',
-                padding: 0,
-                cursor: 'pointer',
-                textAlign: 'left',
+                background: 'white',
+                border: '1.5px solid #f5dde8',
+                borderRadius: 16,
+                padding: '10px 12px',
               }}
             >
-              <h3
+              <button
+                type="button"
+                onClick={() => onAbrirReceta(receta.id)}
                 style={{
-                  fontSize: 16,
-                  color: '#c45b86',
-                  textDecoration: 'underline',
-                  textUnderlineOffset: 3,
+                  border: 'none',
+                  background: 'transparent',
+                  padding: 0,
+                  cursor: 'pointer',
+                  textAlign: 'left',
+                  width: '100%',
                 }}
               >
-                📖 {receta.nombre}
-              </h3>
-            </button>
-
-            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 8 }}>
-              {receta.dietas.slice(0, 3).map((dieta) => (
-                <span key={dieta} className="pill pill-naranja">
-                  {dieta}
+                <span
+                  style={{
+                    color: '#c45b86',
+                    fontWeight: 800,
+                    fontSize: 16,
+                    textDecoration: 'underline',
+                    textUnderlineOffset: 3,
+                  }}
+                >
+                  📖 {receta.nombre}
                 </span>
-              ))}
+              </button>
 
-              {receta.requiereDescongelar && (
-                <span className="pill pill-teal">❄️ Descongelar</span>
-              )}
+              {estrellas(receta.valoracion, receta.id)}
+
+              <input
+                placeholder="📝 Nota de la receta..."
+                value={receta.nota || ''}
+                onChange={(e) =>
+                  updateReceta(receta.id, {
+                    nota: e.target.value,
+                  })
+                }
+                style={{
+                  marginTop: 10,
+                  background: '#fffafc',
+                  color: '#8f7080',
+                  fontSize: 13,
+                  fontWeight: 600,
+                  lineHeight: 1.4,
+                }}
+              />
             </div>
-
-            {receta.ingredientes.length > 0 && (
-              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 10 }}>
-                {receta.ingredientes.map((ingrediente) => (
-                  <span
-                    key={ingrediente}
-                    className={`pill ${claseIngrediente(ingrediente)}`}
-                  >
-                    {emojiIngrediente(ingrediente)} {ingrediente}
-                  </span>
-                ))}
-              </div>
-            )}
-
-            {estrellas(receta.valoracion, receta.id)}
           </div>
         )}
 
         {hueco?.comidaLibre && renderIngredientes(hueco.comidaLibre)}
 
         {hueco?.nota && (
-          <p style={{ marginTop: 10, color: '#8f7080' }}>📝 {hueco.nota}</p>
+          <p
+            style={{
+              marginTop: 10,
+              color: '#8f7080',
+              fontSize: 13,
+              lineHeight: 1.45,
+              fontWeight: 600,
+              background: 'rgba(255, 255, 255, 0.65)',
+              borderRadius: 14,
+              padding: '8px 10px',
+              whiteSpace: 'pre-wrap',
+            }}
+          >
+            📝 {hueco.nota}
+          </p>
         )}
 
         {hayContenido && !estaEditando && (
-          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 12 }}>
+          <div
+            style={{
+              display: 'flex',
+              gap: 10,
+              flexWrap: 'wrap',
+              marginTop: 12,
+            }}
+          >
             <button
               className="btn-secundario"
               onClick={() =>
@@ -352,7 +449,9 @@ export default function Planning({ onAbrirReceta }: Props) {
             <div
               key={fecha}
               className="card"
-              style={{ background: COLORES_DIA[i] }}
+              style={{
+                background: COLORES_DIA[i],
+              }}
             >
               <div
                 style={{
@@ -381,7 +480,14 @@ export default function Planning({ onAbrirReceta }: Props) {
                 )}
               </div>
 
-              <div style={{ display: 'grid', gap: '12px' }}>
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
+                  gap: '14px',
+                  alignItems: 'stretch',
+                }}
+              >
                 {renderHueco(fecha, 'comida')}
                 {renderHueco(fecha, 'cena')}
               </div>
