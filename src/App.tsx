@@ -5,6 +5,7 @@ import { supabase } from './lib/supabase'
 import { useRaykuStore } from './store'
 
 import Planning from './pages/Planning'
+import CalendarioPlanning from './pages/CalendarioPlanning'
 import Recetas from './pages/Recetas'
 import Inventario from './pages/Inventario'
 import Compra from './pages/Compra'
@@ -12,6 +13,7 @@ import Auth from './pages/Auth'
 
 type Pagina =
   | 'planning'
+  | 'calendario'
   | 'recetas'
   | 'inventario'
   | 'compra'
@@ -168,6 +170,23 @@ export default function App() {
           <button
             type="button"
             className={
+              paginaActual ===
+              'calendario'
+                ? 'activo'
+                : ''
+            }
+            onClick={() =>
+              setPaginaActual(
+                'calendario'
+              )
+            }
+          >
+            📅 Calendario
+          </button>
+
+          <button
+            type="button"
+            className={
               paginaActual === 'recetas'
                 ? 'activo'
                 : ''
@@ -249,6 +268,15 @@ export default function App() {
         {paginaActual ===
           'planning' && (
           <Planning
+            onAbrirReceta={
+              abrirReceta
+            }
+          />
+        )}
+
+        {paginaActual ===
+          'calendario' && (
+          <CalendarioPlanning
             onAbrirReceta={
               abrirReceta
             }
