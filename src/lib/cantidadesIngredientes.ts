@@ -8,8 +8,13 @@ export type IngredienteConCantidad = {
 const UNIDADES = [
   'kg',
   'g',
+  'gr',
+  'gramo',
+  'gramos',
   'ml',
   'l',
+  'litro',
+  'litros',
   'u.',
   'u',
   'unidad',
@@ -22,21 +27,88 @@ const UNIDADES = [
 
 export function separarTextoIngredientes(texto: string) {
   return texto
-    .split(/[\n;]+|,(?=\s*[A-Za-zÁÉÍÓÚÜÑáéíóúüñ])/)
+    .split(/[\n;]+|,(?=\s*[A-Za-zÁÉÍÓÚÜÑáéíóúüñ0-9])/)
     .map((i) => i.trim())
     .filter(Boolean)
 }
 
-export function normalizarUnidad(unidad: string) {
+export function normalizarCantidadUnidad(
+  cantidad: number,
+  unidad: string
+) {
   const limpia = unidad.trim().toLowerCase()
 
-  if (limpia === 'u') return 'u.'
-  if (limpia === 'unidad') return 'u.'
-  if (limpia === 'unidades') return 'u.'
-  if (limpia === 'paquetes') return 'paquete'
-  if (limpia === 'latas') return 'lata'
+  if (
+    limpia === 'kg'
+  ) {
+    return {
+      cantidad: cantidad * 1000,
+      unidad: 'g',
+    }
+  }
 
-  return limpia
+  if (
+    limpia === 'gr' ||
+    limpia === 'gramo' ||
+    limpia === 'gramos'
+  ) {
+    return {
+      cantidad,
+      unidad: 'g',
+    }
+  }
+
+  if (
+    limpia === 'l' ||
+    limpia === 'litro' ||
+    limpia === 'litros'
+  ) {
+    return {
+      cantidad: cantidad * 1000,
+      unidad: 'ml',
+    }
+  }
+
+  if (
+    limpia === 'u' ||
+    limpia === 'unidad' ||
+    limpia === 'unidades'
+  ) {
+    return {
+      cantidad,
+      unidad: 'u.',
+    }
+  }
+
+  if (limpia === 'paquetes') {
+    return {
+      cantidad,
+      unidad: 'paquete',
+    }
+  }
+
+  if (limpia === 'latas') {
+    return {
+      cantidad,
+      unidad: 'lata',
+    }
+  }
+
+  return {
+    cantidad,
+    unidad: limpia,
+  }
+}
+
+export function normalizarUnidad(unidad: string) {
+  return normalizarCantidadUnidad(
+    1,
+    unidad
+  ).unidad
+}
+
+function leerNumero(valor: string) {
+  return Number(valor.replace(',', '.'))
 }
 
 export function parsearIngredienteConCantidad(
@@ -56,10 +128,15 @@ export function parsearIngredienteConCantidad(
   )
 
   if (inicio) {
+    const normalizado = normalizarCantidadUnidad(
+      leerNumero(inicio[1]),
+      inicio[2]
+    )
+
     return {
       original,
-      cantidad: Number(inicio[1].replace(',', '.')),
-      unidad: normalizarUnidad(inicio[2]),
+      cantidad: normalizado.cantidad,
+      unidad: normalizado.unidad,
       nombre: inicio[3].trim(),
     }
   }
@@ -72,11 +149,16 @@ export function parsearIngredienteConCantidad(
   )
 
   if (final) {
+    const normalizado = normalizarCantidadUnidad(
+      leerNumero(final[2]),
+      final[3]
+    )
+
     return {
       original,
       nombre: final[1].trim(),
-      cantidad: Number(final[2].replace(',', '.')),
-      unidad: normalizarUnidad(final[3]),
+      cantidad: normalizado.cantidad,
+      unidad: normalizado.unidad,
     }
   }
 
