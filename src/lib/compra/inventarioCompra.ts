@@ -12,12 +12,26 @@ import {
   obtenerClaveIngredienteCompra,
 } from './normalizacionCompra'
 
+function claveDeIngredienteCompra(
+  ingrediente:
+    | string
+    | IngredienteCompra
+) {
+  return typeof ingrediente === 'string'
+    ? obtenerClaveIngredienteCompra(
+        ingrediente
+      )
+    : ingrediente.clave
+}
+
 function coincidenIngredientesCompra(
-  ingredienteA: string,
+  ingredienteA:
+    | string
+    | IngredienteCompra,
   ingredienteB: string
 ) {
   const a =
-    obtenerClaveIngredienteCompra(
+    claveDeIngredienteCompra(
       ingredienteA
     )
 
@@ -82,7 +96,7 @@ function calcularDisponible(
     (total, item) => {
       const coincide =
         coincidenIngredientesCompra(
-          ingrediente.nombre,
+          ingrediente,
           item.nombre
         )
 

@@ -17,15 +17,18 @@ import type {
 import {
   normalizarUnidadCompra,
   obtenerClaveIngredienteCompra,
+  obtenerNombreVisualIngredienteCompra,
   unidadesCompraCompatibles,
 } from './normalizacionCompra'
 
 function crearIngredienteCompra(
+  clave: string,
   nombre: string,
   cantidad: number | null,
   unidad: string | null
 ): IngredienteCompra {
   return {
+    clave,
     nombre,
     veces: 1,
     cantidad,
@@ -51,7 +54,12 @@ export function generarIngredientesCompra(
         ingrediente.nombre
       )
 
-    if (!clave) {
+    const nombreVisual =
+      obtenerNombreVisualIngredienteCompra(
+        ingrediente.nombre
+      )
+
+    if (!clave || !nombreVisual) {
       return
     }
 
@@ -98,6 +106,7 @@ export function generarIngredientesCompra(
       clave,
       crearIngredienteCompra(
         clave,
+        nombreVisual,
         ingrediente.cantidad,
         unidad
       )

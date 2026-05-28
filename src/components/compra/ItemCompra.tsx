@@ -52,23 +52,83 @@ export default function ItemCompra({
     item.cantidad !== null &&
     Boolean(item.unidad)
 
-  const renderCantidadPrincipal = () => {
-    if (!tieneCantidad) {
+  const cantidadNecesaria =
+    tieneCantidad
+      ? `${item.cantidad}${item.unidad}`
+      : null
+
+  const cantidadDisponible =
+    item.cantidadDisponible !== null &&
+    item.unidad
+      ? `${item.cantidadDisponible}${item.unidad}`
+      : null
+
+  const cantidadFaltante =
+    item.cantidadFaltante !== null &&
+    item.unidad
+      ? `${item.cantidadFaltante}${item.unidad}`
+      : null
+
+  const renderFaltantePrincipal = () => {
+    if (!cantidadFaltante) {
       return null
+    }
+
+    if (
+      item.cantidadFaltante !== null &&
+      item.cantidadFaltante <= 0
+    ) {
+      return (
+        <span
+          className="pill pill-verde"
+          style={{
+            fontSize: 15,
+            fontWeight: 900,
+            padding: '10px 14px',
+          }}
+        >
+          ✅ Completo
+        </span>
+      )
     }
 
     return (
       <span
-        className="pill pill-rosa"
+        className="pill pill-naranja"
         style={{
           fontSize: 15,
           fontWeight: 900,
           padding: '10px 14px',
         }}
       >
-        📏 Comprar{' '}
-        {item.cantidad}
-        {item.unidad}
+        ⚠️ Faltan{' '}
+        {cantidadFaltante}
+      </span>
+    )
+  }
+
+  const renderDisponible = () => {
+    if (!cantidadDisponible) {
+      return null
+    }
+
+    return (
+      <span className="pill pill-verde">
+        📦 Tienes{' '}
+        {cantidadDisponible}
+      </span>
+    )
+  }
+
+  const renderNecesario = () => {
+    if (!cantidadNecesaria) {
+      return null
+    }
+
+    return (
+      <span className="pill pill-rosa">
+        🏷️ Necesitas{' '}
+        {cantidadNecesaria}
       </span>
     )
   }
@@ -83,59 +143,13 @@ export default function ItemCompra({
         className="pill pill-malva"
         style={{
           fontSize: 12,
-          opacity: 0.8,
+          opacity: 0.85,
           padding: '6px 10px',
         }}
       >
         🔁 usado en{' '}
         {item.veces}{' '}
         comidas
-      </span>
-    )
-  }
-
-  const renderDisponible = () => {
-    if (
-      item.cantidadDisponible ===
-        null ||
-      !item.unidad
-    ) {
-      return null
-    }
-
-    return (
-      <span className="pill pill-verde">
-        📦 Tienes{' '}
-        {item.cantidadDisponible}
-        {item.unidad}
-      </span>
-    )
-  }
-
-  const renderFaltante = () => {
-    if (
-      item.cantidadFaltante ===
-        null ||
-      !item.unidad
-    ) {
-      return null
-    }
-
-    if (
-      item.cantidadFaltante <= 0
-    ) {
-      return (
-        <span className="pill pill-verde">
-          ✅ Completo
-        </span>
-      )
-    }
-
-    return (
-      <span className="pill pill-naranja">
-        ⚠️ Faltan{' '}
-        {item.cantidadFaltante}
-        {item.unidad}
       </span>
     )
   }
@@ -187,6 +201,7 @@ export default function ItemCompra({
             : undefined,
           fontSize: 15,
           padding: '10px 14px',
+          textTransform: 'none',
         }}
       >
         {esDisponible
@@ -211,13 +226,13 @@ export default function ItemCompra({
           alignItems: 'center',
         }}
       >
-        {renderCantidadPrincipal()}
-
-        {renderUso()}
+        {renderFaltantePrincipal()}
 
         {renderDisponible()}
 
-        {renderFaltante()}
+        {renderNecesario()}
+
+        {renderUso()}
 
         {yaTienes &&
           item.cantidad === null && (

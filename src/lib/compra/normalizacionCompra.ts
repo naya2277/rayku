@@ -49,6 +49,17 @@ const SINONIMOS: Record<string, string> = {
   moras: 'mora',
 }
 
+function quitarAcentos(
+  texto: string
+) {
+  return texto
+    .normalize('NFD')
+    .replace(
+      /[\u0300-\u036f]/g,
+      ''
+    )
+}
+
 export function normalizarUnidadCompra(
   unidad: string | null
 ) {
@@ -106,6 +117,7 @@ export function normalizarUnidadCompra(
   if (
     [
       'u',
+      'u.',
       'ud',
       'uds',
       'unidad',
@@ -118,31 +130,38 @@ export function normalizarUnidadCompra(
   return limpia
 }
 
-function limpiarClaveIngrediente(
-  ingrediente: string
+function limpiarPalabras(
+  ingrediente: string,
+  quitarTildes: boolean
 ) {
-  return normalizarIngrediente(
-    ingrediente
-  )
-    .replace(/\([^)]*\)/g, '')
+  const base =
+    normalizarIngrediente(
+      ingrediente
+    )
 
-    // mantener acentos y caracteres unicode
+  const texto =
+    quitarTildes
+      ? quitarAcentos(base)
+      : base
+
+  return texto
+    .replace(/\([^)]*\)/g, '')
     .replace(
       /[^\p{L}0-9\s]/gu,
       ' '
     )
-
     .split(/\s+/)
     .map(
       (palabra) =>
-        SINONIMOS[palabra] ||
-        palabra
+        SINONIMOS[
+          quitarAcentos(palabra)
+        ] || palabra
     )
     .filter(
       (palabra) =>
         palabra &&
         !PALABRAS_RELLENO.includes(
-          palabra
+          quitarAcentos(palabra)
         )
     )
     .join(' ')
@@ -150,12 +169,22 @@ function limpiarClaveIngrediente(
     .trim()
 }
 
+export function obtenerNombreVisualIngredienteCompra(
+  ingrediente: string
+) {
+  return limpiarPalabras(
+    ingrediente,
+    false
+  )
+}
+
 export function obtenerClaveIngredienteCompra(
   ingrediente: string
 ) {
   const limpio =
-    limpiarClaveIngrediente(
-      ingrediente
+    limpiarPalabras(
+      ingrediente,
+      true
     )
 
   const reglas: Array<

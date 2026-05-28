@@ -33,21 +33,13 @@ export default function Compra() {
     )
   }, [planning, recetas])
 
-  const {
-    paraComprar,
-    yaDisponibles,
-  } = useMemo(() => {
-    return separarIngredientesPorInventario(
-      ingredientes,
-      inventario
-    )
-  }, [ingredientes, inventario])
-
   const itemsManualesComoCompra =
     useMemo<IngredienteCompra[]>(
       () =>
         compraManual.map(
           (item) => ({
+            clave: `manual-${item.id}`,
+
             nombre:
               item.cantidad
                 ? `${item.nombre} (${item.cantidad})`
@@ -69,24 +61,34 @@ export default function Compra() {
       [compraManual]
     )
 
-  const paraComprarConManuales =
+  const ingredientesConManuales =
     useMemo(
       () => [
+        ...ingredientes,
         ...itemsManualesComoCompra,
-        ...paraComprar,
       ],
       [
+        ingredientes,
         itemsManualesComoCompra,
-        paraComprar,
       ]
     )
+
+  const {
+    paraComprar,
+    yaDisponibles,
+  } = useMemo(() => {
+    return separarIngredientesPorInventario(
+      ingredientesConManuales,
+      inventario
+    )
+  }, [ingredientesConManuales, inventario])
 
   const agrupadosComprar =
     useMemo(() => {
       return agruparIngredientesCompra(
-        paraComprarConManuales
+        paraComprar
       )
-    }, [paraComprarConManuales])
+    }, [paraComprar])
 
   const agrupadosDisponibles =
     useMemo(() => {
@@ -96,7 +98,7 @@ export default function Compra() {
     }, [yaDisponibles])
 
   const totalCompra =
-    paraComprarConManuales.length
+    paraComprar.length
 
   return (
     <div>

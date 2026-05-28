@@ -17,6 +17,7 @@ export type ItemInventarioListaCompra = {
 }
 
 export type IngredienteCompra = {
+  clave: string
   nombre: string
   veces: number
   cantidad: number | null
