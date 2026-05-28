@@ -34,6 +34,7 @@ export type ItemPlanning = {
   comidaLibre: string
   nota: string
   racionesOverride?: number | null
+  cocinado?: boolean
 }
 
 export type ItemCompraManual = {

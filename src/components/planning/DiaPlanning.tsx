@@ -57,6 +57,10 @@ type Props = {
     tipoComida: TipoComida
   ) => void
 
+  toggleCocinadoPlanning: (
+    id: string
+  ) => void
+
   updateReceta: (
     recetaId: string,
     datos: any
@@ -78,6 +82,7 @@ export default function DiaPlanning({
   setBusqueda,
   guardarHuecoPlanning,
   limpiarHuecoPlanning,
+  toggleCocinadoPlanning,
   updateReceta,
 }: Props) {
   const fecha =
@@ -233,6 +238,15 @@ export default function DiaPlanning({
             tipoComida
           )
         }
+        toggleCocinado={() => {
+          if (
+            datos.hueco?.id
+          ) {
+            toggleCocinadoPlanning(
+              datos.hueco.id
+            )
+          }
+        }}
         updateReceta={
           updateReceta
         }

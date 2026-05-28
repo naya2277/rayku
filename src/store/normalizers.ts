@@ -130,4 +130,7 @@ export const normalizarPlanning = (
 
   racionesOverride:
     item.racionesOverride ?? null,
+
+  cocinado:
+    item.cocinado ?? false,
 })

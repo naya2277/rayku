@@ -20,6 +20,7 @@ type Props = {
 
   estaEditando: boolean
   hayContenido: boolean
+  toggleCocinado: () => void
 
   busqueda: string
   sugerencias: any[]
@@ -62,6 +63,7 @@ export default function HuecoPlanning({
   setBusqueda,
   guardarHueco,
   limpiarHueco,
+  toggleCocinado,
   updateReceta,
 }: Props) {
   const esComida =
@@ -645,12 +647,25 @@ export default function HuecoPlanning({
               ✏️ Editar
             </button>
 
+             <button
+  className="btn-secundario"
+  onClick={
+    toggleCocinado
+  }
+>
+  {hueco?.cocinado
+    ? '✅ Cocinado'
+    : '🍳 Marcar cocinado'}
+</button>
+            
+
             <button
               className="btn-secundario"
               onClick={
                 limpiarHueco
               }
             >
+            
               🧹 Limpiar
             </button>
           </div>

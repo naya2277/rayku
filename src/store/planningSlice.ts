@@ -39,6 +39,10 @@ export type PlanningSlice = {
     fecha: string,
     tipoComida: TipoComida
   ) => void
+
+  toggleCocinadoPlanning: (
+    id: string
+  ) => void
 }
 
 export const crearPlanningSlice = (
@@ -108,6 +112,30 @@ export const crearPlanningSlice = (
               h.tipoComida ===
                 tipoComida
             )
+        )
+
+      guardarPlanningLocal(
+        nuevoPlanning
+      )
+
+      set({
+        planning:
+          nuevoPlanning,
+      })
+    },
+
+  toggleCocinadoPlanning:
+    (id) => {
+      const nuevoPlanning =
+        get().planning.map(
+          (hueco) =>
+            hueco.id === id
+              ? {
+                  ...hueco,
+                  cocinado:
+                    !hueco.cocinado,
+                }
+              : hueco
         )
 
       guardarPlanningLocal(

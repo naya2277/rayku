@@ -69,6 +69,7 @@ export default function Planning({
     planning,
     guardarHuecoPlanning,
     limpiarHuecoPlanning,
+    toggleCocinadoPlanning,
     updateReceta,
   } = useRaykuStore()
 
@@ -255,6 +256,9 @@ export default function Planning({
                 }
                 limpiarHuecoPlanning={
                   limpiarHuecoPlanning
+                }
+                toggleCocinadoPlanning={
+                  toggleCocinadoPlanning
                 }
                 updateReceta={
                   updateReceta

@@ -4,9 +4,14 @@ import {
 } from './ingredientes'
 
 import {
-  parsearIngredienteConCantidad,
   separarTextoIngredientes,
 } from './cantidadesIngredientes'
+
+import {
+  calcularIngredientesEscalados,
+  redondearCantidad,
+  type IngredienteEscalado,
+} from './recetas/calcularIngredientesEscalados'
 
 type RecetaListaCompra = {
   id: string
@@ -46,14 +51,6 @@ function unidadesCompatibles(
   return unidadA === unidadB
 }
 
-function redondear(
-  valor: number
-) {
-  return Number(
-    valor.toFixed(2)
-  )
-}
-
 export function generarIngredientesCompra(
   planning: HuecoPlanningListaCompra[],
   recetas: RecetaListaCompra[]
@@ -64,30 +61,16 @@ export function generarIngredientesCompra(
   >()
 
   const añadirIngrediente = (
-    ingrediente: string,
-    multiplicador = 1
+    ingrediente: IngredienteEscalado
   ) => {
-    const parseado =
-      parsearIngredienteConCantidad(
-        ingrediente
-      )
-
     const normalizado =
       normalizarIngrediente(
-        parseado.nombre
+        ingrediente.nombre
       )
 
     if (!normalizado) {
       return
     }
-
-    const cantidadEscalada =
-      parseado.cantidad !== null
-        ? redondear(
-            parseado.cantidad *
-              multiplicador
-          )
-        : null
 
     const existente =
       mapa.get(normalizado)
@@ -96,30 +79,30 @@ export function generarIngredientesCompra(
       existente.veces += 1
 
       if (
-        cantidadEscalada !== null &&
-        parseado.unidad &&
+        ingrediente.cantidad !== null &&
+        ingrediente.unidad &&
         unidadesCompatibles(
           existente.unidad,
-          parseado.unidad
+          ingrediente.unidad
         )
       ) {
         existente.cantidad =
-          redondear(
+          redondearCantidad(
             (existente.cantidad ||
               0) +
-              cantidadEscalada
+              ingrediente.cantidad
           )
       }
 
       if (
         existente.cantidad === null &&
-        cantidadEscalada !== null
+        ingrediente.cantidad !== null
       ) {
         existente.cantidad =
-          cantidadEscalada
+          ingrediente.cantidad
 
         existente.unidad =
-          parseado.unidad
+          ingrediente.unidad
       }
     } else {
       mapa.set(normalizado, {
@@ -128,10 +111,10 @@ export function generarIngredientesCompra(
         veces: 1,
 
         cantidad:
-          cantidadEscalada,
+          ingrediente.cantidad,
 
         unidad:
-          parseado.unidad,
+          ingrediente.unidad,
 
         cantidadDisponible:
           null,
@@ -152,38 +135,32 @@ export function generarIngredientesCompra(
         )
 
       if (receta) {
-        const racionesBase =
-          receta.raciones || 1
-
         const racionesObjetivo =
           hueco.racionesOverride ||
           receta.raciones ||
           1
 
-        const multiplicador =
-          racionesObjetivo /
-          racionesBase
-
-        receta.ingredientes.forEach(
-          (ingrediente) => {
-            añadirIngrediente(
-              ingrediente,
-              multiplicador
-            )
-          }
+        calcularIngredientesEscalados(
+          receta,
+          racionesObjetivo
+        ).forEach(
+          añadirIngrediente
         )
       }
     }
 
     if (hueco.comidaLibre) {
-      separarTextoIngredientes(
-        hueco.comidaLibre
+      calcularIngredientesEscalados(
+        {
+          ingredientes:
+            separarTextoIngredientes(
+              hueco.comidaLibre
+            ),
+          raciones: 1,
+        },
+        1
       ).forEach(
-        (ingrediente) => {
-          añadirIngrediente(
-            ingrediente
-          )
-        }
+        añadirIngrediente
       )
     }
   })
@@ -370,7 +347,7 @@ export function separarIngredientesPorInventario(
             cantidadFaltante:
               Math.max(
                 0,
-                redondear(
+                redondearCantidad(
                   faltante
                 )
               ),
