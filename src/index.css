@@ -215,268 +215,58 @@ input::placeholder, textarea::placeholder {
   color: var(--txt3);
 }
 
-/* ESTRELLAS */
-.estrellas {
-  display: flex;
-  gap: 3px;
-}
-
-.estrella {
-  font-size: 18px;
-  cursor: pointer;
-  transition: transform 0.1s;
-  color: #ddd;
-}
-
-.estrella.on { color: #ffb347; }
-.estrella:hover { transform: scale(1.2); }
-
-/* NOTIFICACION DESCONGELADO */
-.notif-descongelar {
-  background: #fffbf0;
-  border: 1.5px solid #ffd699;
-  border-radius: 14px;
-  padding: 12px 14px;
-  display: flex;
-  align-items: flex-start;
-  gap: 9px;
-  margin-bottom: 16px;
-}
-
-.notif-ico { font-size: 22px; flex-shrink: 0; }
-.notif-titulo { font-size: 12.5px; font-weight: 800; color: #7a5000; }
-.notif-sub { font-size: 11px; color: #a07020; margin-top: 2px; line-height: 1.4; }
-
-/* BANNER IA */
-.ia-banner {
-  background: linear-gradient(135deg, #b39ddb, #f4a7b9);
-  border-radius: 18px;
-  padding: 13px 18px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 22px;
-}
-
-.ia-banner-izq {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  color: white;
-}
-
-.ia-banner-emoji { font-size: 22px; }
-.ia-banner-txt { font-size: 13.5px; font-weight: 800; }
-.ia-banner-sub { font-size: 11px; opacity: 0.85; margin-top: 1px; }
-
-.ia-banner-btn {
-  background: linear-gradient(135deg, #f4a7b9, #b39ddb);
-  color: white;
-  border: 2px solid rgba(255,255,255,0.4);
-  border-radius: 12px;
-  padding: 8px 14px;
-  font-size: 12px;
-  font-weight: 800;
-  font-family: 'Nunito', sans-serif;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: opacity 0.15s;
-}
-
-.ia-banner-btn:hover { opacity: 0.85; }
-
-/* MOBILE */
-@media (max-width: 768px) {
-  .nav-principal { padding: 0 14px; height: 58px; }
-  .logo-texto { font-size: 22px; }
-  .nav-links button { padding: 7px 10px; font-size: 12px; }
-  .contenido-principal { padding: 14px; }
-}
-/* PLANNING */
-.planning-nav {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 22px;
-  background: var(--card);
-  border: 1.5px solid var(--borde);
-  border-radius: var(--radio);
-  padding: 12px 18px;
-}
-
-.planning-nav-titulo {
-  font-size: 15px;
-  font-weight: 800;
-  color: var(--txt);
-}
-
-.planning-dia-header {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 10px;
-  position: relative;
-}
-
-.planning-dia-header::before {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 0;
-  right: 0;
-  height: 1.5px;
-  background: var(--borde);
-}
-
-.planning-dia-pill {
-  position: relative;
-  z-index: 1;
-  padding: 5px 18px;
-  border-radius: 20px;
-  font-size: 12px;
-  font-weight: 800;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.dp-lun { background: #fce4ec; color: #c2607a; border: 1.5px solid #f4a7b9; }
-.dp-mar { background: #fff8ee; color: #c07030; border: 1.5px solid #ffb347; }
-.dp-mie { background: #ede7f6; color: #7050b0; border: 1.5px solid #b39ddb; }
-.dp-jue { background: #e0f7f4; color: #207060; border: 1.5px solid #81d4c8; }
-.dp-vie { background: #f1f8e9; color: #407040; border: 1.5px solid #a5d6a7; }
-.dp-sab { background: #fce4ec; color: #905080; border: 1.5px solid #e4a0c0; }
-.dp-dom { background: #fff3e0; color: #a06020; border: 1.5px solid #ffcc80; }
-
-.planning-hoy {
-  background: var(--p1);
-  color: white;
-  font-size: 10px;
-  padding: 2px 8px;
-  border-radius: 10px;
-}
-
-.planning-card {
-  background: var(--card);
-  border: 1.5px solid var(--borde);
-  border-radius: var(--radio);
-  overflow: hidden;
-  transition: border-color 0.2s;
-}
-
-.planning-card:hover {
-  border-color: var(--p4);
-}
-
-.planning-slots {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-}
-
-.planning-slot {
-  padding: 14px 16px;
-  min-height: 100px;
-  cursor: pointer;
-  border-right: 1.5px solid var(--borde);
-  transition: background 0.15s;
-}
-
-.planning-slot:last-child {
-  border-right: none;
-}
-
-.planning-slot:hover {
-  background: var(--p3);
-}
-
-.planning-slot-label {
-  font-size: 11px;
-  font-weight: 800;
-  letter-spacing: 0.5px;
-  text-transform: uppercase;
-  margin-bottom: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.planning-sol { color: var(--a1); }
-.planning-luna { color: var(--m1); }
-
-.planning-receta-nombre {
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--txt);
-  line-height: 1.35;
-}
-
-.planning-vacio {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 10px;
-  border-radius: 10px;
-  border: 1.5px dashed var(--borde2);
-  color: var(--txt3);
-  font-size: 12px;
-  font-weight: 700;
-  margin-top: 4px;
-  transition: all 0.15s;
-}
-
-.planning-slot:hover .planning-vacio {
-  border-color: var(--p1);
-  color: var(--p1);
-  background: var(--p3);
-}
-/* ===================================== */
-/* 📱 MOBILE FIRST MEJORADO */
-/* ===================================== */
-
-html {
-  -webkit-tap-highlight-color: transparent;
-}
-
-img {
-  max-width: 100%;
-  display: block;
-}
-
-button,
-input,
-textarea,
-select {
-  font-size: 16px;
-}
-
 /* MOBILE */
 @media (max-width: 768px) {
 
   .nav-principal {
-    flex-direction: column;
     height: auto;
-    padding: 14px;
-    gap: 12px;
+    min-height: 58px;
+    padding:
+      calc(8px + env(safe-area-inset-top))
+      10px
+      8px;
+    gap: 8px;
     align-items: stretch;
+    flex-direction: column;
   }
 
   .nav-logo {
     justify-content: center;
+    min-height: 28px;
+  }
+
+  .logo-emoji {
+    font-size: 20px;
+  }
+
+  .logo-texto {
+    font-size: 22px;
   }
 
   .nav-links {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 8px;
+    display: flex;
+    gap: 6px;
     width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 2px 2px 6px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .nav-links::-webkit-scrollbar {
+    display: none;
   }
 
   .nav-links button {
+    flex: 0 0 auto;
     justify-content: center;
-    width: 100%;
-    min-height: 46px;
-    border-radius: 14px;
-    font-size: 13px;
+    min-height: 34px;
+    width: auto;
+    white-space: nowrap;
+    border-radius: 999px;
+    font-size: 12px;
+    padding: 6px 10px;
   }
 
   .contenido-principal {
@@ -562,21 +352,12 @@ select {
   textarea {
     min-height: 110px;
   }
-
-  .logo-texto {
-    font-size: 24px;
-  }
 }
 
-/* MINI MÓVILES */
 @media (max-width: 480px) {
 
   .contenido-principal {
     padding: 10px;
-  }
-
-  .nav-links {
-    grid-template-columns: 1fr;
   }
 
   .card {
@@ -588,110 +369,11 @@ select {
   }
 
   .logo-texto {
-    font-size: 22px;
+    font-size: 20px;
   }
 
   .planning-dia-pill {
     font-size: 11px;
     padding: 4px 12px;
-  }
-}
-input[type='number']::-webkit-outer-spin-button,
-input[type='number']::-webkit-inner-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
-}
-
-input[type='number'] {
-  appearance: textfield;
-  -moz-appearance: textfield;
-}
-/* ===================================== */
-/* 📱 COMPACT MODE — COMPRA + INVENTARIO */
-/* ===================================== */
-
-@media (max-width: 768px) {
-  .contenido-principal h1 {
-    font-size: 21px;
-  }
-
-  .contenido-principal h2 {
-    font-size: 18px;
-  }
-
-  .contenido-principal h3 {
-    font-size: 16px;
-  }
-
-  .card {
-    padding: 13px;
-  }
-
-  .pill {
-    font-size: 10px;
-    padding: 3px 8px;
-    line-height: 1.25;
-  }
-
-  .btn-principal,
-  .btn-secundario {
-    min-height: 38px;
-    padding: 7px 12px;
-    font-size: 12px;
-    border-radius: 16px;
-  }
-
-  input,
-  textarea,
-  select {
-    min-height: 40px;
-    font-size: 14px;
-    padding: 7px 10px;
-  }
-
-  .notif-descongelar {
-    padding: 10px 12px;
-  }
-
-  .notif-ico {
-    font-size: 18px;
-  }
-
-  .notif-titulo {
-    font-size: 12px;
-  }
-
-  .notif-sub {
-    font-size: 10.5px;
-  }
-}
-
-@media (max-width: 480px) {
-  .contenido-principal {
-    padding: 9px;
-  }
-
-  .card {
-    padding: 12px;
-    border-radius: 16px;
-  }
-
-  .pill {
-    font-size: 9.5px;
-    padding: 3px 7px;
-  }
-
-  .btn-principal,
-  .btn-secundario {
-    min-height: 36px;
-    font-size: 11.5px;
-    padding: 6px 10px;
-  }
-
-  input,
-  textarea,
-  select {
-    min-height: 38px;
-    font-size: 13.5px;
   }
 }
