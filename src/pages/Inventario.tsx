@@ -4,6 +4,7 @@ import { useRaykuStore } from '../store'
 
 import {
   emojiIngrediente,
+  detectarCategoriaIngrediente,
 } from '../lib/ingredientes'
 
 import {
@@ -15,6 +16,84 @@ import {
 
 import FormularioInventario from '../components/inventario/FormularioInventario'
 import SeccionInventario from '../components/inventario/SeccionInventario'
+
+type FiltroInventario =
+  | 'todos'
+  | 'pendiente'
+  | 'nevera'
+  | 'congelador'
+  | 'despensa'
+  | 'stockBajo'
+  | 'caducan'
+  | 'proteina'
+  | 'verdura'
+  | 'grasa'
+  | 'carbohidrato'
+  | 'salsa'
+  | 'fruta'
+  | 'otros'
+
+const FILTROS: {
+  key: FiltroInventario
+  label: string
+}[] = [
+  {
+    key: 'todos',
+    label: '🌸 Todos',
+  },
+  {
+    key: 'pendiente',
+    label: '🛍️ Pendiente',
+  },
+  {
+    key: 'nevera',
+    label: '🧊 Nevera',
+  },
+  {
+    key: 'congelador',
+    label: '❄️ Congelador',
+  },
+  {
+    key: 'despensa',
+    label: '🗄️ Despensa',
+  },
+  {
+    key: 'stockBajo',
+    label: '🧺 Poco stock',
+  },
+  {
+    key: 'caducan',
+    label: '⚠️ Caducan',
+  },
+  {
+    key: 'proteina',
+    label: '🥩 Proteína',
+  },
+  {
+    key: 'verdura',
+    label: '🥦 Verdura',
+  },
+  {
+    key: 'grasa',
+    label: '🧈 Grasa',
+  },
+  {
+    key: 'carbohidrato',
+    label: '🍚 Carbohidrato',
+  },
+  {
+    key: 'salsa',
+    label: '🥣 Salsa',
+  },
+  {
+    key: 'fruta',
+    label: '🍓 Fruta',
+  },
+  {
+    key: 'otros',
+    label: '✨ Otros',
+  },
+]
 
 export default function Inventario() {
   const {
@@ -28,6 +107,16 @@ export default function Inventario() {
     mostrarFormulario,
     setMostrarFormulario,
   ] = useState(false)
+
+  const [
+    busqueda,
+    setBusqueda,
+  ] = useState('')
+
+  const [
+    filtroActivo,
+    setFiltroActivo,
+  ] = useState<FiltroInventario>('todos')
 
   const ordenarPorNombre = <
     T extends {
@@ -124,6 +213,92 @@ export default function Inventario() {
           }
         )
       })
+
+  const hayFiltrosActivos =
+    filtroActivo !== 'todos' ||
+    busqueda.trim() !== ''
+
+  const limpiarFiltros = () => {
+    setFiltroActivo('todos')
+    setBusqueda('')
+  }
+
+  const coincideFiltro = (
+    item: typeof inventario[number]
+  ) => {
+    if (filtroActivo === 'todos') {
+      return true
+    }
+
+    if (
+      [
+        'pendiente',
+        'nevera',
+        'congelador',
+        'despensa',
+      ].includes(filtroActivo)
+    ) {
+      return item.ubicacion === filtroActivo
+    }
+
+    if (filtroActivo === 'stockBajo') {
+      return (
+        item.ubicacion !== 'pendiente' &&
+        Boolean(
+          detectarStockBajo(
+            item.cantidad,
+            item.unidad
+          )
+        )
+      )
+    }
+
+    if (filtroActivo === 'caducan') {
+      const dias =
+        calcularDiasCaducidad(
+          item.fechaCaducidad
+        )
+
+      return (
+        item.ubicacion !== 'pendiente' &&
+        dias !== null &&
+        dias <= 3
+      )
+    }
+
+    return (
+      detectarCategoriaIngrediente(
+        item.nombre
+      ) === filtroActivo
+    )
+  }
+
+  const coincideBusqueda = (
+    item: typeof inventario[number]
+  ) => {
+    const texto =
+      [
+        item.nombre,
+        item.categoria,
+        item.ubicacion,
+        item.unidad,
+      ]
+        .join(' ')
+        .toLowerCase()
+
+    return texto.includes(
+      busqueda
+        .trim()
+        .toLowerCase()
+    )
+  }
+
+  const inventarioFiltrado =
+    inventario.filter(
+      (item) =>
+        coincideFiltro(item) &&
+        coincideBusqueda(item)
+    )
 
   return (
     <div>
@@ -404,6 +579,97 @@ export default function Inventario() {
         </div>
       )}
 
+      <div
+        className="card"
+        style={{
+          marginBottom: 18,
+          background:
+            'linear-gradient(135deg, #fffaf8, #fff0f6)',
+        }}
+      >
+        <input
+          type="text"
+          placeholder="🔎 Buscar producto..."
+          value={busqueda}
+          onChange={(e) =>
+            setBusqueda(
+              e.target.value
+            )
+          }
+          style={{
+            marginBottom: 12,
+          }}
+        />
+
+        <div
+          style={{
+            display: 'flex',
+            gap: 8,
+            flexWrap: 'wrap',
+          }}
+        >
+          {FILTROS.map((filtro) => (
+            <button
+              key={filtro.key}
+              type="button"
+              className={
+                filtroActivo ===
+                filtro.key
+                  ? 'btn-principal'
+                  : 'btn-secundario'
+              }
+              onClick={() =>
+                setFiltroActivo(
+                  filtro.key
+                )
+              }
+              style={{
+                minHeight: 34,
+                fontSize: 12,
+                padding:
+                  '6px 10px',
+              }}
+            >
+              {filtro.label}
+            </button>
+          ))}
+
+          {hayFiltrosActivos && (
+            <button
+              type="button"
+              className="btn-secundario"
+              onClick={
+                limpiarFiltros
+              }
+              style={{
+                minHeight: 34,
+                fontSize: 12,
+                padding:
+                  '6px 10px',
+              }}
+            >
+              ✨ Limpiar
+            </button>
+          )}
+        </div>
+
+        {hayFiltrosActivos && (
+          <p
+            style={{
+              marginTop: 10,
+              color: 'var(--txt2)',
+              fontSize: 12,
+              fontWeight: 800,
+            }}
+          >
+            Mostrando{' '}
+            {inventarioFiltrado.length}{' '}
+            de {inventario.length}{' '}
+            productos
+          </p>
+        )}
+      </div>
+
       {mostrarFormulario && (
         <FormularioInventario
           agregarItemInventario={
@@ -432,7 +698,7 @@ export default function Inventario() {
           }) => {
             const items =
               ordenarPorNombre(
-                inventario.filter(
+                inventarioFiltrado.filter(
                   (i) =>
                     i.ubicacion === key
                 )
