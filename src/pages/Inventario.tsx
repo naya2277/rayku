@@ -28,6 +28,23 @@ export default function Inventario() {
     setMostrarFormulario,
   ] = useState(false)
 
+  const ordenarPorNombre = <
+    T extends {
+      nombre: string
+    },
+  >(
+    items: T[]
+  ) =>
+    [...items].sort((a, b) =>
+      a.nombre.localeCompare(
+        b.nombre,
+        'es',
+        {
+          sensitivity: 'base',
+        }
+      )
+    )
+
   const productosUrgentes =
     inventario
       .filter((item) => {
@@ -59,7 +76,17 @@ export default function Inventario() {
             b.fechaCaducidad
           ) ?? 999
 
-        return diasA - diasB
+        if (diasA !== diasB) {
+          return diasA - diasB
+        }
+
+        return a.nombre.localeCompare(
+          b.nombre,
+          'es',
+          {
+            sensitivity: 'base',
+          }
+        )
       })
 
   return (
@@ -254,9 +281,11 @@ export default function Inventario() {
             color,
           }) => {
             const items =
-              inventario.filter(
-                (i) =>
-                  i.ubicacion === key
+              ordenarPorNombre(
+                inventario.filter(
+                  (i) =>
+                    i.ubicacion === key
+                )
               )
 
             return (

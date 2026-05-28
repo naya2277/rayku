@@ -134,78 +134,80 @@ export default function Recetas({
   ])
 
   const recetasFiltradas =
-    recetas.filter((r) => {
-      const texto = [
-        r.nombre,
-        r.ingredientes.join(' '),
-        r.pasos,
-        r.nota,
-        r.tiposComida.join(' '),
-        r.ingredientesBase.join(
-          ' '
-        ),
-        r.dietas.join(' '),
-        r.caracteristicas.join(
-          ' '
-        ),
-      ]
-        .join(' ')
-        .toLowerCase()
+    [...recetas]
+      .reverse()
+      .filter((r) => {
+        const texto = [
+          r.nombre,
+          r.ingredientes.join(' '),
+          r.pasos,
+          r.nota,
+          r.tiposComida.join(' '),
+          r.ingredientesBase.join(
+            ' '
+          ),
+          r.dietas.join(' '),
+          r.caracteristicas.join(
+            ' '
+          ),
+        ]
+          .join(' ')
+          .toLowerCase()
 
-      const coincideBusqueda =
-        texto.includes(
-          busqueda.toLowerCase()
+        const coincideBusqueda =
+          texto.includes(
+            busqueda.toLowerCase()
+          )
+
+        const coincideFavoritas =
+          !filtros.favoritas ||
+          r.favorita
+
+        const coincideKeto =
+          !filtros.keto ||
+          r.dietas.some((d) =>
+            d
+              .toLowerCase()
+              .includes('keto')
+          )
+
+        const coincideRapidas =
+          !filtros.rapidas ||
+          r.caracteristicas.some((c) =>
+            c
+              .toLowerCase()
+              .includes('rápida')
+          )
+
+        const coincideEconomicas =
+          !filtros.economicas ||
+          r.caracteristicas.some((c) =>
+            c
+              .toLowerCase()
+              .includes(
+                'económica'
+              )
+          )
+
+        const coincideAirFryer =
+          !filtros.airFryer ||
+          r.caracteristicas.some((c) =>
+            c
+              .toLowerCase()
+              .includes(
+                'air fryer'
+              )
+          )
+
+        return (
+          coincideBusqueda &&
+          coincideFavoritas &&
+          coincideKeto &&
+          coincideRapidas &&
+          coincideEconomicas &&
+          coincideAirFryer
         )
-
-      const coincideFavoritas =
-        !filtros.favoritas ||
-        r.favorita
-
-      const coincideKeto =
-        !filtros.keto ||
-        r.dietas.some((d) =>
-          d
-            .toLowerCase()
-            .includes('keto')
-        )
-
-      const coincideRapidas =
-        !filtros.rapidas ||
-        r.caracteristicas.some((c) =>
-          c
-            .toLowerCase()
-            .includes('rápida')
-        )
-
-      const coincideEconomicas =
-        !filtros.economicas ||
-        r.caracteristicas.some((c) =>
-          c
-            .toLowerCase()
-            .includes(
-              'económica'
-            )
-        )
-
-      const coincideAirFryer =
-        !filtros.airFryer ||
-        r.caracteristicas.some((c) =>
-          c
-            .toLowerCase()
-            .includes(
-              'air fryer'
-            )
-        )
-
-      return (
-        coincideBusqueda &&
-        coincideFavoritas &&
-        coincideKeto &&
-        coincideRapidas &&
-        coincideEconomicas &&
-        coincideAirFryer
-      )
-    })
+      })
 
   const editarReceta = (
     receta: Receta
