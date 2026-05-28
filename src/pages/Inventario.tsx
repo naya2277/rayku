@@ -8,6 +8,7 @@ import {
 
 import {
   detectarCaducidad,
+  calcularDiasCaducidad,
   SECCIONES_INVENTARIO,
 } from '../lib/inventario'
 
@@ -27,22 +28,39 @@ export default function Inventario() {
     setMostrarFormulario,
   ] = useState(false)
 
-  const proximosACaducar =
-    inventario.filter((item) => {
-      const estado =
-        detectarCaducidad(
-          item.fechaCaducidad
-        )
+  const productosUrgentes =
+    inventario
+      .filter((item) => {
+        if (
+          item.ubicacion ===
+          'pendiente'
+        ) {
+          return false
+        }
 
-      return (
-        estado?.texto.includes(
-          '🔴'
-        ) ||
-        estado?.texto.includes(
-          '🟠'
+        const dias =
+          calcularDiasCaducidad(
+            item.fechaCaducidad
+          )
+
+        return (
+          dias !== null &&
+          dias <= 3
         )
-      )
-    })
+      })
+      .sort((a, b) => {
+        const diasA =
+          calcularDiasCaducidad(
+            a.fechaCaducidad
+          ) ?? 999
+
+        const diasB =
+          calcularDiasCaducidad(
+            b.fechaCaducidad
+          ) ?? 999
+
+        return diasA - diasB
+      })
 
   return (
     <div>
@@ -83,49 +101,127 @@ export default function Inventario() {
         </button>
       </div>
 
-      {proximosACaducar.length >
+      {productosUrgentes.length >
         0 && (
         <div
-          className="notif-descongelar"
+          className="card"
           style={{
-            background: '#fff3f3',
-            borderColor: '#ffb3b3',
+            marginBottom: 18,
+            background:
+              'linear-gradient(135deg, #fff0f6, #fff8ee)',
+            borderColor: '#f4a7b9',
           }}
         >
-          <span className="notif-ico">
-            ⚠️
-          </span>
-
-          <div>
-            <div
-              className="notif-titulo"
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 10,
+              marginBottom: 12,
+            }}
+          >
+            <span
               style={{
-                color: '#8b0000',
+                fontSize: 24,
               }}
             >
-              Productos a revisar
-            </div>
+              ⚠️
+            </span>
 
-            {proximosACaducar.map(
-              (item) => (
-                <div
-                  key={item.id}
-                  className="notif-sub"
-                  style={{
-                    color: '#c00000',
-                  }}
-                >
-                  {emojiIngrediente(
-                    item.nombre
-                  )}{' '}
-                  {item.nombre} —{' '}
-                  {
-                    detectarCaducidad(
-                      item.fechaCaducidad
-                    )?.texto
-                  }
-                </div>
-              )
+            <div>
+              <h2
+                style={{
+                  color: '#c45b86',
+                  fontSize: 18,
+                }}
+              >
+                Usa esto pronto
+              </h2>
+
+              <p
+                style={{
+                  color: 'var(--txt2)',
+                  fontSize: 13,
+                  fontWeight: 700,
+                }}
+              >
+                Productos que caducan
+                pronto o ya necesitan
+                revisión.
+              </p>
+            </div>
+          </div>
+
+          <div
+            style={{
+              display: 'grid',
+              gap: 8,
+            }}
+          >
+            {productosUrgentes.map(
+              (item) => {
+                const estado =
+                  detectarCaducidad(
+                    item.fechaCaducidad
+                  )
+
+                return (
+                  <div
+                    key={item.id}
+                    style={{
+                      display: 'flex',
+                      alignItems:
+                        'center',
+                      justifyContent:
+                        'space-between',
+                      gap: 8,
+                      flexWrap: 'wrap',
+                      background:
+                        'rgba(255,255,255,0.72)',
+                      border:
+                        '1px solid var(--borde)',
+                      borderRadius: 14,
+                      padding:
+                        '9px 11px',
+                    }}
+                  >
+                    <span
+                      className="pill pill-rosa"
+                      style={{
+                        fontSize: 14,
+                        padding:
+                          '8px 12px',
+                      }}
+                    >
+                      {emojiIngrediente(
+                        item.nombre
+                      )}{' '}
+                      {item.nombre}
+                    </span>
+
+                    <span
+                      className="pill"
+                      style={{
+                        background:
+                          estado?.fondo,
+                        color:
+                          estado?.color,
+                        border: `1px solid ${estado?.color}`,
+                        fontSize: 12,
+                        padding:
+                          '6px 10px',
+                      }}
+                    >
+                      {estado?.texto}
+                    </span>
+
+                    <span className="pill pill-malva">
+                      📦 {item.cantidad}
+                      {item.unidad}
+                    </span>
+                  </div>
+                )
+              }
             )}
           </div>
         </div>

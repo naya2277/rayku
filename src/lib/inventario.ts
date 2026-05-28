@@ -67,7 +67,7 @@ export const CATEGORIAS_INVENTARIO = [
   },
 ]
 
-export function detectarCaducidad(
+export function calcularDiasCaducidad(
   fecha: string | null
 ) {
   if (!fecha) return null
@@ -75,16 +75,29 @@ export function detectarCaducidad(
   const hoy = new Date()
   const caduca = new Date(fecha)
 
-  const diff = Math.ceil(
+  hoy.setHours(0, 0, 0, 0)
+  caduca.setHours(0, 0, 0, 0)
+
+  return Math.ceil(
     (caduca.getTime() - hoy.getTime()) /
       (1000 * 60 * 60 * 24)
   )
+}
+
+export function detectarCaducidad(
+  fecha: string | null
+) {
+  const diff =
+    calcularDiasCaducidad(fecha)
+
+  if (diff === null) return null
 
   if (diff < 0) {
     return {
       texto: '🔴 Caducado',
       color: '#8b0000',
       fondo: '#ffe0e0',
+      prioridad: 0,
     }
   }
 
@@ -93,6 +106,7 @@ export function detectarCaducidad(
       texto: '🔴 Caduca hoy',
       color: '#8b0000',
       fondo: '#ffe0e0',
+      prioridad: 1,
     }
   }
 
@@ -103,6 +117,7 @@ export function detectarCaducidad(
       }`,
       color: '#9a5a00',
       fondo: '#fff1d6',
+      prioridad: 2,
     }
   }
 
@@ -110,5 +125,6 @@ export function detectarCaducidad(
     texto: '🟢 Bien',
     color: '#407040',
     fondo: '#f1f8e9',
+    prioridad: 3,
   }
 }
