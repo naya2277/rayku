@@ -7,6 +7,12 @@ export type TipoComida =
   | 'comida'
   | 'cena'
 
+export type UbicacionInventario =
+  | 'pendiente'
+  | 'nevera'
+  | 'congelador'
+  | 'despensa'
+
 export type Receta = {
   id: string
   nombre: string
@@ -49,10 +55,7 @@ export type ItemInventario = {
   cantidad: number
   unidad: string
   categoria: string
-  ubicacion:
-    | 'nevera'
-    | 'congelador'
-    | 'despensa'
+  ubicacion: UbicacionInventario
   fechaCaducidad: string | null
   fechaDescongelar?: string | null
   necesitaDescongelar: boolean

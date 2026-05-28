@@ -48,18 +48,48 @@ export default function ItemCompra({
   const esDisponible =
     modo === 'disponible'
 
-  const renderCantidad = () => {
-    if (
-      item.cantidad === null ||
-      !item.unidad
-    ) {
+  const tieneCantidad =
+    item.cantidad !== null &&
+    Boolean(item.unidad)
+
+  const renderCantidadPrincipal = () => {
+    if (!tieneCantidad) {
       return null
     }
 
     return (
-      <span className="pill pill-rosa">
-        📏 {item.cantidad}
+      <span
+        className="pill pill-rosa"
+        style={{
+          fontSize: 15,
+          fontWeight: 900,
+          padding: '10px 14px',
+        }}
+      >
+        📏 Comprar{' '}
+        {item.cantidad}
         {item.unidad}
+      </span>
+    )
+  }
+
+  const renderUso = () => {
+    if (manual || item.veces <= 1) {
+      return null
+    }
+
+    return (
+      <span
+        className="pill pill-malva"
+        style={{
+          fontSize: 12,
+          opacity: 0.8,
+          padding: '6px 10px',
+        }}
+      >
+        🔁 usado en{' '}
+        {item.veces}{' '}
+        comidas
       </span>
     )
   }
@@ -171,10 +201,6 @@ export default function ItemCompra({
         {manual && (
           <span> ✍️</span>
         )}
-
-        {item.veces > 1 && (
-          <span> x{item.veces}</span>
-        )}
       </button>
 
       <div
@@ -182,9 +208,12 @@ export default function ItemCompra({
           display: 'flex',
           gap: '8px',
           flexWrap: 'wrap',
+          alignItems: 'center',
         }}
       >
-        {renderCantidad()}
+        {renderCantidadPrincipal()}
+
+        {renderUso()}
 
         {renderDisponible()}
 

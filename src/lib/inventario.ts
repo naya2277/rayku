@@ -1,4 +1,5 @@
 export type UbicacionInventario =
+  | 'pendiente'
   | 'nevera'
   | 'congelador'
   | 'despensa'
@@ -9,6 +10,12 @@ export const SECCIONES_INVENTARIO: {
   label: string
   color: string
 }[] = [
+  {
+    key: 'pendiente',
+    emoji: '🛍️',
+    label: 'Pendiente de guardar',
+    color: '#fff0f6',
+  },
   {
     key: 'nevera',
     emoji: '🧊',

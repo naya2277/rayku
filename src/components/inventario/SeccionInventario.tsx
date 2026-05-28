@@ -229,6 +229,14 @@ export default function SeccionInventario({
                         }
                       </span>
 
+                      {item.ubicacion ===
+                        'pendiente' && (
+                        <span className="pill pill-naranja">
+                          🛍️ Pendiente
+                          de guardar
+                        </span>
+                      )}
+
                       {item.cantidad <=
                         0 && (
                         <span className="pill pill-naranja">
@@ -512,6 +520,48 @@ export default function SeccionInventario({
 
                       <option value="lata">
                         lata
+                      </option>
+                    </select>
+
+                    <select
+                      value={
+                        item.ubicacion
+                      }
+                      onChange={(
+                        e
+                      ) =>
+                        editarItemInventario(
+                          item.id,
+                          {
+                            ubicacion:
+                              e.target
+                                .value as ItemInventario['ubicacion'],
+                          }
+                        )
+                      }
+                      style={{
+                        minHeight:
+                          30,
+                        fontSize:
+                          11,
+                        padding:
+                          '4px 6px',
+                      }}
+                    >
+                      <option value="pendiente">
+                        🛍️ Pendiente
+                      </option>
+
+                      <option value="nevera">
+                        🧊 Nevera
+                      </option>
+
+                      <option value="congelador">
+                        ❄️ Congelador
+                      </option>
+
+                      <option value="despensa">
+                        🗄️ Despensa
                       </option>
                     </select>
 

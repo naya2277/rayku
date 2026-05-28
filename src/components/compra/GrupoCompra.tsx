@@ -30,7 +30,12 @@ type Props = {
   comprados: string[]
   compraManual: ItemManual[]
   onToggleComprado: (
-    id: string
+    id: string,
+    itemCompra?: {
+      nombre: string
+      cantidad: number | null
+      unidad: string | null
+    }
   ) => void
   onEliminarManual: (
     id: string
@@ -134,7 +139,15 @@ export default function GrupoCompra({
                     manual={manual}
                     onToggleComprado={() =>
                       onToggleComprado(
-                        idCheck
+                        idCheck,
+                        {
+                          nombre:
+                            item.nombre,
+                          cantidad:
+                            item.cantidad,
+                          unidad:
+                            item.unidad,
+                        }
                       )
                     }
                     onEliminarManual={() => {
