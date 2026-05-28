@@ -1,6 +1,6 @@
 import {
   normalizarIngrediente,
-} from '../ingredientes'
+} from '../recetas/helpers'
 
 const PALABRAS_RELLENO = [
   'de',
@@ -125,7 +125,13 @@ function limpiarClaveIngrediente(
     ingrediente
   )
     .replace(/\([^)]*\)/g, '')
-    .replace(/[^a-z0-9ñ\s]/g, ' ')
+
+    // mantener acentos y caracteres unicode
+    .replace(
+      /[^\p{L}0-9\s]/gu,
+      ' '
+    )
+
     .split(/\s+/)
     .map(
       (palabra) =>
@@ -152,37 +158,38 @@ export function obtenerClaveIngredienteCompra(
       ingrediente
     )
 
-  const reglas: Array<[RegExp, string]> =
+  const reglas: Array<
+    [RegExp, string]
+  > = [
     [
-      [
-        /\btomate\b.*\bcherry\b|\bcherry\b.*\btomate\b/,
-        'tomate cherry',
-      ],
-      [
-        /\bcarne\b.*\bpicada\b|\bpicada\b.*\bcarne\b/,
-        'carne picada',
-      ],
-      [
-        /\bjamon\b.*\byork\b|\byork\b.*\bjamon\b/,
-        'jamon york',
-      ],
-      [
-        /\bjamon\b.*\bserrano\b|\bserrano\b.*\bjamon\b/,
-        'jamon serrano',
-      ],
-      [
-        /\byogur\b.*\bgriego\b|\bgriego\b.*\byogur\b/,
-        'yogur griego',
-      ],
-      [
-        /\bcrema\b.*\bcacahuete\b|\bcacahuete\b.*\bcrema\b/,
-        'crema de cacahuete',
-      ],
-      [
-        /\bjudia\b.*\bverde\b|\bverde\b.*\bjudia\b/,
-        'judia verde',
-      ],
-    ]
+      /\btomate\b.*\bcherry\b|\bcherry\b.*\btomate\b/,
+      'tomate cherry',
+    ],
+    [
+      /\bcarne\b.*\bpicada\b|\bpicada\b.*\bcarne\b/,
+      'carne picada',
+    ],
+    [
+      /\bjamon\b.*\byork\b|\byork\b.*\bjamon\b/,
+      'jamon york',
+    ],
+    [
+      /\bjamon\b.*\bserrano\b|\bserrano\b.*\bjamon\b/,
+      'jamon serrano',
+    ],
+    [
+      /\byogur\b.*\bgriego\b|\bgriego\b.*\byogur\b/,
+      'yogur griego',
+    ],
+    [
+      /\bcrema\b.*\bcacahuete\b|\bcacahuete\b.*\bcrema\b/,
+      'crema de cacahuete',
+    ],
+    [
+      /\bjudia\b.*\bverde\b|\bverde\b.*\bjudia\b/,
+      'judia verde',
+    ],
+  ]
 
   const regla =
     reglas.find(
@@ -202,7 +209,11 @@ export function unidadesCompraCompatibles(
   }
 
   return (
-    normalizarUnidadCompra(unidadA) ===
-    normalizarUnidadCompra(unidadB)
+    normalizarUnidadCompra(
+      unidadA
+    ) ===
+    normalizarUnidadCompra(
+      unidadB
+    )
   )
 }
