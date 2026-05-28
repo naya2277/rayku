@@ -1,4 +1,7 @@
-import { useMemo } from 'react'
+import {
+  useMemo,
+  useState,
+} from 'react'
 
 import { useRaykuStore } from '../store'
 
@@ -25,6 +28,11 @@ export default function Compra() {
     toggleCheckCompra,
     limpiarChecksCompra,
   } = useRaykuStore()
+
+  const [
+    mostrarComprados,
+    setMostrarComprados,
+  ] = useState(false)
 
   const ingredientes = useMemo(() => {
     return generarIngredientesCompra(
@@ -83,12 +91,53 @@ export default function Compra() {
     )
   }, [ingredientesConManuales, inventario])
 
+  const esItemComprado = (
+    item: IngredienteCompra
+  ) => {
+    const manual =
+      compraManual.find(
+        (manualItem) =>
+          item.clave ===
+          `manual-${manualItem.id}`
+      )
+
+    const idCheck =
+      manual
+        ? `manual-${manual.id}`
+        : item.nombre
+
+    return checksCompra.includes(
+      idCheck
+    )
+  }
+
+  const paraComprarVisibles =
+    useMemo(() => {
+      if (mostrarComprados) {
+        return paraComprar
+      }
+
+      return paraComprar.filter(
+        (item) =>
+          !esItemComprado(item)
+      )
+    }, [
+      paraComprar,
+      mostrarComprados,
+      checksCompra,
+      compraManual,
+    ])
+
+  const compradosOcultos =
+    paraComprar.length -
+    paraComprarVisibles.length
+
   const agrupadosComprar =
     useMemo(() => {
       return agruparIngredientesCompra(
-        paraComprar
+        paraComprarVisibles
       )
-    }, [paraComprar])
+    }, [paraComprarVisibles])
 
   const agrupadosDisponibles =
     useMemo(() => {
@@ -98,7 +147,7 @@ export default function Compra() {
     }, [yaDisponibles])
 
   const totalCompra =
-    paraComprar.length
+    paraComprarVisibles.length
 
   return (
     <div>
@@ -133,14 +182,36 @@ export default function Compra() {
           </p>
         </div>
 
-        <button
-          className="btn-secundario"
-          onClick={
-            limpiarChecksCompra
-          }
+        <div
+          style={{
+            display: 'flex',
+            gap: 8,
+            flexWrap: 'wrap',
+          }}
         >
-          🧹 Limpiar checks
-        </button>
+          <button
+            className="btn-secundario"
+            onClick={() =>
+              setMostrarComprados(
+                (actual) =>
+                  !actual
+              )
+            }
+          >
+            {mostrarComprados
+              ? '🙈 Ocultar comprados'
+              : '👁️ Mostrar comprados'}
+          </button>
+
+          <button
+            className="btn-secundario"
+            onClick={
+              limpiarChecksCompra
+            }
+          >
+            🧹 Limpiar checks
+          </button>
+        </div>
       </div>
 
       <FormularioCompraManual
@@ -151,11 +222,11 @@ export default function Compra() {
 
       <ResumenCompra
         total={
-          totalCompra +
+          paraComprar.length +
           yaDisponibles.length
         }
         paraComprar={
-          totalCompra
+          paraComprar.length
         }
         yaDisponibles={
           yaDisponibles.length
@@ -164,6 +235,56 @@ export default function Compra() {
           compraManual.length
         }
       />
+
+      {compradosOcultos > 0 &&
+        !mostrarComprados && (
+          <div
+            className="card"
+            style={{
+              marginBottom: 18,
+              background:
+                '#f7fff8',
+              borderColor:
+                '#cfead2',
+              color:
+                '#407040',
+              fontWeight: 800,
+              display: 'flex',
+              justifyContent:
+                'space-between',
+              gap: 10,
+              flexWrap: 'wrap',
+              alignItems:
+                'center',
+            }}
+          >
+            <span>
+              ✅ {compradosOcultos}{' '}
+              comprado
+              {compradosOcultos ===
+              1
+                ? ''
+                : 's'}{' '}
+              oculto
+              {compradosOcultos ===
+              1
+                ? ''
+                : 's'}
+            </span>
+
+            <button
+              type="button"
+              className="btn-secundario"
+              onClick={() =>
+                setMostrarComprados(
+                  true
+                )
+              }
+            >
+              👁️ Ver
+            </button>
+          </div>
+        )}
 
       {totalCompra === 0 &&
         yaDisponibles.length ===
@@ -179,6 +300,25 @@ export default function Compra() {
               ingredientes en el
               planning ni extras
               manuales 💕
+            </p>
+          </div>
+        )}
+
+      {totalCompra === 0 &&
+        paraComprar.length > 0 &&
+        compradosOcultos > 0 &&
+        !mostrarComprados && (
+          <div className="card">
+            <p
+              style={{
+                color:
+                  '#9e7d90',
+                fontWeight: 800,
+              }}
+            >
+              Todo lo pendiente
+              está comprado y
+              oculto ✅💕
             </p>
           </div>
         )}
