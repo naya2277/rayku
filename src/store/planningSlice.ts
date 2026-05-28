@@ -1,4 +1,6 @@
 import type {
+  Receta,
+  ItemInventario,
   ItemPlanning,
   TipoComida,
 } from './types'
@@ -12,16 +14,33 @@ import {
 } from './normalizers'
 
 import {
+  guardarInventarioLocal,
   guardarPlanningLocal,
 } from './storage'
 
+import {
+  calcularIngredientesEscalados,
+  type IngredienteEscalado,
+} from '../lib/recetas/calcularIngredientesEscalados'
+
+import {
+  separarTextoIngredientes,
+} from '../lib/cantidadesIngredientes'
+
+import {
+  descontarIngredientesInventario,
+} from '../lib/inventario/descontarIngredientesInventario'
+
 type StoreGet = () => {
   planning: ItemPlanning[]
+  recetas: Receta[]
+  inventario: ItemInventario[]
 }
 
 type StoreSet = (
   data: Partial<{
     planning: ItemPlanning[]
+    inventario: ItemInventario[]
   }>
 ) => void
 
@@ -126,25 +145,102 @@ export const crearPlanningSlice = (
 
   toggleCocinadoPlanning:
     (id) => {
+      const estado =
+        get()
+
+      const hueco =
+        estado.planning.find(
+          (h) => h.id === id
+        )
+
+      if (!hueco) {
+        return
+      }
+
+      const vaACocinar =
+        !hueco.cocinado
+
       const nuevoPlanning =
-        get().planning.map(
-          (hueco) =>
-            hueco.id === id
+        estado.planning.map(
+          (item) =>
+            item.id === id
               ? {
-                  ...hueco,
+                  ...item,
                   cocinado:
-                    !hueco.cocinado,
+                    vaACocinar,
                 }
-              : hueco
+              : item
+        )
+
+      if (!vaACocinar) {
+        guardarPlanningLocal(
+          nuevoPlanning
+        )
+
+        set({
+          planning:
+            nuevoPlanning,
+        })
+
+        return
+      }
+
+      const ingredientes: IngredienteEscalado[] =
+        []
+
+      if (hueco.recetaId) {
+        const receta =
+          estado.recetas.find(
+            (r) =>
+              r.id ===
+              hueco.recetaId
+          )
+
+        if (receta) {
+          ingredientes.push(
+            ...calcularIngredientesEscalados(
+              receta,
+              hueco.racionesOverride ??
+                receta.raciones
+            )
+          )
+        }
+      }
+
+      if (hueco.comidaLibre) {
+        ingredientes.push(
+          ...calcularIngredientesEscalados(
+            {
+              ingredientes:
+                separarTextoIngredientes(
+                  hueco.comidaLibre
+                ),
+              raciones: 1,
+            },
+            1
+          )
+        )
+      }
+
+      const nuevoInventario =
+        descontarIngredientesInventario(
+          estado.inventario,
+          ingredientes
         )
 
       guardarPlanningLocal(
         nuevoPlanning
       )
 
+      guardarInventarioLocal(
+        nuevoInventario
+      )
+
       set({
         planning:
           nuevoPlanning,
+        inventario:
+          nuevoInventario,
       })
     },
 })
