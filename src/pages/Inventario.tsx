@@ -9,6 +9,7 @@ import {
 import {
   detectarCaducidad,
   calcularDiasCaducidad,
+  detectarStockBajo,
   SECCIONES_INVENTARIO,
 } from '../lib/inventario'
 
@@ -78,6 +79,41 @@ export default function Inventario() {
 
         if (diasA !== diasB) {
           return diasA - diasB
+        }
+
+        return a.nombre.localeCompare(
+          b.nombre,
+          'es',
+          {
+            sensitivity: 'base',
+          }
+        )
+      })
+
+  const productosStockBajo =
+    inventario
+      .filter((item) => {
+        if (
+          item.ubicacion ===
+          'pendiente'
+        ) {
+          return false
+        }
+
+        return Boolean(
+          detectarStockBajo(
+            item.cantidad,
+            item.unidad
+          )
+        )
+      })
+      .sort((a, b) => {
+        if (
+          a.cantidad !== b.cantidad
+        ) {
+          return (
+            a.cantidad - b.cantidad
+          )
         }
 
         return a.nombre.localeCompare(
@@ -245,6 +281,120 @@ export default function Inventario() {
                     <span className="pill pill-malva">
                       📦 {item.cantidad}
                       {item.unidad}
+                    </span>
+                  </div>
+                )
+              }
+            )}
+          </div>
+        </div>
+      )}
+
+      {productosStockBajo.length >
+        0 && (
+        <div
+          className="card"
+          style={{
+            marginBottom: 18,
+            background:
+              'linear-gradient(135deg, #fff8ee, #f1f8e9)',
+            borderColor: '#ffcc80',
+          }}
+        >
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 10,
+              marginBottom: 12,
+            }}
+          >
+            <span
+              style={{
+                fontSize: 24,
+              }}
+            >
+              🧺
+            </span>
+
+            <div>
+              <h2
+                style={{
+                  color: '#a07030',
+                  fontSize: 18,
+                }}
+              >
+                Queda poco
+              </h2>
+
+              <p
+                style={{
+                  color: 'var(--txt2)',
+                  fontSize: 13,
+                  fontWeight: 700,
+                }}
+              >
+                Productos que quizá
+                conviene reponer
+                pronto.
+              </p>
+            </div>
+          </div>
+
+          <div
+            style={{
+              display: 'grid',
+              gap: 8,
+            }}
+          >
+            {productosStockBajo.map(
+              (item) => {
+                const stock =
+                  detectarStockBajo(
+                    item.cantidad,
+                    item.unidad
+                  )
+
+                return (
+                  <div
+                    key={item.id}
+                    style={{
+                      display: 'flex',
+                      alignItems:
+                        'center',
+                      justifyContent:
+                        'space-between',
+                      gap: 8,
+                      flexWrap: 'wrap',
+                      background:
+                        'rgba(255,255,255,0.72)',
+                      border:
+                        '1px solid var(--borde)',
+                      borderRadius: 14,
+                      padding:
+                        '9px 11px',
+                    }}
+                  >
+                    <span
+                      className="pill pill-rosa"
+                      style={{
+                        fontSize: 14,
+                        padding:
+                          '8px 12px',
+                      }}
+                    >
+                      {emojiIngrediente(
+                        item.nombre
+                      )}{' '}
+                      {item.nombre}
+                    </span>
+
+                    <span className="pill pill-naranja">
+                      {stock?.texto}
+                    </span>
+
+                    <span className="pill pill-malva">
+                      📍 {item.ubicacion}
                     </span>
                   </div>
                 )

@@ -128,3 +128,131 @@ export function detectarCaducidad(
     prioridad: 3,
   }
 }
+
+function normalizarUnidadStock(
+  unidad: string
+) {
+  return unidad
+    .toLowerCase()
+    .trim()
+    .replace(/\./g, '')
+}
+
+export function detectarStockBajo(
+  cantidad: number,
+  unidad: string
+) {
+  if (cantidad <= 0) {
+    return null
+  }
+
+  const unidadNormalizada =
+    normalizarUnidadStock(unidad)
+
+  if (
+    [
+      'g',
+      'gr',
+      'grs',
+      'gramo',
+      'gramos',
+    ].includes(
+      unidadNormalizada
+    ) &&
+    cantidad <= 100
+  ) {
+    return {
+      texto: `⚠️ Quedan ${cantidad}${unidad}`,
+      prioridad: 1,
+    }
+  }
+
+  if (
+    [
+      'ml',
+      'mililitro',
+      'mililitros',
+    ].includes(
+      unidadNormalizada
+    ) &&
+    cantidad <= 100
+  ) {
+    return {
+      texto: `⚠️ Quedan ${cantidad}${unidad}`,
+      prioridad: 1,
+    }
+  }
+
+  if (
+    [
+      'kg',
+      'kilo',
+      'kilos',
+      'kilogramo',
+      'kilogramos',
+    ].includes(
+      unidadNormalizada
+    ) &&
+    cantidad <= 0.25
+  ) {
+    return {
+      texto: `⚠️ Quedan ${cantidad}${unidad}`,
+      prioridad: 1,
+    }
+  }
+
+  if (
+    [
+      'l',
+      'litro',
+      'litros',
+    ].includes(
+      unidadNormalizada
+    ) &&
+    cantidad <= 0.25
+  ) {
+    return {
+      texto: `⚠️ Quedan ${cantidad}${unidad}`,
+      prioridad: 1,
+    }
+  }
+
+  if (
+    [
+      'u',
+      'ud',
+      'uds',
+      'unidad',
+      'unidades',
+    ].includes(
+      unidadNormalizada
+    ) &&
+    cantidad <= 2
+  ) {
+    return {
+      texto: `⚠️ Quedan ${cantidad}${unidad}`,
+      prioridad: 1,
+    }
+  }
+
+  if (
+    [
+      'paquete',
+      'paquetes',
+      'lata',
+      'latas',
+      'brick',
+      'bricks',
+    ].includes(
+      unidadNormalizada
+    ) &&
+    cantidad <= 1
+  ) {
+    return {
+      texto: `⚠️ Queda ${cantidad} ${unidad}`,
+      prioridad: 1,
+    }
+  }
+
+  return null
+}
