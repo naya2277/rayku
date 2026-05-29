@@ -1,6 +1,12 @@
 import { useState } from 'react'
 
-import { useRaykuStore } from '../store'
+import {
+  useRaykuStore,
+} from '../store'
+
+import type {
+  UbicacionInventario,
+} from '../store/types'
 
 import {
   emojiIngrediente,
@@ -16,6 +22,7 @@ import {
 
 import FormularioInventario from '../components/inventario/FormularioInventario'
 import SeccionInventario from '../components/inventario/SeccionInventario'
+import AccionesPendientesInventario from '../components/inventario/AccionesPendientesInventario'
 
 type FiltroInventario =
   | 'todos'
@@ -118,6 +125,11 @@ export default function Inventario() {
     setFiltroActivo,
   ] = useState<FiltroInventario>('todos')
 
+  const [
+    seleccionadosPendientes,
+    setSeleccionadosPendientes,
+  ] = useState<string[]>([])
+
   const ordenarPorNombre = <
     T extends {
       nombre: string
@@ -134,6 +146,55 @@ export default function Inventario() {
         }
       )
     )
+
+  const productosPendientes =
+    inventario.filter(
+      (item) =>
+        item.ubicacion ===
+        'pendiente'
+    )
+
+  const toggleSeleccionPendiente = (
+    id: string
+  ) => {
+    setSeleccionadosPendientes(
+      (actual) =>
+        actual.includes(id)
+          ? actual.filter(
+              (itemId) =>
+                itemId !== id
+            )
+          : [
+              ...actual,
+              id,
+            ]
+    )
+  }
+
+  const limpiarSeleccionPendiente =
+    () => {
+      setSeleccionadosPendientes(
+        []
+      )
+    }
+
+  const moverSeleccionadosPendientes =
+    (
+      ubicacion: UbicacionInventario
+    ) => {
+      seleccionadosPendientes.forEach(
+        (id) => {
+          editarItemInventario(
+            id,
+            {
+              ubicacion,
+            }
+          )
+        }
+      )
+
+      limpiarSeleccionPendiente()
+    }
 
   const productosUrgentes =
     inventario
@@ -670,6 +731,21 @@ export default function Inventario() {
         )}
       </div>
 
+      <AccionesPendientesInventario
+        totalPendientes={
+          productosPendientes.length
+        }
+        seleccionados={
+          seleccionadosPendientes
+        }
+        onMoverSeleccionados={
+          moverSeleccionadosPendientes
+        }
+        onLimpiarSeleccion={
+          limpiarSeleccionPendiente
+        }
+      />
+
       {mostrarFormulario && (
         <FormularioInventario
           agregarItemInventario={
@@ -704,6 +780,9 @@ export default function Inventario() {
                 )
               )
 
+            const esPendiente =
+              key === 'pendiente'
+
             return (
               <SeccionInventario
                 key={key}
@@ -711,6 +790,19 @@ export default function Inventario() {
                 emoji={emoji}
                 color={color}
                 items={items}
+                seleccionables={
+                  esPendiente
+                }
+                seleccionados={
+                  esPendiente
+                    ? seleccionadosPendientes
+                    : []
+                }
+                onToggleSeleccion={
+                  esPendiente
+                    ? toggleSeleccionPendiente
+                    : undefined
+                }
                 editarItemInventario={
                   editarItemInventario
                 }

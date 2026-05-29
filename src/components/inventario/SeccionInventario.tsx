@@ -10,6 +10,13 @@ type Props = {
   color: string
   items: ItemInventarioType[]
 
+  seleccionables?: boolean
+  seleccionados?: string[]
+
+  onToggleSeleccion?: (
+    id: string
+  ) => void
+
   editarItemInventario: (
     id: string,
     data: Partial<ItemInventarioType>
@@ -25,6 +32,9 @@ export default function SeccionInventario({
   emoji,
   color,
   items,
+  seleccionables = false,
+  seleccionados = [],
+  onToggleSeleccion,
   editarItemInventario,
   eliminarItemInventario,
 }: Props) {
@@ -93,23 +103,78 @@ export default function SeccionInventario({
           </div>
         ) : (
           items.map(
-            (item, idx) => (
-              <ItemInventario
-                key={item.id}
-                item={item}
-                ultimo={
-                  idx ===
-                  items.length -
-                    1
-                }
-                editarItemInventario={
-                  editarItemInventario
-                }
-                eliminarItemInventario={
-                  eliminarItemInventario
-                }
-              />
-            )
+            (item, idx) => {
+              const seleccionado =
+                seleccionados.includes(
+                  item.id
+                )
+
+              return (
+                <div
+                  key={item.id}
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns:
+                      seleccionables
+                        ? '44px 1fr'
+                        : '1fr',
+                    alignItems: 'stretch',
+                    borderBottom:
+                      idx ===
+                      items.length - 1
+                        ? 'none'
+                        : '1px solid var(--borde)',
+                  }}
+                >
+                  {seleccionables && (
+                    <button
+                      type="button"
+                      onClick={() =>
+                        onToggleSeleccion?.(
+                          item.id
+                        )
+                      }
+                      style={{
+                        border: 'none',
+                        borderRight:
+                          '1px solid var(--borde)',
+                        background:
+                          seleccionado
+                            ? '#f2fff4'
+                            : '#fffafc',
+                        cursor: 'pointer',
+                        fontSize: 22,
+                        fontWeight: 900,
+                        color:
+                          seleccionado
+                            ? '#6d9b6d'
+                            : '#c45b86',
+                      }}
+                      aria-label={
+                        seleccionado
+                          ? 'Quitar selección'
+                          : 'Seleccionar producto'
+                      }
+                    >
+                      {seleccionado
+                        ? '✅'
+                        : '☐'}
+                    </button>
+                  )}
+
+                  <ItemInventario
+                    item={item}
+                    ultimo={true}
+                    editarItemInventario={
+                      editarItemInventario
+                    }
+                    eliminarItemInventario={
+                      eliminarItemInventario
+                    }
+                  />
+                </div>
+              )
+            }
           )
         )}
       </div>
