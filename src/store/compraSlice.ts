@@ -60,6 +60,8 @@ export type CompraSlice = {
   ) => void
 
   limpiarChecksCompra: () => void
+
+  finalizarCompra: () => void
 }
 
 function yaExistePendiente(
@@ -216,6 +218,33 @@ export const crearCompraSlice = (
       )
 
       set({
+        checksCompra: [],
+      })
+    },
+
+  finalizarCompra:
+    () => {
+      const estado = get()
+
+      const compraManualPendiente =
+        estado.compraManual.filter(
+          (item) =>
+            !estado.checksCompra.includes(
+              `manual-${item.id}`
+            )
+        )
+
+      guardarCompraManualLocal(
+        compraManualPendiente
+      )
+
+      guardarChecksCompraLocal(
+        []
+      )
+
+      set({
+        compraManual:
+          compraManualPendiente,
         checksCompra: [],
       })
     },

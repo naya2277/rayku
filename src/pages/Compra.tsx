@@ -26,7 +26,7 @@ export default function Compra() {
     eliminarItemCompraManual,
     checksCompra,
     toggleCheckCompra,
-    limpiarChecksCompra,
+    finalizarCompra,
   } = useRaykuStore()
 
   const [
@@ -202,15 +202,6 @@ export default function Compra() {
               ? '🙈 Ocultar comprados'
               : '👁️ Mostrar comprados'}
           </button>
-
-          <button
-            className="btn-secundario"
-            onClick={
-              limpiarChecksCompra
-            }
-          >
-            🧹 Limpiar checks
-          </button>
         </div>
       </div>
 
@@ -233,6 +224,12 @@ export default function Compra() {
         }
         manuales={
           compraManual.length
+        }
+        comprados={
+          checksCompra.length
+        }
+        onFinalizarCompra={
+          finalizarCompra
         }
       />
 
