@@ -7,6 +7,7 @@ import type {
   ItemInventario,
   ItemPlanning,
   ItemCompraManual,
+  RegistroCocinado,
 } from './types'
 
 export const normalizarReceta = (
@@ -78,4 +79,35 @@ export const normalizarPlanning = (
   nota: item.nota ?? '',
   racionesOverride: item.racionesOverride ?? null,
   cocinado: item.cocinado ?? false,
+})
+
+export const normalizarRegistroCocinado = (
+  item: any
+): RegistroCocinado => ({
+  id: item.id ?? generarId(),
+  planningId: item.planningId ?? '',
+  fecha: item.fecha ?? '',
+  tipoComida: item.tipoComida ?? 'comida',
+  origen: item.origen ?? 'comida_libre',
+  recetaId: item.recetaId ?? null,
+  recetaNombre: item.recetaNombre ?? null,
+  comidaLibre: item.comidaLibre ?? '',
+  raciones:
+    item.raciones === null ||
+    item.raciones === undefined
+      ? null
+      : Number(item.raciones),
+  ingredientesOriginales: Array.isArray(item.ingredientesOriginales)
+    ? item.ingredientesOriginales
+    : [],
+  cambiosInventario: Array.isArray(item.cambiosInventario)
+    ? item.cambiosInventario.map((c: any) => ({
+        itemId: c.itemId ?? '',
+        nombre: c.nombre ?? '',
+        unidad: c.unidad ?? '',
+        cantidadAnterior: Number(c.cantidadAnterior) || 0,
+        cantidadNueva: Number(c.cantidadNueva) || 0,
+      }))
+    : [],
+  creadoEn: item.creadoEn ?? new Date().toISOString(),
 })

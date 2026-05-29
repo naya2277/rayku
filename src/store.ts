@@ -13,6 +13,7 @@ import {
   normalizarInventario,
   normalizarPlanning,
   normalizarCompraManual,
+  normalizarRegistroCocinado,
 } from './store/normalizers'
 
 import {
@@ -104,6 +105,11 @@ export const useRaykuStore =
         []
       ),
 
+      historialCocinado: cargar<any[]>(
+        STORAGE_KEYS.historialCocinado,
+        []
+      ).map(normalizarRegistroCocinado),
+
       semanas: [],
 
       listaCompra: [],
@@ -119,4 +125,6 @@ export type {
   ItemCompraManual,
   TipoComida,
   Dificultad,
+  RegistroCocinado,
+  CambioInventarioCocinado,
 } from './store/types'

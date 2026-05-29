@@ -60,3 +60,26 @@ export type ItemInventario = {
   fechaDescongelar?: string | null
   necesitaDescongelar: boolean
 }
+
+export type CambioInventarioCocinado = {
+  itemId: string
+  nombre: string
+  unidad: string
+  cantidadAnterior: number
+  cantidadNueva: number
+}
+
+export type RegistroCocinado = {
+  id: string
+  planningId: string
+  fecha: string
+  tipoComida: TipoComida
+  origen: 'receta' | 'comida_libre' | 'mixto'
+  recetaId: string | null
+  recetaNombre: string | null
+  comidaLibre: string
+  raciones: number | null
+  ingredientesOriginales: string[]
+  cambiosInventario: CambioInventarioCocinado[]
+  creadoEn: string
+}

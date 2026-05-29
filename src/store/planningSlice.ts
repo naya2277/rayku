@@ -3,6 +3,7 @@ import type {
   ItemInventario,
   ItemPlanning,
   TipoComida,
+  RegistroCocinado,
 } from './types'
 
 import {
@@ -16,36 +17,39 @@ import {
 import {
   guardarInventarioLocal,
   guardarPlanningLocal,
+  guardarHistorialCocinadoLocal,
 } from './storage'
 
 import {
-  calcularIngredientesEscalados,
-  type IngredienteEscalado,
-} from '../lib/recetas/calcularIngredientesEscalados'
+  prepararIngredientesCocinar,
+} from '../lib/cocinar/prepararIngredientesCocinar'
 
 import {
-  separarTextoIngredientes,
-} from '../lib/cantidadesIngredientes'
+  aplicarCocinado,
+} from '../lib/cocinar/aplicarCocinado'
 
 import {
-  descontarIngredientesInventario,
-} from '../lib/inventario/descontarIngredientesInventario'
+  revertirCocinado,
+} from '../lib/cocinar/revertirCocinado'
 
 type StoreGet = () => {
   planning: ItemPlanning[]
   recetas: Receta[]
   inventario: ItemInventario[]
+  historialCocinado: RegistroCocinado[]
 }
 
 type StoreSet = (
   data: Partial<{
     planning: ItemPlanning[]
     inventario: ItemInventario[]
+    historialCocinado: RegistroCocinado[]
   }>
 ) => void
 
 export type PlanningSlice = {
   planning: ItemPlanning[]
+  historialCocinado: RegistroCocinado[]
 
   guardarHuecoPlanning: (
     item: Omit<
@@ -69,6 +73,7 @@ export const crearPlanningSlice = (
   get: StoreGet
 ): PlanningSlice => ({
   planning: [],
+  historialCocinado: [],
 
   guardarHuecoPlanning:
     (item) => {
@@ -160,87 +165,116 @@ export const crearPlanningSlice = (
       const vaACocinar =
         !hueco.cocinado
 
+      if (!vaACocinar) {
+        const registro =
+          [...estado.historialCocinado]
+            .reverse()
+            .find(
+              (r) =>
+                r.planningId === id
+            )
+
+        const nuevoInventario =
+          registro
+            ? revertirCocinado(
+                estado.inventario,
+                registro
+              )
+            : estado.inventario
+
+        const nuevoHistorial =
+          registro
+            ? estado.historialCocinado.filter(
+                (r) =>
+                  r.id !==
+                  registro.id
+              )
+            : estado.historialCocinado
+
+        const nuevoPlanning =
+          estado.planning.map(
+            (item) =>
+              item.id === id
+                ? {
+                    ...item,
+                    cocinado: false,
+                  }
+                : item
+          )
+
+        guardarPlanningLocal(
+          nuevoPlanning
+        )
+
+        guardarInventarioLocal(
+          nuevoInventario
+        )
+
+        guardarHistorialCocinadoLocal(
+          nuevoHistorial
+        )
+
+        set({
+          planning:
+            nuevoPlanning,
+          inventario:
+            nuevoInventario,
+          historialCocinado:
+            nuevoHistorial,
+        })
+
+        return
+      }
+
+      const datosCocinado =
+        prepararIngredientesCocinar(
+          hueco,
+          estado.recetas
+        )
+
+      const resultado =
+        aplicarCocinado(
+          estado.inventario,
+          hueco,
+          datosCocinado
+        )
+
       const nuevoPlanning =
         estado.planning.map(
           (item) =>
             item.id === id
               ? {
                   ...item,
-                  cocinado:
-                    vaACocinar,
+                  cocinado: true,
                 }
               : item
         )
 
-      if (!vaACocinar) {
-        guardarPlanningLocal(
-          nuevoPlanning
-        )
-
-        set({
-          planning:
-            nuevoPlanning,
-        })
-
-        return
-      }
-
-      const ingredientes: IngredienteEscalado[] =
-        []
-
-      if (hueco.recetaId) {
-        const receta =
-          estado.recetas.find(
-            (r) =>
-              r.id ===
-              hueco.recetaId
-          )
-
-        if (receta) {
-          ingredientes.push(
-            ...calcularIngredientesEscalados(
-              receta,
-              hueco.racionesOverride ??
-                receta.raciones
-            )
-          )
-        }
-      }
-
-      if (hueco.comidaLibre) {
-        ingredientes.push(
-          ...calcularIngredientesEscalados(
-            {
-              ingredientes:
-                separarTextoIngredientes(
-                  hueco.comidaLibre
-                ),
-              raciones: 1,
-            },
-            1
-          )
-        )
-      }
-
-      const nuevoInventario =
-        descontarIngredientesInventario(
-          estado.inventario,
-          ingredientes
-        )
+      const nuevoHistorial =
+        [
+          ...estado.historialCocinado,
+          resultado.registro,
+        ]
 
       guardarPlanningLocal(
         nuevoPlanning
       )
 
       guardarInventarioLocal(
-        nuevoInventario
+        resultado.inventario
+      )
+
+      guardarHistorialCocinadoLocal(
+        nuevoHistorial
       )
 
       set({
         planning:
           nuevoPlanning,
         inventario:
-          nuevoInventario,
+          resultado.inventario,
+        historialCocinado:
+          nuevoHistorial,
       })
     },
 })

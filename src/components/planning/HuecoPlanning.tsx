@@ -647,17 +647,16 @@ export default function HuecoPlanning({
               ✏️ Editar
             </button>
 
-             <button
-  className="btn-secundario"
-  onClick={
-    toggleCocinado
-  }
->
-  {hueco?.cocinado
-    ? '✅ Cocinado'
-    : '🍳 Marcar cocinado'}
-</button>
-            
+            <button
+              className="btn-secundario"
+              onClick={
+                toggleCocinado
+              }
+            >
+              {hueco?.cocinado
+                ? '↩️ Deshacer cocinado'
+                : '🍳 Hoy cocino'}
+            </button>
 
             <button
               className="btn-secundario"
@@ -665,7 +664,6 @@ export default function HuecoPlanning({
                 limpiarHueco
               }
             >
-            
               🧹 Limpiar
             </button>
           </div>
