@@ -67,8 +67,8 @@ export const crearRecetasSlice = (
       })
 
     const nuevas = [
-      ...get().recetas,
       nuevaReceta,
+      ...get().recetas,
     ]
 
     guardarRecetasLocal(
