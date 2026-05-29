@@ -23,6 +23,7 @@ import {
 import FormularioInventario from '../components/inventario/FormularioInventario'
 import SeccionInventario from '../components/inventario/SeccionInventario'
 import AccionesPendientesInventario from '../components/inventario/AccionesPendientesInventario'
+import AccionesAgotadosInventario from '../components/inventario/AccionesAgotadosInventario'
 
 type FiltroInventario =
   | 'todos'
@@ -44,62 +45,20 @@ const FILTROS: {
   key: FiltroInventario
   label: string
 }[] = [
-  {
-    key: 'todos',
-    label: '🌸 Todos',
-  },
-  {
-    key: 'pendiente',
-    label: '🛍️ Pendiente',
-  },
-  {
-    key: 'nevera',
-    label: '🧊 Nevera',
-  },
-  {
-    key: 'congelador',
-    label: '❄️ Congelador',
-  },
-  {
-    key: 'despensa',
-    label: '🗄️ Despensa',
-  },
-  {
-    key: 'stockBajo',
-    label: '🧺 Poco stock',
-  },
-  {
-    key: 'caducan',
-    label: '⚠️ Caducan',
-  },
-  {
-    key: 'proteina',
-    label: '🥩 Proteína',
-  },
-  {
-    key: 'verdura',
-    label: '🥦 Verdura',
-  },
-  {
-    key: 'grasa',
-    label: '🧈 Grasa',
-  },
-  {
-    key: 'carbohidrato',
-    label: '🍚 Carbohidrato',
-  },
-  {
-    key: 'salsa',
-    label: '🥣 Salsa',
-  },
-  {
-    key: 'fruta',
-    label: '🍓 Fruta',
-  },
-  {
-    key: 'otros',
-    label: '✨ Otros',
-  },
+  { key: 'todos', label: '🌸 Todos' },
+  { key: 'pendiente', label: '🛍️ Pendiente' },
+  { key: 'nevera', label: '🧊 Nevera' },
+  { key: 'congelador', label: '❄️ Congelador' },
+  { key: 'despensa', label: '🗄️ Despensa' },
+  { key: 'stockBajo', label: '🧺 Poco stock' },
+  { key: 'caducan', label: '⚠️ Caducan' },
+  { key: 'proteina', label: '🥩 Proteína' },
+  { key: 'verdura', label: '🥦 Verdura' },
+  { key: 'grasa', label: '🧈 Grasa' },
+  { key: 'carbohidrato', label: '🍚 Carbohidrato' },
+  { key: 'salsa', label: '🥣 Salsa' },
+  { key: 'fruta', label: '🍓 Fruta' },
+  { key: 'otros', label: '✨ Otros' },
 ]
 
 export default function Inventario() {
@@ -108,22 +67,18 @@ export default function Inventario() {
     agregarItemInventario,
     editarItemInventario,
     eliminarItemInventario,
+    agregarAgotadosACompra,
+    compraManual,
   } = useRaykuStore()
 
-  const [
-    mostrarFormulario,
-    setMostrarFormulario,
-  ] = useState(false)
+  const [mostrarFormulario, setMostrarFormulario] =
+    useState(false)
 
-  const [
-    busqueda,
-    setBusqueda,
-  ] = useState('')
+  const [busqueda, setBusqueda] =
+    useState('')
 
-  const [
-    filtroActivo,
-    setFiltroActivo,
-  ] = useState<FiltroInventario>('todos')
+  const [filtroActivo, setFiltroActivo] =
+    useState<FiltroInventario>('todos')
 
   const [
     seleccionadosPendientes,
@@ -133,25 +88,42 @@ export default function Inventario() {
   const ordenarPorNombre = <
     T extends {
       nombre: string
+      cantidad?: number
     },
   >(
     items: T[]
   ) =>
-    [...items].sort((a, b) =>
-      a.nombre.localeCompare(
+    [...items].sort((a, b) => {
+      const agotadoA =
+        Number(a.cantidad ?? 1) <= 0
+
+      const agotadoB =
+        Number(b.cantidad ?? 1) <= 0
+
+      if (agotadoA !== agotadoB) {
+        return agotadoA ? 1 : -1
+      }
+
+      return a.nombre.localeCompare(
         b.nombre,
         'es',
-        {
-          sensitivity: 'base',
-        }
+        { sensitivity: 'base' }
       )
-    )
+    })
 
   const productosPendientes =
     inventario.filter(
       (item) =>
         item.ubicacion ===
         'pendiente'
+    )
+
+  const productosAgotados =
+    inventario.filter(
+      (item) =>
+        item.cantidad <= 0 &&
+        item.ubicacion !==
+          'pendiente'
     )
 
   const toggleSeleccionPendiente = (
@@ -206,6 +178,10 @@ export default function Inventario() {
           return false
         }
 
+        if (item.cantidad <= 0) {
+          return false
+        }
+
         const dias =
           calcularDiasCaducidad(
             item.fechaCaducidad
@@ -234,9 +210,7 @@ export default function Inventario() {
         return a.nombre.localeCompare(
           b.nombre,
           'es',
-          {
-            sensitivity: 'base',
-          }
+          { sensitivity: 'base' }
         )
       })
 
@@ -250,6 +224,10 @@ export default function Inventario() {
           return false
         }
 
+        if (item.cantidad <= 0) {
+          return false
+        }
+
         return Boolean(
           detectarStockBajo(
             item.cantidad,
@@ -258,20 +236,14 @@ export default function Inventario() {
         )
       })
       .sort((a, b) => {
-        if (
-          a.cantidad !== b.cantidad
-        ) {
-          return (
-            a.cantidad - b.cantidad
-          )
+        if (a.cantidad !== b.cantidad) {
+          return a.cantidad - b.cantidad
         }
 
         return a.nombre.localeCompare(
           b.nombre,
           'es',
-          {
-            sensitivity: 'base',
-          }
+          { sensitivity: 'base' }
         )
       })
 
@@ -305,6 +277,7 @@ export default function Inventario() {
     if (filtroActivo === 'stockBajo') {
       return (
         item.ubicacion !== 'pendiente' &&
+        item.cantidad > 0 &&
         Boolean(
           detectarStockBajo(
             item.cantidad,
@@ -322,6 +295,7 @@ export default function Inventario() {
 
       return (
         item.ubicacion !== 'pendiente' &&
+        item.cantidad > 0 &&
         dias !== null &&
         dias <= 3
       )
@@ -348,9 +322,7 @@ export default function Inventario() {
         .toLowerCase()
 
     return texto.includes(
-      busqueda
-        .trim()
-        .toLowerCase()
+      busqueda.trim().toLowerCase()
     )
   }
 
@@ -400,8 +372,7 @@ export default function Inventario() {
         </button>
       </div>
 
-      {productosUrgentes.length >
-        0 && (
+      {productosUrgentes.length > 0 && (
         <div
           className="card"
           style={{
@@ -419,11 +390,7 @@ export default function Inventario() {
               marginBottom: 12,
             }}
           >
-            <span
-              style={{
-                fontSize: 24,
-              }}
-            >
+            <span style={{ fontSize: 24 }}>
               ⚠️
             </span>
 
@@ -444,9 +411,7 @@ export default function Inventario() {
                   fontWeight: 700,
                 }}
               >
-                Productos que caducan
-                pronto o ya necesitan
-                revisión.
+                Productos que caducan pronto o ya necesitan revisión.
               </p>
             </div>
           </div>
@@ -457,77 +422,70 @@ export default function Inventario() {
               gap: 8,
             }}
           >
-            {productosUrgentes.map(
-              (item) => {
-                const estado =
-                  detectarCaducidad(
-                    item.fechaCaducidad
-                  )
+            {productosUrgentes.map((item) => {
+              const estado =
+                detectarCaducidad(
+                  item.fechaCaducidad
+                )
 
-                return (
-                  <div
-                    key={item.id}
+              return (
+                <div
+                  key={item.id}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent:
+                      'space-between',
+                    gap: 8,
+                    flexWrap: 'wrap',
+                    background:
+                      'rgba(255,255,255,0.72)',
+                    border:
+                      '1px solid var(--borde)',
+                    borderRadius: 14,
+                    padding: '9px 11px',
+                  }}
+                >
+                  <span
+                    className="pill pill-rosa"
                     style={{
-                      display: 'flex',
-                      alignItems:
-                        'center',
-                      justifyContent:
-                        'space-between',
-                      gap: 8,
-                      flexWrap: 'wrap',
-                      background:
-                        'rgba(255,255,255,0.72)',
-                      border:
-                        '1px solid var(--borde)',
-                      borderRadius: 14,
-                      padding:
-                        '9px 11px',
+                      fontSize: 14,
+                      padding: '8px 12px',
                     }}
                   >
-                    <span
-                      className="pill pill-rosa"
-                      style={{
-                        fontSize: 14,
-                        padding:
-                          '8px 12px',
-                      }}
-                    >
-                      {emojiIngrediente(
-                        item.nombre
-                      )}{' '}
-                      {item.nombre}
-                    </span>
+                    {emojiIngrediente(
+                      item.nombre
+                    )}{' '}
+                    {item.nombre}
+                  </span>
 
-                    <span
-                      className="pill"
-                      style={{
-                        background:
-                          estado?.fondo,
-                        color:
-                          estado?.color,
-                        border: `1px solid ${estado?.color}`,
-                        fontSize: 12,
-                        padding:
-                          '6px 10px',
-                      }}
-                    >
-                      {estado?.texto}
-                    </span>
+                  <span
+                    className="pill"
+                    style={{
+                      background:
+                        estado?.fondo,
+                      color:
+                        estado?.color,
+                      border: `1px solid ${estado?.color}`,
+                      fontSize: 12,
+                      padding: '6px 10px',
+                    }}
+                  >
+                    {estado?.texto}
+                  </span>
 
-                    <span className="pill pill-malva">
-                      📦 {item.cantidad}
-                      {item.unidad}
-                    </span>
-                  </div>
-                )
-              }
-            )}
+                  <span className="pill pill-malva">
+                    📦 {item.cantidad}
+                    {item.unidad}
+                  </span>
+                </div>
+              )
+            })}
           </div>
         </div>
       )}
 
-      {productosStockBajo.length >
-        0 && (
+      {productosStockBajo.length > 0 && (
         <div
           className="card"
           style={{
@@ -545,11 +503,7 @@ export default function Inventario() {
               marginBottom: 12,
             }}
           >
-            <span
-              style={{
-                fontSize: 24,
-              }}
-            >
+            <span style={{ fontSize: 24 }}>
               🧺
             </span>
 
@@ -570,9 +524,7 @@ export default function Inventario() {
                   fontWeight: 700,
                 }}
               >
-                Productos que quizá
-                conviene reponer
-                pronto.
+                Productos que quizá conviene reponer pronto.
               </p>
             </div>
           </div>
@@ -583,59 +535,54 @@ export default function Inventario() {
               gap: 8,
             }}
           >
-            {productosStockBajo.map(
-              (item) => {
-                const stock =
-                  detectarStockBajo(
-                    item.cantidad,
-                    item.unidad
-                  )
+            {productosStockBajo.map((item) => {
+              const stock =
+                detectarStockBajo(
+                  item.cantidad,
+                  item.unidad
+                )
 
-                return (
-                  <div
-                    key={item.id}
+              return (
+                <div
+                  key={item.id}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent:
+                      'space-between',
+                    gap: 8,
+                    flexWrap: 'wrap',
+                    background:
+                      'rgba(255,255,255,0.72)',
+                    border:
+                      '1px solid var(--borde)',
+                    borderRadius: 14,
+                    padding: '9px 11px',
+                  }}
+                >
+                  <span
+                    className="pill pill-rosa"
                     style={{
-                      display: 'flex',
-                      alignItems:
-                        'center',
-                      justifyContent:
-                        'space-between',
-                      gap: 8,
-                      flexWrap: 'wrap',
-                      background:
-                        'rgba(255,255,255,0.72)',
-                      border:
-                        '1px solid var(--borde)',
-                      borderRadius: 14,
-                      padding:
-                        '9px 11px',
+                      fontSize: 14,
+                      padding: '8px 12px',
                     }}
                   >
-                    <span
-                      className="pill pill-rosa"
-                      style={{
-                        fontSize: 14,
-                        padding:
-                          '8px 12px',
-                      }}
-                    >
-                      {emojiIngrediente(
-                        item.nombre
-                      )}{' '}
-                      {item.nombre}
-                    </span>
+                    {emojiIngrediente(
+                      item.nombre
+                    )}{' '}
+                    {item.nombre}
+                  </span>
 
-                    <span className="pill pill-naranja">
-                      {stock?.texto}
-                    </span>
+                  <span className="pill pill-naranja">
+                    {stock?.texto}
+                  </span>
 
-                    <span className="pill pill-malva">
-                      📍 {item.ubicacion}
-                    </span>
-                  </div>
-                )
-              }
-            )}
+                  <span className="pill pill-malva">
+                    📍 {item.ubicacion}
+                  </span>
+                </div>
+              )
+            })}
           </div>
         </div>
       )}
@@ -653,9 +600,7 @@ export default function Inventario() {
           placeholder="🔎 Buscar producto..."
           value={busqueda}
           onChange={(e) =>
-            setBusqueda(
-              e.target.value
-            )
+            setBusqueda(e.target.value)
           }
           style={{
             marginBottom: 12,
@@ -674,8 +619,7 @@ export default function Inventario() {
               key={filtro.key}
               type="button"
               className={
-                filtroActivo ===
-                filtro.key
+                filtroActivo === filtro.key
                   ? 'btn-principal'
                   : 'btn-secundario'
               }
@@ -687,8 +631,7 @@ export default function Inventario() {
               style={{
                 minHeight: 34,
                 fontSize: 12,
-                padding:
-                  '6px 10px',
+                padding: '6px 10px',
               }}
             >
               {filtro.label}
@@ -699,14 +642,11 @@ export default function Inventario() {
             <button
               type="button"
               className="btn-secundario"
-              onClick={
-                limpiarFiltros
-              }
+              onClick={limpiarFiltros}
               style={{
                 minHeight: 34,
                 fontSize: 12,
-                padding:
-                  '6px 10px',
+                padding: '6px 10px',
               }}
             >
               ✨ Limpiar
@@ -746,15 +686,25 @@ export default function Inventario() {
         }
       />
 
+      <AccionesAgotadosInventario
+        productosAgotados={
+          productosAgotados
+        }
+        compraManual={
+          compraManual
+        }
+        onAgregarAgotadosACompra={
+          agregarAgotadosACompra
+        }
+      />
+
       {mostrarFormulario && (
         <FormularioInventario
           agregarItemInventario={
             agregarItemInventario
           }
           cerrarFormulario={() =>
-            setMostrarFormulario(
-              false
-            )
+            setMostrarFormulario(false)
           }
         />
       )}

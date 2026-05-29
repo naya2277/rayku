@@ -50,12 +50,19 @@ function coincidenIngredientesCompra(
   )
 }
 
+function tieneStockDisponible(
+  item: ItemInventarioListaCompra
+) {
+  return Number(item.cantidad || 0) > 0
+}
+
 export function ingredienteEnInventario(
   ingrediente: string,
   inventario: ItemInventarioListaCompra[]
 ) {
   return inventario.some(
     (item) =>
+      tieneStockDisponible(item) &&
       coincidenIngredientesCompra(
         ingrediente,
         item.nombre
@@ -68,11 +75,13 @@ export function cantidadesInventario(
   inventario: ItemInventarioListaCompra[]
 ) {
   return inventario
-    .filter((item) =>
-      coincidenIngredientesCompra(
-        ingrediente,
-        item.nombre
-      )
+    .filter(
+      (item) =>
+        tieneStockDisponible(item) &&
+        coincidenIngredientesCompra(
+          ingrediente,
+          item.nombre
+        )
     )
     .map(
       (item) =>
@@ -94,6 +103,10 @@ function calcularDisponible(
 
   return inventario.reduce(
     (total, item) => {
+      if (!tieneStockDisponible(item)) {
+        return total
+      }
+
       const coincide =
         coincidenIngredientesCompra(
           ingrediente,

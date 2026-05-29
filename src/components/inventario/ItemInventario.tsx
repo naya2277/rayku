@@ -48,6 +48,9 @@ export default function ItemInventario({
       item.fechaCaducidad
     )
 
+  const agotado =
+    item.cantidad <= 0
+
   const consumirProducto = () => {
     const cantidadRestar =
       parseFloat(
@@ -91,6 +94,10 @@ export default function ItemInventario({
         borderBottom: !ultimo
           ? '1px solid var(--borde)'
           : 'none',
+        opacity: agotado ? 0.72 : 1,
+        background: agotado
+          ? '#fffaf8'
+          : 'transparent',
       }}
     >
       <div>
@@ -115,6 +122,9 @@ export default function ItemInventario({
               fontWeight: 800,
               borderRadius:
                 '999px',
+              textDecoration: agotado
+                ? 'line-through'
+                : 'none',
             }}
           >
             {emojiIngrediente(
@@ -124,11 +134,16 @@ export default function ItemInventario({
           </span>
 
           <span
-            className="pill pill-rosa"
+            className={
+              agotado
+                ? 'pill pill-naranja'
+                : 'pill pill-rosa'
+            }
             style={{
               fontSize: '13px',
               padding:
                 '6px 10px',
+              fontWeight: 900,
             }}
           >
             📦 {item.cantidad}
@@ -143,10 +158,9 @@ export default function ItemInventario({
             </span>
           )}
 
-          {item.cantidad <=
-            0 && (
+          {agotado && (
             <span className="pill pill-naranja">
-              ⚠️ Sin stock
+              🪫 Agotado
             </span>
           )}
 
@@ -156,7 +170,7 @@ export default function ItemInventario({
             </span>
           )}
 
-          {estado && (
+          {estado && !agotado && (
             <span
               className="pill"
               style={{

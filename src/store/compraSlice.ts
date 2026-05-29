@@ -14,6 +14,7 @@ import {
 
 import {
   detectarCategoriaIngrediente,
+  normalizarIngrediente,
 } from '../lib/ingredientes'
 
 import {
@@ -50,6 +51,8 @@ export type CompraSlice = {
     item: ItemCompraManual
   ) => void
 
+  agregarAgotadosACompra: () => void
+
   eliminarItemCompraManual: (
     id: string
   ) => void
@@ -79,6 +82,16 @@ function yaExistePendiente(
   )
 }
 
+function nombresCoinciden(
+  a: string,
+  b: string
+) {
+  return (
+    normalizarIngrediente(a) ===
+    normalizarIngrediente(b)
+  )
+}
+
 export const crearCompraSlice = (
   set: StoreSet,
   get: StoreGet
@@ -103,6 +116,105 @@ export const crearCompraSlice = (
       set({
         compraManual:
           nuevaLista,
+      })
+    },
+
+  agregarAgotadosACompra:
+    () => {
+      const estado = get()
+
+      const agotados =
+        estado.inventario.filter(
+          (item) =>
+            item.cantidad <= 0 &&
+            item.ubicacion !==
+              'pendiente'
+        )
+
+      if (agotados.length === 0) {
+        return
+      }
+
+      const nuevosManuales =
+        agotados
+          .filter(
+            (agotado) =>
+              !estado.compraManual.some(
+                (manual) =>
+                  nombresCoinciden(
+                    manual.nombre,
+                    agotado.nombre
+                  )
+              )
+          )
+          .map((item) =>
+            normalizarCompraManual({
+              id: generarId(),
+              nombre: item.nombre,
+              cantidad: null,
+            })
+          )
+
+      const nuevaLista = [
+        ...estado.compraManual,
+        ...nuevosManuales,
+      ]
+
+      const nombresAgotados =
+        agotados.map((item) =>
+          normalizarIngrediente(
+            item.nombre
+          )
+        )
+
+      const nuevosChecks =
+        estado.checksCompra.filter(
+          (check) => {
+            if (
+              !check.startsWith(
+                'manual-'
+              )
+            ) {
+              return true
+            }
+
+            const manualId =
+              check.replace(
+                'manual-',
+                ''
+              )
+
+            const manual =
+              nuevaLista.find(
+                (item) =>
+                  item.id === manualId
+              )
+
+            if (!manual) {
+              return true
+            }
+
+            return !nombresAgotados.includes(
+              normalizarIngrediente(
+                manual.nombre
+              )
+            )
+          }
+        )
+
+      guardarCompraManualLocal(
+        nuevaLista
+      )
+
+      guardarChecksCompraLocal(
+        nuevosChecks
+      )
+
+      set({
+        compraManual:
+          nuevaLista,
+        checksCompra:
+          nuevosChecks,
       })
     },
 
