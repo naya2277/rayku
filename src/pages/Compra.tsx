@@ -15,6 +15,7 @@ import {
 import FormularioCompraManual from '../components/compra/FormularioCompraManual'
 import ResumenCompra from '../components/compra/ResumenCompra'
 import GrupoCompra from '../components/compra/GrupoCompra'
+import ModoSupermercado from '../components/compra/ModoSupermercado'
 
 export default function Compra() {
   const {
@@ -32,6 +33,11 @@ export default function Compra() {
   const [
     mostrarComprados,
     setMostrarComprados,
+  ] = useState(false)
+
+  const [
+    modoSupermercado,
+    setModoSupermercado,
   ] = useState(false)
 
   const ingredientes = useMemo(() => {
@@ -190,6 +196,26 @@ export default function Compra() {
           }}
         >
           <button
+            type="button"
+            className={
+              modoSupermercado
+                ? 'btn-principal'
+                : 'btn-secundario'
+            }
+            onClick={() =>
+              setModoSupermercado(
+                (actual) =>
+                  !actual
+              )
+            }
+          >
+            {modoSupermercado
+              ? '🛒 Vista normal'
+              : '🛍️ Modo supermercado'}
+          </button>
+
+          <button
+            type="button"
             className="btn-secundario"
             onClick={() =>
               setMostrarComprados(
@@ -205,11 +231,13 @@ export default function Compra() {
         </div>
       </div>
 
-      <FormularioCompraManual
-        onAgregar={
-          agregarItemCompraManual
-        }
-      />
+      {!modoSupermercado && (
+        <FormularioCompraManual
+          onAgregar={
+            agregarItemCompraManual
+          }
+        />
+      )}
 
       <ResumenCompra
         total={
@@ -232,6 +260,44 @@ export default function Compra() {
           finalizarCompra
         }
       />
+
+      {modoSupermercado && (
+        <div
+          className="card"
+          style={{
+            marginBottom: 18,
+            background:
+              '#fffaf8',
+            borderColor:
+              '#f5dde8',
+          }}
+        >
+          <p
+            style={{
+              color: '#8f7080',
+              fontWeight: 800,
+              marginBottom: 10,
+            }}
+          >
+            🛍️ Modo supermercado:
+            lista compacta por
+            secciones, cantidades
+            visibles y checks rápidos.
+          </p>
+
+          <button
+            type="button"
+            className="btn-secundario"
+            onClick={() =>
+              setModoSupermercado(
+                false
+              )
+            }
+          >
+            ✍️ Añadir compra manual
+          </button>
+        </div>
+      )}
 
       {compradosOcultos > 0 &&
         !mostrarComprados && (
@@ -323,33 +389,12 @@ export default function Compra() {
       {(totalCompra > 0 ||
         yaDisponibles.length >
           0) && (
-        <div
-          style={{
-            display: 'grid',
-            gap: 22,
-          }}
-        >
-          <section>
-            <h2
-              style={{
-                marginBottom: 14,
-                color:
-                  '#c45b86',
-              }}
-            >
-              🛒 Necesitas
-              comprar
-            </h2>
-
-            <GrupoCompra
-              titulo="comprar"
+        <>
+          {modoSupermercado ? (
+            <ModoSupermercado
               grupos={
                 agrupadosComprar
               }
-              modo="comprar"
-              inventario={
-                inventario
-              }
               comprados={
                 checksCompra
               }
@@ -359,48 +404,88 @@ export default function Compra() {
               onToggleComprado={
                 toggleCheckCompra
               }
-              onEliminarManual={
-                eliminarItemCompraManual
-              }
             />
-          </section>
-
-          <section>
-            <h2
+          ) : (
+            <div
               style={{
-                marginBottom: 14,
-                color:
-                  '#8f7080',
+                display: 'grid',
+                gap: 22,
               }}
             >
-              📦 Ya tienes
-              en inventario
-            </h2>
+              <section>
+                <h2
+                  style={{
+                    marginBottom: 14,
+                    color:
+                      '#c45b86',
+                  }}
+                >
+                  🛒 Necesitas
+                  comprar
+                </h2>
 
-            <GrupoCompra
-              titulo="disponible"
-              grupos={
-                agrupadosDisponibles
-              }
-              modo="disponible"
-              inventario={
-                inventario
-              }
-              comprados={
-                checksCompra
-              }
-              compraManual={
-                compraManual
-              }
-              onToggleComprado={
-                toggleCheckCompra
-              }
-              onEliminarManual={
-                eliminarItemCompraManual
-              }
-            />
-          </section>
-        </div>
+                <GrupoCompra
+                  titulo="comprar"
+                  grupos={
+                    agrupadosComprar
+                  }
+                  modo="comprar"
+                  inventario={
+                    inventario
+                  }
+                  comprados={
+                    checksCompra
+                  }
+                  compraManual={
+                    compraManual
+                  }
+                  onToggleComprado={
+                    toggleCheckCompra
+                  }
+                  onEliminarManual={
+                    eliminarItemCompraManual
+                  }
+                />
+              </section>
+
+              <section>
+                <h2
+                  style={{
+                    marginBottom: 14,
+                    color:
+                      '#8f7080',
+                  }}
+                >
+                  📦 Ya tienes
+                  en inventario
+                </h2>
+
+                <GrupoCompra
+                  titulo="disponible"
+                  grupos={
+                    agrupadosDisponibles
+                  }
+                  modo="disponible"
+                  inventario={
+                    inventario
+                  }
+                  comprados={
+                    checksCompra
+                  }
+                  compraManual={
+                    compraManual
+                  }
+                  onToggleComprado={
+                    toggleCheckCompra
+                  }
+                  onEliminarManual={
+                    eliminarItemCompraManual
+                  }
+                />
+              </section>
+            </div>
+          )}
+        </>
       )}
     </div>
   )
