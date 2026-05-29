@@ -10,61 +10,29 @@ import {
 
 import HuecoPlanning from './HuecoPlanning'
 
+import {
+  calcularAvisosIngredientesPlanning,
+} from '../../lib/planning/avisosIngredientesPlanning'
+
 type Props = {
   dia: Date
   indice: number
   esHoy: boolean
-
   emojiDia: string
   colorDia: string
-
   recetas: any[]
   planning: any[]
-
-  busquedas: Record<
-    string,
-    string
-  >
-
-  editandoHuecos: Record<
-    string,
-    boolean
-  >
-
-  onAbrirReceta: (
-    recetaId: string
-  ) => void
-
-  activarEdicion: (
-    clave: string
-  ) => void
-
-  cerrarEdicion: (
-    clave: string
-  ) => void
-
-  setBusqueda: (
-    clave: string,
-    valor: string
-  ) => void
-
-  guardarHuecoPlanning: (
-    datos: any
-  ) => void
-
-  limpiarHuecoPlanning: (
-    fecha: string,
-    tipoComida: TipoComida
-  ) => void
-
-  toggleCocinadoPlanning: (
-    id: string
-  ) => void
-
-  updateReceta: (
-    recetaId: string,
-    datos: any
-  ) => void
+  inventario: any[]
+  busquedas: Record<string, string>
+  editandoHuecos: Record<string, boolean>
+  onAbrirReceta: (recetaId: string) => void
+  activarEdicion: (clave: string) => void
+  cerrarEdicion: (clave: string) => void
+  setBusqueda: (clave: string, valor: string) => void
+  guardarHuecoPlanning: (datos: any) => void
+  limpiarHuecoPlanning: (fecha: string, tipoComida: TipoComida) => void
+  toggleCocinadoPlanning: (id: string) => void
+  updateReceta: (recetaId: string, datos: any) => void
 }
 
 export default function DiaPlanning({
@@ -74,6 +42,7 @@ export default function DiaPlanning({
   colorDia,
   recetas,
   planning,
+  inventario,
   busquedas,
   editandoHuecos,
   onAbrirReceta,
@@ -85,79 +54,55 @@ export default function DiaPlanning({
   toggleCocinadoPlanning,
   updateReceta,
 }: Props) {
-  const fecha =
-    format(
-      dia,
-      'yyyy-MM-dd'
-    )
+  const fecha = format(dia, 'yyyy-MM-dd')
 
-  const obtenerDatosHueco = (
-    tipoComida: TipoComida
-  ) => {
+  const obtenerDatosHueco = (tipoComida: TipoComida) => {
     const clave = `${fecha}-${tipoComida}`
 
-    const estaEditando =
-      editandoHuecos[
-        clave
-      ] ?? false
+    const estaEditando = editandoHuecos[clave] ?? false
 
-    const hueco =
-      planning.find(
-        (h) =>
-          h.fecha ===
-            fecha &&
-          h.tipoComida ===
-            tipoComida
+    const hueco = planning.find(
+      (h) =>
+        h.fecha === fecha &&
+        h.tipoComida === tipoComida
+    )
+
+    const receta = recetas.find(
+      (r) => r.id === hueco?.recetaId
+    )
+
+    const hayContenido = Boolean(
+      hueco?.recetaId ||
+        hueco?.comidaLibre ||
+        hueco?.nota
+    )
+
+    const busqueda = busquedas[clave] ?? ''
+
+    const sugerencias = busqueda.trim()
+      ? recetas
+          .filter((r) => {
+            const texto = [
+              r.nombre,
+              r.ingredientes.join(' '),
+              r.dietas.join(' '),
+              r.ingredientesBase.join(' '),
+              r.caracteristicas.join(' '),
+            ]
+              .join(' ')
+              .toLowerCase()
+
+            return texto.includes(busqueda.toLowerCase())
+          })
+          .slice(0, 5)
+      : []
+
+    const avisosIngredientes =
+      calcularAvisosIngredientesPlanning(
+        hueco,
+        recetas,
+        inventario
       )
-
-    const receta =
-      recetas.find(
-        (r) =>
-          r.id ===
-          hueco?.recetaId
-      )
-
-    const hayContenido =
-      Boolean(
-        hueco?.recetaId ||
-          hueco?.comidaLibre ||
-          hueco?.nota
-      )
-
-    const busqueda =
-      busquedas[
-        clave
-      ] ?? ''
-
-    const sugerencias =
-      busqueda.trim()
-        ? recetas
-            .filter((r) => {
-              const texto =
-                [
-                  r.nombre,
-                  r.ingredientes.join(
-                    ' '
-                  ),
-                  r.dietas.join(
-                    ' '
-                  ),
-                  r.ingredientesBase.join(
-                    ' '
-                  ),
-                  r.caracteristicas.join(
-                    ' '
-                  ),
-                ]
-                  .join(' ')
-                  .toLowerCase()
-
-              return texto.includes(
-                busqueda.toLowerCase()
-              )
-            })
-            .slice(0, 5)
-        : []
 
     return {
       clave,
@@ -167,164 +112,68 @@ export default function DiaPlanning({
       hayContenido,
       busqueda,
       sugerencias,
+      avisosIngredientes,
     }
   }
 
-  const renderHueco = (
-    tipoComida: TipoComida
-  ) => {
-    const datos =
-      obtenerDatosHueco(
-        tipoComida
-      )
+  const renderHueco = (tipoComida: TipoComida) => {
+    const datos = obtenerDatosHueco(tipoComida)
 
     return (
       <HuecoPlanning
-        key={
-          datos.clave
-        }
+        key={datos.clave}
         fecha={fecha}
-        tipoComida={
-          tipoComida
-        }
-        clave={
-          datos.clave
-        }
-        hueco={
-          datos.hueco
-        }
-        receta={
-          datos.receta
-        }
-        estaEditando={
-          datos.estaEditando
-        }
-        hayContenido={
-          datos.hayContenido
-        }
-        busqueda={
-          datos.busqueda
-        }
-        sugerencias={
-          datos.sugerencias
-        }
-        onAbrirReceta={
-          onAbrirReceta
-        }
-        activarEdicion={() =>
-          activarEdicion(
-            datos.clave
-          )
-        }
-        cerrarEdicion={() =>
-          cerrarEdicion(
-            datos.clave
-          )
-        }
-        setBusqueda={(
-          valor
-        ) =>
-          setBusqueda(
-            datos.clave,
-            valor
-          )
-        }
-        guardarHueco={
-          guardarHuecoPlanning
-        }
+        tipoComida={tipoComida}
+        clave={datos.clave}
+        hueco={datos.hueco}
+        receta={datos.receta}
+        estaEditando={datos.estaEditando}
+        hayContenido={datos.hayContenido}
+        busqueda={datos.busqueda}
+        sugerencias={datos.sugerencias}
+        avisosIngredientes={datos.avisosIngredientes}
+        onAbrirReceta={onAbrirReceta}
+        activarEdicion={() => activarEdicion(datos.clave)}
+        cerrarEdicion={() => cerrarEdicion(datos.clave)}
+        setBusqueda={(valor) => setBusqueda(datos.clave, valor)}
+        guardarHueco={guardarHuecoPlanning}
         limpiarHueco={() =>
-          limpiarHuecoPlanning(
-            fecha,
-            tipoComida
-          )
+          limpiarHuecoPlanning(fecha, tipoComida)
         }
         toggleCocinado={() => {
-          if (
-            datos.hueco?.id
-          ) {
-            toggleCocinadoPlanning(
-              datos.hueco.id
-            )
+          if (datos.hueco?.id) {
+            toggleCocinadoPlanning(datos.hueco.id)
           }
         }}
-        updateReceta={
-          updateReceta
-        }
+        updateReceta={updateReceta}
       />
     )
   }
 
   return (
-    <div
-      className="card"
-      style={{
-        background:
-          colorDia,
-      }}
-    >
+    <div className="card" style={{ background: colorDia }}>
       <div
         style={{
           display: 'flex',
-
-          alignItems:
-            'center',
-
+          alignItems: 'center',
           gap: '10px',
-
-          marginBottom:
-            '14px',
+          marginBottom: '14px',
         }}
       >
-        <span
-          style={{
-            fontSize: '24px',
-          }}
-        >
-          {emojiDia}
-        </span>
+        <span style={{ fontSize: '24px' }}>{emojiDia}</span>
 
         <div>
-          <h3
-            style={{
-              fontSize: '18px',
-            }}
-          >
-            {format(
-              dia,
-              'EEEE',
-              {
-                locale: es,
-              }
-            )}
+          <h3 style={{ fontSize: '18px' }}>
+            {format(dia, 'EEEE', { locale: es })}
           </h3>
 
-          <p
-            style={{
-              color:
-                '#8f7080',
-
-              fontSize:
-                '14px',
-            }}
-          >
-            {format(
-              dia,
-              "d 'de' MMMM",
-              {
-                locale: es,
-              }
-            )}
+          <p style={{ color: '#8f7080', fontSize: '14px' }}>
+            {format(dia, "d 'de' MMMM", { locale: es })}
           </p>
         </div>
 
         {esHoy && (
-          <span
-            className="pill pill-rosa"
-            style={{
-              marginLeft:
-                'auto',
-            }}
-          >
+          <span className="pill pill-rosa" style={{ marginLeft: 'auto' }}>
             💕 Hoy
           </span>
         )}
@@ -333,23 +182,13 @@ export default function DiaPlanning({
       <div
         style={{
           display: 'grid',
-
-          gridTemplateColumns:
-            'repeat(auto-fit, minmax(260px, 1fr))',
-
+          gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
           gap: '14px',
-
-          alignItems:
-            'stretch',
+          alignItems: 'stretch',
         }}
       >
-        {renderHueco(
-          'comida'
-        )}
-
-        {renderHueco(
-          'cena'
-        )}
+        {renderHueco('comida')}
+        {renderHueco('cena')}
       </div>
     </div>
   )

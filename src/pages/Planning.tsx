@@ -67,6 +67,7 @@ export default function Planning({
   const {
     recetas,
     planning,
+    inventario,
     guardarHuecoPlanning,
     limpiarHuecoPlanning,
     toggleCocinadoPlanning,
@@ -135,19 +136,14 @@ export default function Planning({
       <div
         style={{
           display: 'flex',
-
           justifyContent:
             'space-between',
-
           alignItems:
             'center',
-
           marginBottom:
             '20px',
-
           flexWrap:
             'wrap',
-
           gap: '12px',
         }}
       >
@@ -169,10 +165,8 @@ export default function Planning({
           style={{
             fontSize:
               '20px',
-
             color:
               '#c77d95',
-
             textAlign:
               'center',
           }}
@@ -205,7 +199,6 @@ export default function Planning({
       <div
         style={{
           display: 'grid',
-
           gap: '18px',
         }}
       >
@@ -233,6 +226,7 @@ export default function Planning({
                 }
                 recetas={recetas}
                 planning={planning}
+                inventario={inventario}
                 busquedas={
                   busquedas
                 }

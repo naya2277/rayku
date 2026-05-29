@@ -10,42 +10,33 @@ import {
 
 import RacionesPlanning from './RacionesPlanning'
 
+type AvisoIngredientePlanning = {
+  nombre: string
+  cantidadNecesaria: number | null
+  cantidadDisponible: number | null
+  cantidadFaltante: number | null
+  unidad: string | null
+}
+
 type Props = {
   fecha: string
   tipoComida: TipoComida
   clave: string
-
   hueco: any
   receta: any
-
   estaEditando: boolean
   hayContenido: boolean
   toggleCocinado: () => void
-
   busqueda: string
   sugerencias: any[]
-
-  onAbrirReceta: (
-    recetaId: string
-  ) => void
-
+  avisosIngredientes: AvisoIngredientePlanning[]
+  onAbrirReceta: (recetaId: string) => void
   activarEdicion: () => void
   cerrarEdicion: () => void
-
-  setBusqueda: (
-    valor: string
-  ) => void
-
-  guardarHueco: (
-    datos: any
-  ) => void
-
+  setBusqueda: (valor: string) => void
+  guardarHueco: (datos: any) => void
   limpiarHueco: () => void
-
-  updateReceta: (
-    recetaId: string,
-    datos: any
-  ) => void
+  updateReceta: (recetaId: string, datos: any) => void
 }
 
 export default function HuecoPlanning({
@@ -57,6 +48,7 @@ export default function HuecoPlanning({
   hayContenido,
   busqueda,
   sugerencias,
+  avisosIngredientes,
   onAbrirReceta,
   activarEdicion,
   cerrarEdicion,
@@ -66,56 +58,31 @@ export default function HuecoPlanning({
   toggleCocinado,
   updateReceta,
 }: Props) {
-  const esComida =
-    tipoComida ===
-    'comida'
+  const esComida = tipoComida === 'comida'
 
-  const estrellas = (
-    valoracion: number,
-    recetaId: string
-  ) => (
-    <div
-      style={{
-        display: 'flex',
-        gap: 3,
-        marginTop: 6,
-      }}
-    >
-      {Array.from(
-        { length: 5 },
-        (_, i) => (
-          <span
-            key={i}
-            style={{
-              cursor:
-                'pointer',
-              fontSize: 18,
-              color:
-                i <
-                valoracion
-                  ? '#ffb347'
-                  : '#ddd',
-            }}
-            onClick={() =>
-              updateReceta(
-                recetaId,
-                {
-                  valoracion:
-                    i + 1,
-                }
-              )
-            }
-          >
-            ★
-          </span>
-        )
-      )}
+  const estrellas = (valoracion: number, recetaId: string) => (
+    <div style={{ display: 'flex', gap: 3, marginTop: 6 }}>
+      {Array.from({ length: 5 }, (_, i) => (
+        <span
+          key={i}
+          style={{
+            cursor: 'pointer',
+            fontSize: 18,
+            color: i < valoracion ? '#ffb347' : '#ddd',
+          }}
+          onClick={() =>
+            updateReceta(recetaId, {
+              valoracion: i + 1,
+            })
+          }
+        >
+          ★
+        </span>
+      ))}
     </div>
   )
 
-  const renderIngredientes = (
-    texto: string
-  ) => (
+  const renderIngredientes = (texto: string) => (
     <div
       style={{
         display: 'flex',
@@ -124,282 +91,233 @@ export default function HuecoPlanning({
         marginTop: 10,
       }}
     >
-      {separarIngredientes(
-        texto
-      ).map(
-        (
-          ingrediente
-        ) => (
-          <span
-            key={
-              ingrediente
-            }
-            className={`pill ${claseIngrediente(
-              ingrediente
-            )}`}
-            style={{
-              fontSize: 15,
-              padding:
-                '8px 12px',
-            }}
-          >
-            {emojiIngrediente(
-              ingrediente
-            )}{' '}
-            {ingrediente}
-          </span>
-        )
-      )}
+      {separarIngredientes(texto).map((ingrediente) => (
+        <span
+          key={ingrediente}
+          className={`pill ${claseIngrediente(ingrediente)}`}
+          style={{
+            fontSize: 15,
+            padding: '8px 12px',
+          }}
+        >
+          {emojiIngrediente(ingrediente)} {ingrediente}
+        </span>
+      ))}
     </div>
   )
+
+  const renderAvisosIngredientes = () => {
+    if (
+      avisosIngredientes.length === 0 ||
+      hueco?.cocinado ||
+      estaEditando
+    ) {
+      return null
+    }
+
+    return (
+      <div
+        style={{
+          marginTop: 10,
+          background: '#fff8ee',
+          border: '1.5px solid #ffcc80',
+          borderRadius: 14,
+          padding: '10px 12px',
+        }}
+      >
+        <strong
+          style={{
+            color: '#a07030',
+            fontSize: 14,
+          }}
+        >
+          ⚠️ Faltan ingredientes
+        </strong>
+
+        <div
+          style={{
+            display: 'flex',
+            flexWrap: 'wrap',
+            gap: 8,
+            marginTop: 8,
+          }}
+        >
+          {avisosIngredientes.slice(0, 4).map((aviso) => {
+            const cantidad =
+              aviso.cantidadFaltante !== null &&
+              aviso.unidad
+                ? `${aviso.cantidadFaltante}${aviso.unidad}`
+                : 'sin stock'
+
+            return (
+              <span
+                key={`${aviso.nombre}-${cantidad}`}
+                className="pill pill-naranja"
+                style={{
+                  fontSize: 12,
+                  padding: '6px 10px',
+                  fontWeight: 900,
+                }}
+              >
+                {emojiIngrediente(aviso.nombre)} {aviso.nombre} · {cantidad}
+              </span>
+            )
+          })}
+
+          {avisosIngredientes.length > 4 && (
+            <span className="pill pill-malva">
+              +{avisosIngredientes.length - 4} más
+            </span>
+          )}
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div
       style={{
-        background:
-          esComida
-            ? '#fffafc'
-            : '#fbf7ff',
-
+        background: esComida ? '#fffafc' : '#fbf7ff',
         borderRadius: 18,
-
         padding: 14,
-
         border:
-          esComida
-            ? '2px solid #f3bfd2'
-            : '2px solid #d7c3f3',
-
-        boxShadow:
-          '0 8px 20px rgba(170, 120, 145, 0.08)',
-
+          avisosIngredientes.length > 0 && !hueco?.cocinado
+            ? '2px solid #ffcc80'
+            : esComida
+              ? '2px solid #f3bfd2'
+              : '2px solid #d7c3f3',
+        boxShadow: '0 8px 20px rgba(170, 120, 145, 0.08)',
         minHeight: 170,
       }}
     >
       <div
         style={{
           display: 'flex',
-
-          justifyContent:
-            'space-between',
-
-          alignItems:
-            'center',
-
+          justifyContent: 'space-between',
+          alignItems: 'center',
           gap: 10,
-
           marginBottom: 10,
         }}
       >
         <strong
           style={{
-            color:
-              esComida
-                ? '#c45b86'
-                : '#8a6ec7',
-
+            color: esComida ? '#c45b86' : '#8a6ec7',
             fontSize: 16,
           }}
         >
-          {esComida
-            ? '☀️ Comida'
-            : '🌙 Cena'}
+          {esComida ? '☀️ Comida' : '🌙 Cena'}
         </strong>
 
-        {!hayContenido &&
-          !estaEditando && (
-            <button
-              type="button"
-              className="btn-secundario"
-              onClick={
-                activarEdicion
-              }
-            >
-              ➕ Añadir
-            </button>
-          )}
+        {!hayContenido && !estaEditando && (
+          <button
+            type="button"
+            className="btn-secundario"
+            onClick={activarEdicion}
+          >
+            ➕ Añadir
+          </button>
+        )}
       </div>
 
-      {!hayContenido &&
-        !estaEditando && (
-          <div
-            style={{
-              color:
-                '#9e7d90',
-
-              fontWeight: 700,
-
-              background:
-                'rgba(255, 255, 255, 0.7)',
-
-              borderRadius: 14,
-
-              padding: 14,
-
-              textAlign:
-                'center',
-            }}
-          >
-            Huequito libre 💕
-          </div>
-        )}
-
-      {(!hayContenido ||
-        estaEditando) && (
+      {!hayContenido && !estaEditando && (
         <div
           style={{
-            marginTop: 10,
+            color: '#9e7d90',
+            fontWeight: 700,
+            background: 'rgba(255, 255, 255, 0.7)',
+            borderRadius: 14,
+            padding: 14,
+            textAlign: 'center',
           }}
         >
+          Huequito libre 💕
+        </div>
+      )}
+
+      {(!hayContenido || estaEditando) && (
+        <div style={{ marginTop: 10 }}>
           <input
             placeholder="🔎 Buscar receta..."
             value={busqueda}
-            onFocus={
-              activarEdicion
-            }
+            onFocus={activarEdicion}
             onChange={(e) => {
               activarEdicion()
-
-              setBusqueda(
-                e.target.value
-              )
+              setBusqueda(e.target.value)
             }}
           />
 
-          {sugerencias.length >
-            0 && (
+          {sugerencias.length > 0 && (
             <div
               className="card"
               style={{
                 marginTop: 8,
                 padding: 10,
-                display:
-                  'grid',
+                display: 'grid',
                 gap: 8,
-                background:
-                  '#fffaf8',
+                background: '#fffaf8',
               }}
             >
-              {sugerencias.map(
-                (r) => (
-                  <button
-                    key={r.id}
-                    type="button"
-                    className="btn-secundario"
-                    style={{
-                      justifyContent:
-                        'flex-start',
-                      width:
-                        '100%',
-                    }}
-                    onClick={() => {
-                      guardarHueco(
-                        {
-                          fecha,
+              {sugerencias.map((r) => (
+                <button
+                  key={r.id}
+                  type="button"
+                  className="btn-secundario"
+                  style={{
+                    justifyContent: 'flex-start',
+                    width: '100%',
+                  }}
+                  onClick={() => {
+                    guardarHueco({
+                      fecha,
+                      tipoComida,
+                      recetaId: r.id,
+                      comidaLibre: hueco?.comidaLibre || '',
+                      nota: hueco?.nota || '',
+                      racionesOverride:
+                        hueco?.racionesOverride ?? r.raciones,
+                    })
 
-                          tipoComida,
-
-                          recetaId:
-                            r.id,
-
-                          comidaLibre:
-                            hueco?.comidaLibre ||
-                            '',
-
-                          nota:
-                            hueco?.nota ||
-                            '',
-
-                          racionesOverride:
-                            hueco?.racionesOverride ??
-                            r.raciones,
-                        }
-                      )
-
-                      setBusqueda(
-                        ''
-                      )
-                    }}
-                  >
-                    📖{' '}
-                    {r.nombre}
-                  </button>
-                )
-              )}
+                    setBusqueda('')
+                  }}
+                >
+                  📖 {r.nombre}
+                </button>
+              ))}
             </div>
           )}
 
           {receta && (
             <RacionesPlanning
-              racionesReceta={
-                receta.raciones
-              }
-              racionesOverride={
-                hueco?.racionesOverride
-              }
-              onGuardar={(
-                nuevasRaciones
-              ) => {
-                guardarHueco(
-                  {
-                    fecha,
-
-                    tipoComida,
-
-                    recetaId:
-                      receta.id,
-
-                    comidaLibre:
-                      hueco?.comidaLibre ||
-                      '',
-
-                    nota:
-                      hueco?.nota ||
-                      '',
-
-                    racionesOverride:
-                      nuevasRaciones,
-                  }
-                )
+              racionesReceta={receta.raciones}
+              racionesOverride={hueco?.racionesOverride}
+              onGuardar={(nuevasRaciones) => {
+                guardarHueco({
+                  fecha,
+                  tipoComida,
+                  recetaId: receta.id,
+                  comidaLibre: hueco?.comidaLibre || '',
+                  nota: hueco?.nota || '',
+                  racionesOverride: nuevasRaciones,
+                })
               }}
             />
           )}
 
           <input
             placeholder="🥬 Ingredientes extra o comida rápida..."
-            value={
-              hueco?.comidaLibre ||
-              ''
-            }
-            onFocus={
-              activarEdicion
-            }
+            value={hueco?.comidaLibre || ''}
+            onFocus={activarEdicion}
             onChange={(e) => {
               activarEdicion()
 
-              guardarHueco(
-                {
-                  fecha,
-
-                  tipoComida,
-
-                  recetaId:
-                    hueco?.recetaId ||
-                    null,
-
-                  comidaLibre:
-                    e.target
-                      .value,
-
-                  nota:
-                    hueco?.nota ||
-                    '',
-
-                  racionesOverride:
-                    hueco?.racionesOverride ??
-                    null,
-                }
-              )
+              guardarHueco({
+                fecha,
+                tipoComida,
+                recetaId: hueco?.recetaId || null,
+                comidaLibre: e.target.value,
+                nota: hueco?.nota || '',
+                racionesOverride: hueco?.racionesOverride ?? null,
+              })
             }}
             style={{
               marginTop: 10,
@@ -408,44 +326,23 @@ export default function HuecoPlanning({
 
           <input
             placeholder="📝 Nota de esta comida..."
-            value={
-              hueco?.nota ||
-              ''
-            }
-            onFocus={
-              activarEdicion
-            }
+            value={hueco?.nota || ''}
+            onFocus={activarEdicion}
             onChange={(e) => {
               activarEdicion()
 
-              guardarHueco(
-                {
-                  fecha,
-
-                  tipoComida,
-
-                  recetaId:
-                    hueco?.recetaId ||
-                    null,
-
-                  comidaLibre:
-                    hueco?.comidaLibre ||
-                    '',
-
-                  nota:
-                    e.target
-                      .value,
-
-                  racionesOverride:
-                    hueco?.racionesOverride ??
-                    null,
-                }
-              )
+              guardarHueco({
+                fecha,
+                tipoComida,
+                recetaId: hueco?.recetaId || null,
+                comidaLibre: hueco?.comidaLibre || '',
+                nota: e.target.value,
+                racionesOverride: hueco?.racionesOverride ?? null,
+              })
             }}
             style={{
               marginTop: 10,
-              color:
-                '#8f7080',
+              color: '#8f7080',
               fontSize: 13,
               fontWeight: 600,
               lineHeight: 1.4,
@@ -457,9 +354,7 @@ export default function HuecoPlanning({
             style={{
               marginTop: 12,
             }}
-            onClick={
-              cerrarEdicion
-            }
+            onClick={cerrarEdicion}
           >
             💕 Guardar
           </button>
@@ -476,110 +371,62 @@ export default function HuecoPlanning({
         >
           <div
             style={{
-              background:
-                'white',
-
-              border:
-                '1.5px solid #f5dde8',
-
+              background: 'white',
+              border: '1.5px solid #f5dde8',
               borderRadius: 16,
-
-              padding:
-                '10px 12px',
+              padding: '10px 12px',
             }}
           >
             <button
               type="button"
-              onClick={() =>
-                onAbrirReceta(
-                  receta.id
-                )
-              }
+              onClick={() => onAbrirReceta(receta.id)}
               style={{
-                border:
-                  'none',
-
-                background:
-                  'transparent',
-
+                border: 'none',
+                background: 'transparent',
                 padding: 0,
-
-                cursor:
-                  'pointer',
-
-                textAlign:
-                  'left',
-
-                width:
-                  '100%',
+                cursor: 'pointer',
+                textAlign: 'left',
+                width: '100%',
               }}
             >
               <span
                 style={{
-                  color:
-                    '#c45b86',
-
+                  color: '#c45b86',
                   fontWeight: 800,
-
                   fontSize: 16,
-
-                  textDecoration:
-                    'underline',
-
+                  textDecoration: 'underline',
                   textUnderlineOffset: 3,
                 }}
               >
-                📖{' '}
-                {
-                  receta.nombre
-                }
+                📖 {receta.nombre}
               </span>
             </button>
 
             <div
               style={{
                 marginTop: 6,
-                color:
-                  '#9e7d90',
+                color: '#9e7d90',
                 fontSize: 13,
                 fontWeight: 700,
               }}
             >
-              🍽️{' '}
-              {hueco?.racionesOverride ??
-                receta.raciones}{' '}
-              raciones
+              🍽️ {hueco?.racionesOverride ?? receta.raciones} raciones
             </div>
 
-            {estrellas(
-              receta.valoracion,
-              receta.id
-            )}
+            {estrellas(receta.valoracion, receta.id)}
 
             <input
               placeholder="📝 Nota de la receta..."
-              value={
-                receta.nota ||
-                ''
-              }
-              onChange={(
-                e
-              ) =>
-                updateReceta(
-                  receta.id,
-                  {
-                    nota:
-                      e.target
-                        .value,
-                  }
-                )
+              value={receta.nota || ''}
+              onChange={(e) =>
+                updateReceta(receta.id, {
+                  nota: e.target.value,
+                })
               }
               style={{
                 marginTop: 10,
-                background:
-                  '#fffafc',
-                color:
-                  '#8f7080',
+                background: '#fffafc',
+                color: '#8f7080',
                 fontSize: 13,
                 fontWeight: 600,
                 lineHeight: 1.4,
@@ -589,85 +436,50 @@ export default function HuecoPlanning({
         </div>
       )}
 
-      {hueco?.comidaLibre &&
-        renderIngredientes(
-          hueco.comidaLibre
-        )}
+      {hueco?.comidaLibre && renderIngredientes(hueco.comidaLibre)}
+
+      {renderAvisosIngredientes()}
 
       {hueco?.nota && (
         <p
           style={{
             marginTop: 10,
-
-            color:
-              '#8f7080',
-
+            color: '#8f7080',
             fontSize: 13,
-
             lineHeight: 1.45,
-
             fontWeight: 600,
-
-            background:
-              'rgba(255, 255, 255, 0.65)',
-
+            background: 'rgba(255, 255, 255, 0.65)',
             borderRadius: 14,
-
-            padding:
-              '8px 10px',
-
-            whiteSpace:
-              'pre-wrap',
+            padding: '8px 10px',
+            whiteSpace: 'pre-wrap',
           }}
         >
           📝 {hueco.nota}
         </p>
       )}
 
-      {hayContenido &&
-        !estaEditando && (
-          <div
-            style={{
-              display: 'flex',
+      {hayContenido && !estaEditando && (
+        <div
+          style={{
+            display: 'flex',
+            gap: 10,
+            flexWrap: 'wrap',
+            marginTop: 12,
+          }}
+        >
+          <button className="btn-secundario" onClick={activarEdicion}>
+            ✏️ Editar
+          </button>
 
-              gap: 10,
+          <button className="btn-secundario" onClick={toggleCocinado}>
+            {hueco?.cocinado ? '↩️ Deshacer cocinado' : '🍳 Hoy cocino'}
+          </button>
 
-              flexWrap:
-                'wrap',
-
-              marginTop: 12,
-            }}
-          >
-            <button
-              className="btn-secundario"
-              onClick={
-                activarEdicion
-              }
-            >
-              ✏️ Editar
-            </button>
-
-            <button
-              className="btn-secundario"
-              onClick={
-                toggleCocinado
-              }
-            >
-              {hueco?.cocinado
-                ? '↩️ Deshacer cocinado'
-                : '🍳 Hoy cocino'}
-            </button>
-
-            <button
-              className="btn-secundario"
-              onClick={
-                limpiarHueco
-              }
-            >
-              🧹 Limpiar
-            </button>
-          </div>
-        )}
+          <button className="btn-secundario" onClick={limpiarHueco}>
+            🧹 Limpiar
+          </button>
+        </div>
+      )}
     </div>
   )
 }
