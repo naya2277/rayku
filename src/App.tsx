@@ -45,7 +45,7 @@ const PAGINAS_VALIDAS: Pagina[] = [
 
 function obtenerPaginaInicial(): Pagina {
   const guardada =
-    localStorage.getItem(
+    sessionStorage.getItem(
       PAGINA_KEY
     ) as Pagina | null
 
@@ -96,7 +96,7 @@ export default function App() {
   )
 
   useEffect(() => {
-    localStorage.setItem(
+    sessionStorage.setItem(
       PAGINA_KEY,
       paginaActual
     )
