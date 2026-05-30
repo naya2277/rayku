@@ -87,6 +87,11 @@ export default function ItemInventario({
   eliminarItemInventario,
 }: Props) {
   const [
+    panelEdicionAbierto,
+    setPanelEdicionAbierto,
+  ] = useState(false)
+
+  const [
     consumoActivo,
     setConsumoActivo,
   ] = useState(false)
@@ -166,7 +171,7 @@ export default function ItemInventario({
   return (
     <div
       style={{
-        padding: '14px',
+        padding: '12px',
         borderBottom: !ultimo
           ? '1px solid var(--borde)'
           : 'none',
@@ -192,180 +197,129 @@ export default function ItemInventario({
       >
         <div
           style={{
-            display: 'grid',
-            gridTemplateColumns:
-              'minmax(0, 1fr) auto',
+            display: 'flex',
+            alignItems: 'flex-start',
             gap: 12,
-            alignItems: 'center',
           }}
         >
           <div
             style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 12,
+              width: 52,
+              height: 52,
+              borderRadius: 18,
+              display: 'grid',
+              placeItems: 'center',
+              background:
+                'linear-gradient(135deg, #ffe4ec, #fff8ee)',
+              border:
+                '1.5px solid #f5c8d8',
+              fontSize: 28,
+              flexShrink: 0,
+            }}
+          >
+            {emojiIngrediente(
+              item.nombre
+            )}
+          </div>
+
+          <div
+            style={{
+              flex: 1,
               minWidth: 0,
             }}
           >
-            <div
+            <strong
               style={{
-                width: 54,
-                height: 54,
-                borderRadius: 18,
-                display: 'grid',
-                placeItems: 'center',
-                background:
-                  'linear-gradient(135deg, #ffe4ec, #fff8ee)',
-                border:
-                  '1.5px solid #f5c8d8',
-                fontSize: 28,
-                flexShrink: 0,
+                display: 'block',
+                fontSize: 18,
+                color:
+                  agotado
+                    ? '#a07030'
+                    : '#6f3f58',
+                textDecoration:
+                  agotado
+                    ? 'line-through'
+                    : 'none',
+                marginBottom: 7,
               }}
             >
-              {emojiIngrediente(
-                item.nombre
-              )}
-            </div>
+              {item.nombre}
+            </strong>
 
             <div
               style={{
-                minWidth: 0,
+                display: 'flex',
+                flexWrap: 'wrap',
+                gap: 6,
               }}
             >
-              <div
+              <span
+                className={
+                  agotado
+                    ? 'pill pill-naranja'
+                    : 'pill pill-rosa'
+                }
                 style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 8,
-                  flexWrap: 'wrap',
+                  fontSize: 12,
+                  fontWeight: 900,
+                  padding:
+                    '5px 9px',
                 }}
               >
-                <strong
-                  style={{
-                    fontSize: 18,
-                    color:
-                      agotado
-                        ? '#a07030'
-                        : '#6f3f58',
-                    textDecoration:
-                      agotado
-                        ? 'line-through'
-                        : 'none',
-                  }}
-                >
-                  {item.nombre}
-                </strong>
+                📦 {item.cantidad}
+                {item.unidad}
+              </span>
 
-                <span
-                  className={
-                    agotado
-                      ? 'pill pill-naranja'
-                      : 'pill pill-rosa'
-                  }
-                  style={{
-                    fontSize: 12,
-                    fontWeight: 900,
-                    padding:
-                      '5px 9px',
-                  }}
-                >
-                  📦 {item.cantidad}
-                  {item.unidad}
+              <span
+                className={`pill ${claseIngrediente(
+                  item.nombre
+                )}`}
+                style={{
+                  fontSize: 11,
+                  padding:
+                    '5px 9px',
+                }}
+              >
+                {etiquetaUbicacion(
+                  item.ubicacion
+                )}
+              </span>
+
+              {item.avisarStockBajo && (
+                <span className="pill pill-malva">
+                  🔔 Aviso stock
                 </span>
-              </div>
+              )}
 
-              <div
-                style={{
-                  display: 'flex',
-                  flexWrap: 'wrap',
-                  gap: 6,
-                  marginTop: 7,
-                }}
-              >
+              {agotado && (
+                <span className="pill pill-naranja">
+                  🪫 Agotado
+                </span>
+              )}
+
+              {item.necesitaDescongelar && (
+                <span className="pill pill-teal">
+                  ❄️ Descongelar
+                </span>
+              )}
+
+              {estado && !agotado && (
                 <span
-                  className={`pill ${claseIngrediente(
-                    item.nombre
-                  )}`}
+                  className="pill"
                   style={{
+                    background:
+                      estado.fondo,
+                    color:
+                      estado.color,
+                    border: `1px solid ${estado.color}`,
                     fontSize: 11,
                     padding:
                       '5px 9px',
                   }}
                 >
-                  {etiquetaUbicacion(
-                    item.ubicacion
-                  )}
+                  {estado.texto}
                 </span>
-
-                {item.avisarStockBajo && (
-                  <span className="pill pill-malva">
-                    🔔 Stock bajo
-                  </span>
-                )}
-
-                {agotado && (
-                  <span className="pill pill-naranja">
-                    🪫 Agotado
-                  </span>
-                )}
-
-                {item.necesitaDescongelar && (
-                  <span className="pill pill-teal">
-                    ❄️ Descongelar
-                  </span>
-                )}
-
-                {estado && !agotado && (
-                  <span
-                    className="pill"
-                    style={{
-                      background:
-                        estado.fondo,
-                      color:
-                        estado.color,
-                      border: `1px solid ${estado.color}`,
-                      fontSize: 11,
-                      padding:
-                        '5px 9px',
-                    }}
-                  >
-                    {estado.texto}
-                  </span>
-                )}
-              </div>
-            </div>
-          </div>
-
-          <div
-            style={{
-              textAlign: 'right',
-              minWidth: 90,
-            }}
-          >
-            <div
-              style={{
-                fontSize: 24,
-                fontWeight: 900,
-                color:
-                  agotado
-                    ? '#a07030'
-                    : '#9b3f68',
-                lineHeight: 1,
-              }}
-            >
-              {item.cantidad}
-              {item.unidad}
-            </div>
-
-            <div
-              style={{
-                fontSize: 11,
-                color: 'var(--txt2)',
-                fontWeight: 800,
-                marginTop: 4,
-              }}
-            >
-              disponibles
+              )}
             </div>
           </div>
         </div>
@@ -416,10 +370,10 @@ export default function ItemInventario({
               item.cantidad <= 0
             }
             style={{
-              minHeight: 42,
-              fontSize: 14,
+              minHeight: 40,
+              fontSize: 13,
               padding:
-                '8px 14px',
+                '8px 12px',
               opacity:
                 item.cantidad <= 0
                   ? 0.45
@@ -450,290 +404,322 @@ export default function ItemInventario({
               )
             }
             style={{
-              minHeight: 42,
-              fontSize: 14,
+              minHeight: 40,
+              fontSize: 13,
               padding:
-                '8px 14px',
+                '8px 12px',
             }}
           >
             + {pasoRapido}
           </button>
         </div>
 
-        {consumoActivo && (
+        <button
+          type="button"
+          className="btn-secundario"
+          onClick={() =>
+            setPanelEdicionAbierto(
+              !panelEdicionAbierto
+            )
+          }
+          style={{
+            justifySelf: 'start',
+            minHeight: 34,
+            fontSize: 12,
+            padding: '7px 12px',
+          }}
+        >
+          {panelEdicionAbierto
+            ? '🌸 Ocultar ajustes'
+            : '⚙️ Editar ajustes'}
+        </button>
+
+        {panelEdicionAbierto && (
           <div
             style={{
-              display: 'flex',
-              gap: 8,
-              flexWrap: 'wrap',
-              alignItems: 'center',
+              display: 'grid',
+              gap: 10,
               background:
-                'linear-gradient(135deg, #fff8fb, #fffaf8)',
+                'rgba(255,255,255,0.72)',
               border:
-                '1.5px solid #f5dde8',
-              borderRadius: 16,
+                '1px solid #f5dde8',
+              borderRadius: 18,
               padding: 10,
             }}
           >
-            <input
-              type="number"
-              inputMode="decimal"
-              min="0"
-              step="0.1"
-              placeholder="Cantidad exacta"
-              value={
-                cantidadConsumida
-              }
-              onChange={(e) =>
-                setCantidadConsumida(
-                  e.target.value
-                )
-              }
+            <div
               style={{
-                width: 130,
-                minHeight: 34,
-                fontSize: 12,
-                padding:
-                  '6px 8px',
-              }}
-            />
-
-            <span className="pill pill-rosa">
-              {item.unidad}
-            </span>
-
-            <button
-              className="btn-principal"
-              onClick={
-                consumirProducto
-              }
-              style={{
-                minHeight: 34,
-                fontSize: 12,
-                padding:
-                  '6px 12px',
+                display: 'grid',
+                gridTemplateColumns:
+                  '1fr 90px 100px',
+                gap: 8,
               }}
             >
-              💕 Aplicar
-            </button>
+              <select
+                value={item.ubicacion}
+                onChange={(e) =>
+                  editarItemInventario(
+                    item.id,
+                    {
+                      ubicacion:
+                        e.target
+                          .value as ItemInventarioType['ubicacion'],
+                    }
+                  )
+                }
+                style={{
+                  minHeight: 36,
+                  fontSize: 12,
+                  padding:
+                    '6px 8px',
+                }}
+              >
+                <option value="pendiente">
+                  🛍️ Pendiente
+                </option>
+
+                <option value="nevera">
+                  🧊 Nevera
+                </option>
+
+                <option value="congelador">
+                  ❄️ Congelador
+                </option>
+
+                <option value="despensa">
+                  🗄️ Despensa
+                </option>
+              </select>
+
+              <input
+                type="number"
+                inputMode="decimal"
+                min="0"
+                step="0.1"
+                value={item.cantidad}
+                onChange={(e) =>
+                  editarItemInventario(
+                    item.id,
+                    {
+                      cantidad:
+                        parseFloat(
+                          e.target.value
+                        ) || 0,
+                    }
+                  )
+                }
+                style={{
+                  minHeight: 36,
+                  appearance:
+                    'textfield',
+                  textAlign:
+                    'center',
+                  fontSize: 12,
+                  padding:
+                    '6px 8px',
+                }}
+              />
+
+              <select
+                value={item.unidad}
+                onChange={(e) =>
+                  editarItemInventario(
+                    item.id,
+                    {
+                      unidad:
+                        e.target.value,
+                    }
+                  )
+                }
+                style={{
+                  minHeight: 36,
+                  fontSize: 12,
+                  padding:
+                    '6px 8px',
+                }}
+              >
+                <option value="g">
+                  g
+                </option>
+
+                <option value="kg">
+                  kg
+                </option>
+
+                <option value="ml">
+                  ml
+                </option>
+
+                <option value="l">
+                  l
+                </option>
+
+                <option value="u.">
+                  u.
+                </option>
+
+                <option value="paquete">
+                  paquete
+                </option>
+
+                <option value="lata">
+                  lata
+                </option>
+              </select>
+            </div>
+
+            <div
+              style={{
+                display: 'flex',
+                gap: 8,
+                flexWrap: 'wrap',
+              }}
+            >
+              <button
+                type="button"
+                onClick={() =>
+                  editarItemInventario(
+                    item.id,
+                    {
+                      avisarStockBajo:
+                        !item.avisarStockBajo,
+                    }
+                  )
+                }
+                className="btn-secundario"
+                style={{
+                  minHeight: 34,
+                  fontSize: 12,
+                  padding:
+                    '6px 10px',
+                }}
+              >
+                {item.avisarStockBajo
+                  ? '🔔 Aviso stock activado'
+                  : '🔕 No avisar stock'}
+              </button>
+
+              <button
+                type="button"
+                onClick={() =>
+                  editarItemInventario(
+                    item.id,
+                    {
+                      necesitaDescongelar:
+                        !item.necesitaDescongelar,
+                    }
+                  )
+                }
+                className="btn-secundario"
+                style={{
+                  minHeight: 34,
+                  fontSize: 12,
+                  padding:
+                    '6px 10px',
+                }}
+              >
+                {item.necesitaDescongelar
+                  ? '❄️ Descongelar activado'
+                  : '⬜ Sin aviso descongelar'}
+              </button>
+
+              <button
+                type="button"
+                onClick={() =>
+                  setConsumoActivo(
+                    !consumoActivo
+                  )
+                }
+                className="btn-secundario"
+                style={{
+                  minHeight: 34,
+                  fontSize: 12,
+                  padding:
+                    '6px 10px',
+                }}
+              >
+                ✏️ Ajustar cantidad exacta
+              </button>
+
+              <button
+                type="button"
+                onClick={() =>
+                  eliminarItemInventario(
+                    item.id
+                  )
+                }
+                className="btn-secundario"
+                style={{
+                  minHeight: 34,
+                  fontSize: 12,
+                  padding:
+                    '6px 10px',
+                }}
+              >
+                🗑️ Eliminar
+              </button>
+            </div>
+
+            {consumoActivo && (
+              <div
+                style={{
+                  display: 'flex',
+                  gap: 8,
+                  flexWrap: 'wrap',
+                  alignItems: 'center',
+                  background:
+                    'linear-gradient(135deg, #fff8fb, #fffaf8)',
+                  border:
+                    '1.5px solid #f5dde8',
+                  borderRadius: 16,
+                  padding: 10,
+                }}
+              >
+                <input
+                  type="number"
+                  inputMode="decimal"
+                  min="0"
+                  step="0.1"
+                  placeholder="Cantidad usada"
+                  value={
+                    cantidadConsumida
+                  }
+                  onChange={(e) =>
+                    setCantidadConsumida(
+                      e.target.value
+                    )
+                  }
+                  style={{
+                    width: 130,
+                    minHeight: 34,
+                    fontSize: 12,
+                    padding:
+                      '6px 8px',
+                  }}
+                />
+
+                <span className="pill pill-rosa">
+                  {item.unidad}
+                </span>
+
+                <button
+                  className="btn-principal"
+                  onClick={
+                    consumirProducto
+                  }
+                  style={{
+                    minHeight: 34,
+                    fontSize: 12,
+                    padding:
+                      '6px 12px',
+                  }}
+                >
+                  💕 Aplicar
+                </button>
+              </div>
+            )}
           </div>
         )}
-
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 8,
-            flexWrap: 'wrap',
-            background:
-              'rgba(255,255,255,0.68)',
-            border:
-              '1px solid #f5dde8',
-            borderRadius: 16,
-            padding: 8,
-          }}
-        >
-          <select
-            value={item.ubicacion}
-            onChange={(e) =>
-              editarItemInventario(
-                item.id,
-                {
-                  ubicacion:
-                    e.target
-                      .value as ItemInventarioType['ubicacion'],
-                }
-              )
-            }
-            style={{
-              minHeight: 34,
-              fontSize: 12,
-              padding:
-                '6px 8px',
-              flex: '1 1 140px',
-            }}
-          >
-            <option value="pendiente">
-              🛍️ Pendiente
-            </option>
-
-            <option value="nevera">
-              🧊 Nevera
-            </option>
-
-            <option value="congelador">
-              ❄️ Congelador
-            </option>
-
-            <option value="despensa">
-              🗄️ Despensa
-            </option>
-          </select>
-
-          <input
-            type="number"
-            inputMode="decimal"
-            min="0"
-            step="0.1"
-            value={item.cantidad}
-            onChange={(e) =>
-              editarItemInventario(
-                item.id,
-                {
-                  cantidad:
-                    parseFloat(
-                      e.target.value
-                    ) || 0,
-                }
-              )
-            }
-            style={{
-              width: 72,
-              minHeight: 34,
-              appearance:
-                'textfield',
-              textAlign:
-                'center',
-              fontSize: 12,
-              padding:
-                '6px 8px',
-            }}
-          />
-
-          <select
-            value={item.unidad}
-            onChange={(e) =>
-              editarItemInventario(
-                item.id,
-                {
-                  unidad:
-                    e.target.value,
-                }
-              )
-            }
-            style={{
-              width: 86,
-              minHeight: 34,
-              fontSize: 12,
-              padding:
-                '6px 8px',
-            }}
-          >
-            <option value="g">
-              g
-            </option>
-
-            <option value="kg">
-              kg
-            </option>
-
-            <option value="ml">
-              ml
-            </option>
-
-            <option value="l">
-              l
-            </option>
-
-            <option value="u.">
-              u.
-            </option>
-
-            <option value="paquete">
-              paquete
-            </option>
-
-            <option value="lata">
-              lata
-            </option>
-          </select>
-
-          <button
-            type="button"
-            onClick={() =>
-              editarItemInventario(
-                item.id,
-                {
-                  avisarStockBajo:
-                    !item.avisarStockBajo,
-                }
-              )
-            }
-            className="btn-secundario"
-            title="Avisar cuando quede poco"
-            style={{
-              minHeight: 34,
-              fontSize: 12,
-              padding:
-                '6px 10px',
-            }}
-          >
-            {item.avisarStockBajo
-              ? '🔔'
-              : '🔕'}
-          </button>
-
-          <button
-            type="button"
-            onClick={() =>
-              setConsumoActivo(
-                !consumoActivo
-              )
-            }
-            className="btn-secundario"
-            style={{
-              minHeight: 34,
-              fontSize: 12,
-              padding:
-                '6px 10px',
-            }}
-          >
-            ✏️ Exacto
-          </button>
-
-          <button
-            type="button"
-            onClick={() =>
-              editarItemInventario(
-                item.id,
-                {
-                  necesitaDescongelar:
-                    !item.necesitaDescongelar,
-                }
-              )
-            }
-            className="btn-secundario"
-            title="Marcar/desmarcar descongelar"
-            style={{
-              minHeight: 34,
-              fontSize: 12,
-              padding:
-                '6px 10px',
-            }}
-          >
-            {item.necesitaDescongelar
-              ? '❄️'
-              : '⬜'}
-          </button>
-
-          <button
-            type="button"
-            onClick={() =>
-              eliminarItemInventario(
-                item.id
-              )
-            }
-            className="btn-secundario"
-            style={{
-              minHeight: 34,
-              fontSize: 12,
-              padding:
-                '6px 10px',
-            }}
-          >
-            ✕
-          </button>
-        </div>
       </div>
     </div>
   )
