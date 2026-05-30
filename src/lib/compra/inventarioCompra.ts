@@ -24,6 +24,66 @@ function claveDeIngredienteCompra(
     : ingrediente.clave
 }
 
+function obtenerTokensClave(
+  clave: string
+) {
+  return clave
+    .split(/\s+/)
+    .map((token) => token.trim())
+    .filter(Boolean)
+}
+
+function tokenValidoParaCoincidenciaParcial(
+  token: string
+) {
+  return token.length >= 4
+}
+
+function clavesCoincidenExactasOParcialesSeguras(
+  claveA: string,
+  claveB: string
+) {
+  if (claveA === claveB) {
+    return true
+  }
+
+  const tokensA =
+    obtenerTokensClave(claveA)
+
+  const tokensB =
+    obtenerTokensClave(claveB)
+
+  if (
+    tokensA.length === 0 ||
+    tokensB.length === 0
+  ) {
+    return false
+  }
+
+  const todosTokensBEnA =
+    tokensB.every(
+      (token) =>
+        tokenValidoParaCoincidenciaParcial(
+          token
+        ) &&
+        tokensA.includes(token)
+    )
+
+  const todosTokensAEnB =
+    tokensA.every(
+      (token) =>
+        tokenValidoParaCoincidenciaParcial(
+          token
+        ) &&
+        tokensB.includes(token)
+    )
+
+  return (
+    todosTokensBEnA ||
+    todosTokensAEnB
+  )
+}
+
 function coincidenIngredientesCompra(
   ingredienteA:
     | string
@@ -44,9 +104,9 @@ function coincidenIngredientesCompra(
     return false
   }
 
-  return (
-    a.includes(b) ||
-    b.includes(a)
+  return clavesCoincidenExactasOParcialesSeguras(
+    a,
+    b
   )
 }
 

@@ -11,33 +11,139 @@ import {
   type IngredienteEscalado,
 } from '../recetas/calcularIngredientesEscalados'
 
-function coincideIngrediente(
+function obtenerTokens(
+  texto: string
+) {
+  return normalizarIngrediente(texto)
+    .split(/\s+/)
+    .map((token) => token.trim())
+    .filter(Boolean)
+}
+
+function clavesCoinciden(
   nombreInventario: string,
   nombreIngrediente: string
 ) {
-  const inventarioNormalizado =
-    normalizarIngrediente(
-      nombreInventario
-    )
+  const tokensInventario =
+    obtenerTokens(nombreInventario)
 
-  const ingredienteNormalizado =
-    normalizarIngrediente(
-      nombreIngrediente
-    )
+  const tokensIngrediente =
+    obtenerTokens(nombreIngrediente)
 
   if (
-    !inventarioNormalizado ||
-    !ingredienteNormalizado
+    tokensInventario.length === 0 ||
+    tokensIngrediente.length === 0
+  ) {
+    return false
+  }
+
+  const claveInventario =
+    tokensInventario.join(' ')
+
+  const claveIngrediente =
+    tokensIngrediente.join(' ')
+
+  if (
+    claveInventario ===
+    claveIngrediente
+  ) {
+    return true
+  }
+
+  return tokensIngrediente.every(
+    (token) =>
+      token.length >= 4 &&
+      tokensInventario.includes(token)
+  )
+}
+
+function normalizarUnidadInventario(
+  unidad: string | null | undefined
+) {
+  if (!unidad) {
+    return null
+  }
+
+  const limpia =
+    unidad.toLowerCase().trim()
+
+  if (
+    [
+      'g',
+      'gr',
+      'grs',
+      'gramo',
+      'gramos',
+    ].includes(limpia)
+  ) {
+    return 'g'
+  }
+
+  if (
+    [
+      'kg',
+      'kilo',
+      'kilos',
+      'kilogramo',
+      'kilogramos',
+    ].includes(limpia)
+  ) {
+    return 'kg'
+  }
+
+  if (
+    [
+      'ml',
+      'mililitro',
+      'mililitros',
+    ].includes(limpia)
+  ) {
+    return 'ml'
+  }
+
+  if (
+    [
+      'l',
+      'litro',
+      'litros',
+    ].includes(limpia)
+  ) {
+    return 'l'
+  }
+
+  if (
+    [
+      'u',
+      'u.',
+      'ud',
+      'uds',
+      'unidad',
+      'unidades',
+    ].includes(limpia)
+  ) {
+    return 'u'
+  }
+
+  return limpia
+}
+
+function unidadesCompatibles(
+  unidadInventario: string | null | undefined,
+  unidadIngrediente: string | null | undefined
+) {
+  if (
+    !unidadInventario ||
+    !unidadIngrediente
   ) {
     return false
   }
 
   return (
-    inventarioNormalizado.includes(
-      ingredienteNormalizado
-    ) ||
-    ingredienteNormalizado.includes(
-      inventarioNormalizado
+    normalizarUnidadInventario(
+      unidadInventario
+    ) ===
+    normalizarUnidadInventario(
+      unidadIngrediente
     )
   )
 }
@@ -71,14 +177,16 @@ export function descontarIngredientesInventario(
             }
 
             const coincide =
-              coincideIngrediente(
+              clavesCoinciden(
                 item.nombre,
                 ingrediente.nombre
               )
 
             const unidadCompatible =
-              item.unidad ===
-              ingrediente.unidad
+              unidadesCompatibles(
+                item.unidad,
+                ingrediente.unidad
+              )
 
             if (
               !coincide ||

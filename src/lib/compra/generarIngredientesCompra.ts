@@ -54,6 +54,20 @@ function obtenerRecetaIds(
     : []
 }
 
+function asegurarCantidadComidaLibre(
+  ingrediente: IngredienteEscalado
+): IngredienteEscalado {
+  if (ingrediente.cantidad !== null) {
+    return ingrediente
+  }
+
+  return {
+    ...ingrediente,
+    cantidad: 1,
+    unidad: ingrediente.unidad || 'unidad',
+  }
+}
+
 export function generarIngredientesCompra(
   planning: HuecoPlanningListaCompra[],
   recetas: RecetaListaCompra[]
@@ -164,7 +178,9 @@ export function generarIngredientesCompra(
           raciones: 1,
         },
         1
-      ).forEach(añadirIngrediente)
+      )
+        .map(asegurarCantidadComidaLibre)
+        .forEach(añadirIngrediente)
     }
   })
 
