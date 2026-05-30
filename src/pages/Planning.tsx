@@ -1,4 +1,8 @@
-import { useState } from 'react'
+import {
+  useState,
+  useEffect,
+  useRef,
+} from 'react'
 
 import {
   format,
@@ -64,6 +68,11 @@ export default function Planning({
     Record<string, boolean>
   >({})
 
+  const scrollHoyRef =
+    useRef<HTMLDivElement | null>(
+      null
+    )
+
   const {
     recetas,
     planning,
@@ -96,6 +105,17 @@ export default function Planning({
     new Date(),
     'yyyy-MM-dd'
   )
+
+  useEffect(() => {
+    setTimeout(() => {
+      scrollHoyRef.current?.scrollIntoView(
+        {
+          behavior: 'smooth',
+          block: 'start',
+        }
+      )
+    }, 150)
+  }, [])
 
   const activarEdicion = (
     clave: string
@@ -210,54 +230,63 @@ export default function Planning({
                 'yyyy-MM-dd'
               )
 
+            const esHoy =
+              fecha === hoy
+
             return (
-              <DiaPlanning
+              <div
                 key={fecha}
-                dia={dia}
-                indice={i}
-                esHoy={
-                  fecha === hoy
+                ref={
+                  esHoy
+                    ? scrollHoyRef
+                    : undefined
                 }
-                emojiDia={
-                  EMOJIS_DIA[i]
-                }
-                colorDia={
-                  COLORES_DIA[i]
-                }
-                recetas={recetas}
-                planning={planning}
-                inventario={inventario}
-                busquedas={
-                  busquedas
-                }
-                editandoHuecos={
-                  editandoHuecos
-                }
-                onAbrirReceta={
-                  onAbrirReceta
-                }
-                activarEdicion={
-                  activarEdicion
-                }
-                cerrarEdicion={
-                  cerrarEdicion
-                }
-                setBusqueda={
-                  setBusqueda
-                }
-                guardarHuecoPlanning={
-                  guardarHuecoPlanning
-                }
-                limpiarHuecoPlanning={
-                  limpiarHuecoPlanning
-                }
-                toggleCocinadoPlanning={
-                  toggleCocinadoPlanning
-                }
-                updateReceta={
-                  updateReceta
-                }
-              />
+              >
+                <DiaPlanning
+                  dia={dia}
+                  indice={i}
+                  esHoy={esHoy}
+                  emojiDia={
+                    EMOJIS_DIA[i]
+                  }
+                  colorDia={
+                    COLORES_DIA[i]
+                  }
+                  recetas={recetas}
+                  planning={planning}
+                  inventario={inventario}
+                  busquedas={
+                    busquedas
+                  }
+                  editandoHuecos={
+                    editandoHuecos
+                  }
+                  onAbrirReceta={
+                    onAbrirReceta
+                  }
+                  activarEdicion={
+                    activarEdicion
+                  }
+                  cerrarEdicion={
+                    cerrarEdicion
+                  }
+                  setBusqueda={
+                    setBusqueda
+                  }
+                  guardarHuecoPlanning={
+                    guardarHuecoPlanning
+                  }
+                  limpiarHuecoPlanning={
+                    limpiarHuecoPlanning
+                  }
+                  toggleCocinadoPlanning={
+                    toggleCocinadoPlanning
+                  }
+                  updateReceta={
+                    updateReceta
+                  }
+                />
+              </div>
             )
           }
         )}
