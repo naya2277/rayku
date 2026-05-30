@@ -1,9 +1,21 @@
-import { useEffect, useState } from 'react'
-import type { Session } from '@supabase/supabase-js'
+import {
+  useEffect,
+  useState,
+} from 'react'
 
-import { supabase } from './lib/supabase'
-import { useRaykuStore } from './store'
+import type {
+  Session,
+} from '@supabase/supabase-js'
 
+import {
+  supabase,
+} from './lib/supabase'
+
+import {
+  useRaykuStore,
+} from './store'
+
+import Inicio from './pages/Inicio'
 import Planning from './pages/Planning'
 import CalendarioPlanning from './pages/CalendarioPlanning'
 import Recetas from './pages/Recetas'
@@ -12,20 +24,51 @@ import Compra from './pages/Compra'
 import Auth from './pages/Auth'
 
 type Pagina =
+  | 'inicio'
   | 'planning'
   | 'calendario'
   | 'recetas'
   | 'inventario'
   | 'compra'
 
-const PAGINA_KEY = 'rayku-pagina-actual'
+const PAGINA_KEY =
+  'rayku-pagina-actual'
+
+const PAGINAS_VALIDAS: Pagina[] = [
+  'inicio',
+  'planning',
+  'calendario',
+  'recetas',
+  'inventario',
+  'compra',
+]
+
+function obtenerPaginaInicial(): Pagina {
+  const guardada =
+    localStorage.getItem(
+      PAGINA_KEY
+    ) as Pagina | null
+
+  if (
+    guardada &&
+    PAGINAS_VALIDAS.includes(
+      guardada
+    )
+  ) {
+    return guardada
+  }
+
+  return 'inicio'
+}
 
 export default function App() {
   const [session, setSession] =
     useState<Session | null>(null)
 
-  const [mensajeNube, setMensajeNube] =
-    useState('')
+  const [
+    mensajeNube,
+    setMensajeNube,
+  ] = useState('')
 
   const {
     sincronizarRecetasDesdeSupabase,
@@ -38,20 +81,19 @@ export default function App() {
     guardarPlanningEnSupabase,
   } = useRaykuStore()
 
-  const [paginaActual, setPaginaActual] =
-    useState<Pagina>(() => {
-      const guardada =
-        localStorage.getItem(
-          PAGINA_KEY
-        ) as Pagina | null
-
-      return guardada || 'planning'
-    })
+  const [
+    paginaActual,
+    setPaginaActual,
+  ] = useState<Pagina>(
+    obtenerPaginaInicial
+  )
 
   const [
     recetaSeleccionadaId,
     setRecetaSeleccionadaId,
-  ] = useState<string | null>(null)
+  ] = useState<string | null>(
+    null
+  )
 
   useEffect(() => {
     localStorage.setItem(
@@ -63,17 +105,26 @@ export default function App() {
   useEffect(() => {
     supabase.auth
       .getSession()
-      .then(({ data: { session } }) => {
-        setSession(session)
-      })
+      .then(
+        ({
+          data: {
+            session,
+          },
+        }) => {
+          setSession(session)
+        }
+      )
 
     const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        setSession(session)
-      }
-    )
+      data: {
+        subscription,
+      },
+    } =
+      supabase.auth.onAuthStateChange(
+        (_event, session) => {
+          setSession(session)
+        }
+      )
 
     return () => {
       subscription.unsubscribe()
@@ -105,35 +156,41 @@ export default function App() {
   const abrirReceta = (
     recetaId: string
   ) => {
-    setRecetaSeleccionadaId(recetaId)
+    setRecetaSeleccionadaId(
+      recetaId
+    )
+
     setPaginaActual('recetas')
   }
 
-  const guardarEnNube = async () => {
-    if (!session?.user.id) return
+  const guardarEnNube =
+    async () => {
+      if (!session?.user.id) return
 
-    setMensajeNube('☁️ Guardando...')
+      setMensajeNube(
+        '☁️ Guardando...'
+      )
 
-    await guardarRecetasEnSupabase(
-      session.user.id
-    )
+      await guardarRecetasEnSupabase(
+        session.user.id
+      )
 
-    await guardarInventarioEnSupabase(
-      session.user.id
-    )
+      await guardarInventarioEnSupabase(
+        session.user.id
+      )
 
-    await guardarPlanningEnSupabase(
-      session.user.id
-    )
+      await guardarPlanningEnSupabase(
+        session.user.id
+      )
 
-    setMensajeNube(
-      '✅ Datos guardados en la nube'
-    )
+      setMensajeNube(
+        '✅ Datos guardados en la nube'
+      )
 
-    setTimeout(() => {
-      setMensajeNube('')
-    }, 2500)
-  }
+      setTimeout(() => {
+        setMensajeNube('')
+      }, 2500)
+    }
 
   if (!session) {
     return <Auth />
@@ -156,12 +213,31 @@ export default function App() {
           <button
             type="button"
             className={
-              paginaActual === 'planning'
+              paginaActual === 'inicio'
                 ? 'activo'
                 : ''
             }
             onClick={() =>
-              setPaginaActual('planning')
+              setPaginaActual(
+                'inicio'
+              )
+            }
+          >
+            🏠 Inicio
+          </button>
+
+          <button
+            type="button"
+            className={
+              paginaActual ===
+              'planning'
+                ? 'activo'
+                : ''
+            }
+            onClick={() =>
+              setPaginaActual(
+                'planning'
+              )
             }
           >
             🗓️ Planning
@@ -187,12 +263,15 @@ export default function App() {
           <button
             type="button"
             className={
-              paginaActual === 'recetas'
+              paginaActual ===
+              'recetas'
                 ? 'activo'
                 : ''
             }
             onClick={() =>
-              setPaginaActual('recetas')
+              setPaginaActual(
+                'recetas'
+              )
             }
           >
             📖 Recetas
@@ -201,12 +280,15 @@ export default function App() {
           <button
             type="button"
             className={
-              paginaActual === 'compra'
+              paginaActual ===
+              'compra'
                 ? 'activo'
                 : ''
             }
             onClick={() =>
-              setPaginaActual('compra')
+              setPaginaActual(
+                'compra'
+              )
             }
           >
             🛒 Compra
@@ -232,7 +314,9 @@ export default function App() {
           <button
             type="button"
             className="btn-secundario"
-            onClick={guardarEnNube}
+            onClick={
+              guardarEnNube
+            }
           >
             ☁️ Guardar
           </button>
@@ -253,11 +337,15 @@ export default function App() {
         <div
           className="card"
           style={{
-            margin: '14px auto 0',
-            maxWidth: '900px',
-            width: 'calc(100% - 28px)',
+            margin:
+              '14px auto 0',
+            maxWidth:
+              '900px',
+            width:
+              'calc(100% - 28px)',
             color: '#8f7080',
-            textAlign: 'center',
+            textAlign:
+              'center',
           }}
         >
           {mensajeNube}
@@ -265,6 +353,15 @@ export default function App() {
       )}
 
       <main className="contenido-principal">
+        {paginaActual ===
+          'inicio' && (
+          <Inicio
+            onAbrirReceta={
+              abrirReceta
+            }
+          />
+        )}
+
         {paginaActual ===
           'planning' && (
           <Planning
@@ -298,7 +395,9 @@ export default function App() {
         )}
 
         {paginaActual ===
-          'compra' && <Compra />}
+          'compra' && (
+          <Compra />
+        )}
 
         {paginaActual ===
           'inventario' && (
