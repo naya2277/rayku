@@ -297,6 +297,12 @@ export default function ItemInventario({
                   )}
                 </span>
 
+                {item.avisarStockBajo && (
+                  <span className="pill pill-malva">
+                    🔔 Stock bajo
+                  </span>
+                )}
+
                 {agotado && (
                   <span className="pill pill-naranja">
                     🪫 Agotado
@@ -641,6 +647,31 @@ export default function ItemInventario({
               lata
             </option>
           </select>
+
+          <button
+            type="button"
+            onClick={() =>
+              editarItemInventario(
+                item.id,
+                {
+                  avisarStockBajo:
+                    !item.avisarStockBajo,
+                }
+              )
+            }
+            className="btn-secundario"
+            title="Avisar cuando quede poco"
+            style={{
+              minHeight: 34,
+              fontSize: 12,
+              padding:
+                '6px 10px',
+            }}
+          >
+            {item.avisarStockBajo
+              ? '🔔'
+              : '🔕'}
+          </button>
 
           <button
             type="button"

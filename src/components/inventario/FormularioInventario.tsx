@@ -57,6 +57,11 @@ export default function FormularioInventario({
     setNecesitaDescongelar,
   ] = useState(false)
 
+  const [
+    avisarStockBajo,
+    setAvisarStockBajo,
+  ] = useState(false)
+
   const guardar = () => {
     if (!nombre.trim()) return
 
@@ -71,6 +76,7 @@ export default function FormularioInventario({
       fechaCaducidad:
         fechaCaducidad || null,
       necesitaDescongelar,
+      avisarStockBajo,
     })
 
     cerrarFormulario()
@@ -225,6 +231,31 @@ export default function FormularioInventario({
             }
           />
         </div>
+
+        <label
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px',
+            fontSize: '13px',
+            fontWeight: '700',
+            color: 'var(--txt)',
+          }}
+        >
+          <input
+            type="checkbox"
+            checked={avisarStockBajo}
+            onChange={(e) =>
+              setAvisarStockBajo(
+                e.target.checked
+              )
+            }
+            style={{
+              width: 'auto',
+            }}
+          />
+          🔔 Avisar cuando quede poco
+        </label>
 
         {ubicacionForm ===
           'congelador' && (

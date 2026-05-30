@@ -53,6 +53,7 @@ export const normalizarInventario = (
   fechaCaducidad: item.fechaCaducidad ?? null,
   fechaDescongelar: item.fechaDescongelar ?? null,
   necesitaDescongelar: item.necesitaDescongelar ?? false,
+  avisarStockBajo: item.avisarStockBajo ?? false,
 })
 
 export const normalizarCompraManual = (

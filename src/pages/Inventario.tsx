@@ -228,12 +228,15 @@ export default function Inventario() {
           return false
         }
 
-        return Boolean(
-          detectarStockBajo(
-            item.cantidad,
-            item.unidad
-          )
-        )
+        return (
+  item.avisarStockBajo === true &&
+  Boolean(
+    detectarStockBajo(
+      item.cantidad,
+      item.unidad
+    )
+  )
+)
       })
       .sort((a, b) => {
         if (a.cantidad !== b.cantidad) {
@@ -275,17 +278,18 @@ export default function Inventario() {
     }
 
     if (filtroActivo === 'stockBajo') {
-      return (
-        item.ubicacion !== 'pendiente' &&
-        item.cantidad > 0 &&
-        Boolean(
-          detectarStockBajo(
-            item.cantidad,
-            item.unidad
-          )
-        )
+  return (
+    item.ubicacion !== 'pendiente' &&
+    item.cantidad > 0 &&
+    item.avisarStockBajo === true &&
+    Boolean(
+      detectarStockBajo(
+        item.cantidad,
+        item.unidad
       )
-    }
+    )
+  )
+}
 
     if (filtroActivo === 'caducan') {
       const dias =
