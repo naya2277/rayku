@@ -68,46 +68,81 @@ export const normalizarCompraManual = (
       : String(item.cantidad),
 })
 
+function normalizarRecetaIdsPlanning(
+  item: any
+) {
+  if (Array.isArray(item.recetaIds)) {
+    return item.recetaIds.filter(Boolean)
+  }
+
+  if (item.recetaId) {
+    return [item.recetaId]
+  }
+
+  return []
+}
+
 export const normalizarPlanning = (
   item: any
-): ItemPlanning => ({
-  id: item.id ?? generarId(),
-  fecha: item.fecha ?? '',
-  tipoComida: item.tipoComida ?? 'comida',
-  recetaId: item.recetaId ?? null,
-  comidaLibre: item.comidaLibre ?? '',
-  nota: item.nota ?? '',
-  racionesOverride: item.racionesOverride ?? null,
-  cocinado: item.cocinado ?? false,
-})
+): ItemPlanning => {
+  const recetaIds =
+    normalizarRecetaIdsPlanning(item)
+
+  return {
+    id: item.id ?? generarId(),
+    fecha: item.fecha ?? '',
+    tipoComida: item.tipoComida ?? 'comida',
+    recetaId: item.recetaId ?? recetaIds[0] ?? null,
+    recetaIds,
+    comidaLibre: item.comidaLibre ?? '',
+    nota: item.nota ?? '',
+    racionesOverride: item.racionesOverride ?? null,
+    cocinado: item.cocinado ?? false,
+  }
+}
 
 export const normalizarRegistroCocinado = (
   item: any
-): RegistroCocinado => ({
-  id: item.id ?? generarId(),
-  planningId: item.planningId ?? '',
-  fecha: item.fecha ?? '',
-  tipoComida: item.tipoComida ?? 'comida',
-  origen: item.origen ?? 'comida_libre',
-  recetaId: item.recetaId ?? null,
-  recetaNombre: item.recetaNombre ?? null,
-  comidaLibre: item.comidaLibre ?? '',
-  raciones:
-    item.raciones === null ||
-    item.raciones === undefined
-      ? null
-      : Number(item.raciones),
-  ingredientesOriginales: Array.isArray(item.ingredientesOriginales)
-    ? item.ingredientesOriginales
-    : [],
-  cambiosInventario: Array.isArray(item.cambiosInventario)
-    ? item.cambiosInventario.map((c: any) => ({
-        itemId: c.itemId ?? '',
-        nombre: c.nombre ?? '',
-        unidad: c.unidad ?? '',
-        cantidadAnterior: Number(c.cantidadAnterior) || 0,
-        cantidadNueva: Number(c.cantidadNueva) || 0,
-      }))
-    : [],
-  creadoEn: item.creadoEn ?? new Date().toISOString(),
-})
+): RegistroCocinado => {
+  const recetaIds =
+    Array.isArray(item.recetaIds)
+      ? item.recetaIds.filter(Boolean)
+      : item.recetaId
+        ? [item.recetaId]
+        : []
+
+  return {
+    id: item.id ?? generarId(),
+    planningId: item.planningId ?? '',
+    fecha: item.fecha ?? '',
+    tipoComida: item.tipoComida ?? 'comida',
+    origen: item.origen ?? 'comida_libre',
+    recetaId: item.recetaId ?? recetaIds[0] ?? null,
+    recetaIds,
+    recetaNombre: item.recetaNombre ?? null,
+    recetaNombres: Array.isArray(item.recetaNombres)
+      ? item.recetaNombres
+      : item.recetaNombre
+        ? [item.recetaNombre]
+        : [],
+    comidaLibre: item.comidaLibre ?? '',
+    raciones:
+      item.raciones === null ||
+      item.raciones === undefined
+        ? null
+        : Number(item.raciones),
+    ingredientesOriginales: Array.isArray(item.ingredientesOriginales)
+      ? item.ingredientesOriginales
+      : [],
+    cambiosInventario: Array.isArray(item.cambiosInventario)
+      ? item.cambiosInventario.map((c: any) => ({
+          itemId: c.itemId ?? '',
+          nombre: c.nombre ?? '',
+          unidad: c.unidad ?? '',
+          cantidadAnterior: Number(c.cantidadAnterior) || 0,
+          cantidadNueva: Number(c.cantidadNueva) || 0,
+        }))
+      : [],
+    creadoEn: item.creadoEn ?? new Date().toISOString(),
+  }
+}

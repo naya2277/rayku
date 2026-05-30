@@ -39,6 +39,21 @@ function crearIngredienteCompra(
   }
 }
 
+function obtenerRecetaIds(
+  hueco: HuecoPlanningListaCompra
+) {
+  if (
+    Array.isArray(hueco.recetaIds) &&
+    hueco.recetaIds.length > 0
+  ) {
+    return hueco.recetaIds
+  }
+
+  return hueco.recetaId
+    ? [hueco.recetaId]
+    : []
+}
+
 export function generarIngredientesCompra(
   planning: HuecoPlanningListaCompra[],
   recetas: RecetaListaCompra[]
@@ -114,25 +129,30 @@ export function generarIngredientesCompra(
   }
 
   planning.forEach((hueco) => {
-    if (hueco.recetaId) {
+    const recetaIds =
+      obtenerRecetaIds(hueco)
+
+    recetaIds.forEach((recetaId) => {
       const receta =
         recetas.find(
           (r) =>
-            r.id === hueco.recetaId
+            r.id === recetaId
         )
 
-      if (receta) {
-        const racionesObjetivo =
-          hueco.racionesOverride ||
-          receta.raciones ||
-          1
-
-        calcularIngredientesEscalados(
-          receta,
-          racionesObjetivo
-        ).forEach(añadirIngrediente)
+      if (!receta) {
+        return
       }
-    }
+
+      const racionesObjetivo =
+        hueco.racionesOverride ||
+        receta.raciones ||
+        1
+
+      calcularIngredientesEscalados(
+        receta,
+        racionesObjetivo
+      ).forEach(añadirIngrediente)
+    })
 
     if (hueco.comidaLibre) {
       calcularIngredientesEscalados(

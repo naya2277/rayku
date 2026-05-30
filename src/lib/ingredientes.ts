@@ -7,6 +7,7 @@ export type CategoriaIngrediente =
   | 'salsa'
   | 'verdura'
   | 'fruta'
+  | 'especia'
   | 'otros'
 
 export { normalizarIngrediente }
@@ -149,7 +150,9 @@ const CATEGORIAS: Record<
     'esparrago',
     'esparragos',
     'champinon',
+    'champiñon',
     'champinones',
+    'champiñones',
     'seta',
     'setas',
     'judia verde',
@@ -163,7 +166,6 @@ const CATEGORIAS: Record<
     'canonigos',
     'alcachofa',
     'alcachofas',
-    'pepino',
     'calabaza',
   ],
 
@@ -186,6 +188,39 @@ const CATEGORIAS: Record<
     'moras',
   ],
 
+  especia: [
+    'sal',
+    'pimienta',
+    'pimenton',
+    'pimenton dulce',
+    'pimenton picante',
+    'ajo en polvo',
+    'cebolla en polvo',
+    'oregano',
+    'albahaca',
+    'perejil',
+    'cilantro',
+    'comino',
+    'curcuma',
+    'curry',
+    'nuez moscada',
+    'canela',
+    'romero',
+    'tomillo',
+    'laurel',
+    'eneldo',
+    'jengibre',
+    'guindilla',
+    'cayena',
+    'chile',
+    'hierbas provenzales',
+    'sazonador',
+    'especia',
+    'especias',
+    'condimento',
+    'condimentos',
+  ],
+
   otros: [],
 }
 
@@ -194,6 +229,7 @@ const ORDEN_CATEGORIAS: CategoriaIngrediente[] = [
   'verdura',
   'grasa',
   'salsa',
+  'especia',
   'carbohidrato',
   'fruta',
   'otros',
@@ -243,6 +279,7 @@ export const emojiIngrediente = (
     salsa: '🥣',
     verdura: '🥦',
     fruta: '🍓',
+    especia: '🌶️',
     otros: '✨',
   }
 
@@ -267,6 +304,7 @@ export const claseIngrediente = (
     salsa: 'pill-teal',
     verdura: 'pill-verde',
     fruta: 'pill-rosa',
+    especia: 'pill-naranja',
     otros: 'pill-malva',
   }
 

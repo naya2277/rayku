@@ -6,6 +6,7 @@ export type RecetaListaCompra = {
 
 export type HuecoPlanningListaCompra = {
   recetaId?: string | null
+  recetaIds?: string[]
   comidaLibre?: string
   racionesOverride?: number | null
 }

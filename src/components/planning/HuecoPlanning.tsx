@@ -23,7 +23,8 @@ type Props = {
   tipoComida: TipoComida
   clave: string
   hueco: any
-  receta: any
+  recetaIds: string[]
+  recetasSeleccionadas: any[]
   estaEditando: boolean
   hayContenido: boolean
   toggleCocinado: () => void
@@ -43,7 +44,8 @@ export default function HuecoPlanning({
   fecha,
   tipoComida,
   hueco,
-  receta,
+  recetaIds,
+  recetasSeleccionadas,
   estaEditando,
   hayContenido,
   busqueda,
@@ -59,6 +61,85 @@ export default function HuecoPlanning({
   updateReceta,
 }: Props) {
   const esComida = tipoComida === 'comida'
+
+  const recetaPrincipal =
+    recetasSeleccionadas[0] ?? null
+
+  const guardarDatosHueco = (
+    datos: {
+      recetaIds?: string[]
+      comidaLibre?: string
+      nota?: string
+      racionesOverride?: number | null
+    }
+  ) => {
+    const nuevosRecetaIds =
+      datos.recetaIds ?? recetaIds
+
+    guardarHueco({
+      fecha,
+      tipoComida,
+      recetaId:
+        nuevosRecetaIds[0] ?? null,
+      recetaIds:
+        nuevosRecetaIds,
+      comidaLibre:
+        datos.comidaLibre ??
+        hueco?.comidaLibre ??
+        '',
+      nota:
+        datos.nota ??
+        hueco?.nota ??
+        '',
+      racionesOverride:
+        datos.racionesOverride ??
+        hueco?.racionesOverride ??
+        null,
+    })
+  }
+
+  const agregarReceta = (
+    recetaNueva: any
+  ) => {
+    const nuevosRecetaIds =
+      recetaIds.includes(
+        recetaNueva.id
+      )
+        ? recetaIds
+        : [
+            ...recetaIds,
+            recetaNueva.id,
+          ]
+
+    guardarDatosHueco({
+      recetaIds:
+        nuevosRecetaIds,
+      racionesOverride:
+        hueco?.racionesOverride ??
+        recetaNueva.raciones,
+    })
+
+    setBusqueda('')
+  }
+
+  const quitarReceta = (
+    recetaId: string
+  ) => {
+    const nuevosRecetaIds =
+      recetaIds.filter(
+        (id) => id !== recetaId
+      )
+
+    guardarDatosHueco({
+      recetaIds:
+        nuevosRecetaIds,
+      racionesOverride:
+        nuevosRecetaIds.length === 0
+          ? null
+          : hueco?.racionesOverride ??
+            null,
+    })
+  }
 
   const estrellas = (valoracion: number, recetaId: string) => (
     <div style={{ display: 'flex', gap: 3, marginTop: 6 }}>
@@ -237,7 +318,11 @@ export default function HuecoPlanning({
       {(!hayContenido || estaEditando) && (
         <div style={{ marginTop: 10 }}>
           <input
-            placeholder="🔎 Buscar receta..."
+            placeholder={
+              recetaIds.length > 0
+                ? '➕ Buscar otra receta...'
+                : '🔎 Buscar receta...'
+            }
             value={busqueda}
             onFocus={activarEdicion}
             onChange={(e) => {
@@ -266,38 +351,24 @@ export default function HuecoPlanning({
                     justifyContent: 'flex-start',
                     width: '100%',
                   }}
-                  onClick={() => {
-                    guardarHueco({
-                      fecha,
-                      tipoComida,
-                      recetaId: r.id,
-                      comidaLibre: hueco?.comidaLibre || '',
-                      nota: hueco?.nota || '',
-                      racionesOverride:
-                        hueco?.racionesOverride ?? r.raciones,
-                    })
-
-                    setBusqueda('')
-                  }}
+                  onClick={() =>
+                    agregarReceta(r)
+                  }
                 >
-                  📖 {r.nombre}
+                  ➕ 📖 {r.nombre}
                 </button>
               ))}
             </div>
           )}
 
-          {receta && (
+          {recetaPrincipal && (
             <RacionesPlanning
-              racionesReceta={receta.raciones}
+              racionesReceta={recetaPrincipal.raciones}
               racionesOverride={hueco?.racionesOverride}
               onGuardar={(nuevasRaciones) => {
-                guardarHueco({
-                  fecha,
-                  tipoComida,
-                  recetaId: receta.id,
-                  comidaLibre: hueco?.comidaLibre || '',
-                  nota: hueco?.nota || '',
-                  racionesOverride: nuevasRaciones,
+                guardarDatosHueco({
+                  racionesOverride:
+                    nuevasRaciones,
                 })
               }}
             />
@@ -310,13 +381,9 @@ export default function HuecoPlanning({
             onChange={(e) => {
               activarEdicion()
 
-              guardarHueco({
-                fecha,
-                tipoComida,
-                recetaId: hueco?.recetaId || null,
-                comidaLibre: e.target.value,
-                nota: hueco?.nota || '',
-                racionesOverride: hueco?.racionesOverride ?? null,
+              guardarDatosHueco({
+                comidaLibre:
+                  e.target.value,
               })
             }}
             style={{
@@ -331,13 +398,9 @@ export default function HuecoPlanning({
             onChange={(e) => {
               activarEdicion()
 
-              guardarHueco({
-                fecha,
-                tipoComida,
-                recetaId: hueco?.recetaId || null,
-                comidaLibre: hueco?.comidaLibre || '',
-                nota: e.target.value,
-                racionesOverride: hueco?.racionesOverride ?? null,
+              guardarDatosHueco({
+                nota:
+                  e.target.value,
               })
             }}
             style={{
@@ -361,7 +424,7 @@ export default function HuecoPlanning({
         </div>
       )}
 
-      {receta && (
+      {recetasSeleccionadas.length > 0 && (
         <div
           style={{
             marginTop: 10,
@@ -369,70 +432,100 @@ export default function HuecoPlanning({
             gap: 8,
           }}
         >
-          <div
-            style={{
-              background: 'white',
-              border: '1.5px solid #f5dde8',
-              borderRadius: 16,
-              padding: '10px 12px',
-            }}
-          >
-            <button
-              type="button"
-              onClick={() => onAbrirReceta(receta.id)}
+          {recetasSeleccionadas.map((receta) => (
+            <div
+              key={receta.id}
               style={{
-                border: 'none',
-                background: 'transparent',
-                padding: 0,
-                cursor: 'pointer',
-                textAlign: 'left',
-                width: '100%',
+                background: 'white',
+                border: '1.5px solid #f5dde8',
+                borderRadius: 16,
+                padding: '10px 12px',
               }}
             >
-              <span
+              <div
                 style={{
-                  color: '#c45b86',
-                  fontWeight: 800,
-                  fontSize: 16,
-                  textDecoration: 'underline',
-                  textUnderlineOffset: 3,
+                  display: 'flex',
+                  justifyContent:
+                    'space-between',
+                  gap: 8,
+                  alignItems: 'flex-start',
                 }}
               >
-                📖 {receta.nombre}
-              </span>
-            </button>
+                <button
+                  type="button"
+                  onClick={() => onAbrirReceta(receta.id)}
+                  style={{
+                    border: 'none',
+                    background: 'transparent',
+                    padding: 0,
+                    cursor: 'pointer',
+                    textAlign: 'left',
+                    width: '100%',
+                  }}
+                >
+                  <span
+                    style={{
+                      color: '#c45b86',
+                      fontWeight: 800,
+                      fontSize: 16,
+                      textDecoration: 'underline',
+                      textUnderlineOffset: 3,
+                    }}
+                  >
+                    📖 {receta.nombre}
+                  </span>
+                </button>
 
-            <div
-              style={{
-                marginTop: 6,
-                color: '#9e7d90',
-                fontSize: 13,
-                fontWeight: 700,
-              }}
-            >
-              🍽️ {hueco?.racionesOverride ?? receta.raciones} raciones
+                {!hueco?.cocinado && (
+                  <button
+                    type="button"
+                    className="btn-secundario"
+                    onClick={() =>
+                      quitarReceta(receta.id)
+                    }
+                    style={{
+                      minHeight: 28,
+                      fontSize: 11,
+                      padding: '4px 8px',
+                    }}
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
+
+              <div
+                style={{
+                  marginTop: 6,
+                  color: '#9e7d90',
+                  fontSize: 13,
+                  fontWeight: 700,
+                }}
+              >
+                🍽️ {hueco?.racionesOverride ?? receta.raciones} raciones
+              </div>
+
+              {estrellas(receta.valoracion, receta.id)}
+
+              <input
+                placeholder="📝 Nota de la receta..."
+                value={receta.nota || ''}
+                onChange={(e) =>
+                  updateReceta(receta.id, {
+                    nota: e.target.value,
+                  })
+                }
+                style={{
+                  marginTop: 10,
+                  background: '#fffafc',
+                  color: '#8f7080',
+                  fontSize: 13,
+                  fontWeight: 600,
+                  lineHeight: 1.4,
+                }}
+              />
             </div>
-
-            {estrellas(receta.valoracion, receta.id)}
-
-            <input
-              placeholder="📝 Nota de la receta..."
-              value={receta.nota || ''}
-              onChange={(e) =>
-                updateReceta(receta.id, {
-                  nota: e.target.value,
-                })
-              }
-              style={{
-                marginTop: 10,
-                background: '#fffafc',
-                color: '#8f7080',
-                fontSize: 13,
-                fontWeight: 600,
-                lineHeight: 1.4,
-              }}
-            />
-          </div>
+          ))}
         </div>
       )}
 

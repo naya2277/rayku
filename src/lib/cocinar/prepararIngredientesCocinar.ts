@@ -17,7 +17,23 @@ export type PreparacionCocinar = {
   ingredientesOriginales: string[]
   origen: 'receta' | 'comida_libre' | 'mixto'
   recetaNombre: string | null
+  recetaNombres: string[]
   raciones: number | null
+}
+
+function obtenerRecetaIds(
+  hueco: ItemPlanning
+) {
+  if (
+    Array.isArray(hueco.recetaIds) &&
+    hueco.recetaIds.length > 0
+  ) {
+    return hueco.recetaIds
+  }
+
+  return hueco.recetaId
+    ? [hueco.recetaId]
+    : []
 }
 
 export function prepararIngredientesCocinar(
@@ -26,40 +42,45 @@ export function prepararIngredientesCocinar(
 ): PreparacionCocinar {
   const ingredientes: IngredienteEscalado[] = []
   const ingredientesOriginales: string[] = []
+  const recetaNombres: string[] = []
 
-  let recetaNombre: string | null = null
   let raciones: number | null = null
 
-  if (hueco.recetaId) {
+  const recetaIds =
+    obtenerRecetaIds(hueco)
+
+  recetaIds.forEach((recetaId) => {
     const receta =
       recetas.find(
-        (r) =>
-          r.id === hueco.recetaId
+        (r) => r.id === recetaId
       )
 
-    if (receta) {
-      const racionesObjetivo =
-        hueco.racionesOverride ??
-        receta.raciones
-
-      recetaNombre =
-        receta.nombre
-
-      raciones =
-        racionesObjetivo
-
-      ingredientesOriginales.push(
-        ...receta.ingredientes
-      )
-
-      ingredientes.push(
-        ...calcularIngredientesEscalados(
-          receta,
-          racionesObjetivo
-        )
-      )
+    if (!receta) {
+      return
     }
-  }
+
+    const racionesObjetivo =
+      hueco.racionesOverride ??
+      receta.raciones
+
+    raciones =
+      racionesObjetivo
+
+    recetaNombres.push(
+      receta.nombre
+    )
+
+    ingredientesOriginales.push(
+      ...receta.ingredientes
+    )
+
+    ingredientes.push(
+      ...calcularIngredientesEscalados(
+        receta,
+        racionesObjetivo
+      )
+    )
+  })
 
   if (hueco.comidaLibre.trim()) {
     const ingredientesLibres =
@@ -84,7 +105,7 @@ export function prepararIngredientesCocinar(
   }
 
   const tieneReceta =
-    Boolean(hueco.recetaId)
+    recetaIds.length > 0
 
   const tieneLibre =
     Boolean(hueco.comidaLibre.trim())
@@ -100,7 +121,9 @@ export function prepararIngredientesCocinar(
     ingredientes,
     ingredientesOriginales,
     origen,
-    recetaNombre,
+    recetaNombre:
+      recetaNombres[0] ?? null,
+    recetaNombres,
     raciones,
   }
 }

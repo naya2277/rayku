@@ -36,7 +36,18 @@ export type ItemPlanning = {
   id: string
   fecha: string
   tipoComida: TipoComida
+
+  /**
+   * Compatibilidad antigua.
+   * No borrar todavía: hay datos guardados y código que aún puede leerlo.
+   */
   recetaId: string | null
+
+  /**
+   * Nuevo sistema: permite varias recetas en la misma comida.
+   */
+  recetaIds: string[]
+
   comidaLibre: string
   nota: string
   racionesOverride?: number | null
@@ -76,7 +87,9 @@ export type RegistroCocinado = {
   tipoComida: TipoComida
   origen: 'receta' | 'comida_libre' | 'mixto'
   recetaId: string | null
+  recetaIds?: string[]
   recetaNombre: string | null
+  recetaNombres?: string[]
   comidaLibre: string
   raciones: number | null
   ingredientesOriginales: string[]

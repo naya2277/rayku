@@ -35,6 +35,19 @@ type Props = {
   updateReceta: (recetaId: string, datos: any) => void
 }
 
+function obtenerRecetaIds(hueco: any) {
+  if (
+    Array.isArray(hueco?.recetaIds) &&
+    hueco.recetaIds.length > 0
+  ) {
+    return hueco.recetaIds
+  }
+
+  return hueco?.recetaId
+    ? [hueco.recetaId]
+    : []
+}
+
 export default function DiaPlanning({
   dia,
   esHoy,
@@ -67,12 +80,16 @@ export default function DiaPlanning({
         h.tipoComida === tipoComida
     )
 
-    const receta = recetas.find(
-      (r) => r.id === hueco?.recetaId
-    )
+    const recetaIds =
+      obtenerRecetaIds(hueco)
+
+    const recetasSeleccionadas =
+      recetas.filter((r) =>
+        recetaIds.includes(r.id)
+      )
 
     const hayContenido = Boolean(
-      hueco?.recetaId ||
+      recetaIds.length > 0 ||
         hueco?.comidaLibre ||
         hueco?.nota
     )
@@ -82,6 +99,10 @@ export default function DiaPlanning({
     const sugerencias = busqueda.trim()
       ? recetas
           .filter((r) => {
+            if (recetaIds.includes(r.id)) {
+              return false
+            }
+
             const texto = [
               r.nombre,
               r.ingredientes.join(' '),
@@ -108,7 +129,8 @@ export default function DiaPlanning({
       clave,
       estaEditando,
       hueco,
-      receta,
+      recetaIds,
+      recetasSeleccionadas,
       hayContenido,
       busqueda,
       sugerencias,
@@ -126,7 +148,8 @@ export default function DiaPlanning({
         tipoComida={tipoComida}
         clave={datos.clave}
         hueco={datos.hueco}
-        receta={datos.receta}
+        recetaIds={datos.recetaIds}
+        recetasSeleccionadas={datos.recetasSeleccionadas}
         estaEditando={datos.estaEditando}
         hayContenido={datos.hayContenido}
         busqueda={datos.busqueda}
