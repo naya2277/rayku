@@ -10,6 +10,10 @@ import type {
   RegistroCocinado,
 } from './types'
 
+import {
+  normalizarCantidadUnidad,
+} from '../lib/cantidadesIngredientes'
+
 export const normalizarReceta = (
   r: any
 ): Receta => ({
@@ -36,25 +40,53 @@ export const normalizarReceta = (
   tiempo: Number(r.tiempo) || 0,
   raciones: Number(r.raciones) || 1,
   dificultad: r.dificultad ?? 'Fácil',
-  requiereDescongelar: r.requiereDescongelar ?? false,
+  requiereDescongelar:
+    r.requiereDescongelar ?? false,
   valoracion: Number(r.valoracion) || 0,
   nota: r.nota ?? '',
 })
 
 export const normalizarInventario = (
   item: any
-): ItemInventario => ({
-  id: item.id ?? generarId(),
-  nombre: item.nombre ?? '',
-  cantidad: Number(item.cantidad) || 0,
-  unidad: item.unidad ?? 'g',
-  categoria: item.categoria ?? 'otros',
-  ubicacion: item.ubicacion ?? 'despensa',
-  fechaCaducidad: item.fechaCaducidad ?? null,
-  fechaDescongelar: item.fechaDescongelar ?? null,
-  necesitaDescongelar: item.necesitaDescongelar ?? false,
-  avisarStockBajo: item.avisarStockBajo ?? false,
-})
+): ItemInventario => {
+  const cantidadOriginal =
+    Number(item.cantidad) || 0
+
+  const unidadOriginal =
+    item.unidad ?? 'g'
+
+  const normalizado =
+    normalizarCantidadUnidad(
+      cantidadOriginal,
+      unidadOriginal
+    )
+
+  return {
+    id: item.id ?? generarId(),
+    nombre: item.nombre ?? '',
+    cantidad:
+      normalizado.cantidad,
+    unidad:
+      normalizado.unidad,
+    categoria:
+      item.categoria ?? 'otros',
+    ubicacion:
+      item.ubicacion ??
+      'despensa',
+    fechaCaducidad:
+      item.fechaCaducidad ??
+      null,
+    fechaDescongelar:
+      item.fechaDescongelar ??
+      null,
+    necesitaDescongelar:
+      item.necesitaDescongelar ??
+      false,
+    avisarStockBajo:
+      item.avisarStockBajo ??
+      false,
+  }
+}
 
 export const normalizarCompraManual = (
   item: any
@@ -73,7 +105,9 @@ function normalizarRecetaIdsPlanning(
   item: any
 ) {
   if (Array.isArray(item.recetaIds)) {
-    return item.recetaIds.filter(Boolean)
+    return item.recetaIds.filter(
+      Boolean
+    )
   }
 
   if (item.recetaId) {
@@ -87,18 +121,29 @@ export const normalizarPlanning = (
   item: any
 ): ItemPlanning => {
   const recetaIds =
-    normalizarRecetaIdsPlanning(item)
+    normalizarRecetaIdsPlanning(
+      item
+    )
 
   return {
     id: item.id ?? generarId(),
     fecha: item.fecha ?? '',
-    tipoComida: item.tipoComida ?? 'comida',
-    recetaId: item.recetaId ?? recetaIds[0] ?? null,
+    tipoComida:
+      item.tipoComida ??
+      'comida',
+    recetaId:
+      item.recetaId ??
+      recetaIds[0] ??
+      null,
     recetaIds,
-    comidaLibre: item.comidaLibre ?? '',
+    comidaLibre:
+      item.comidaLibre ?? '',
     nota: item.nota ?? '',
-    racionesOverride: item.racionesOverride ?? null,
-    cocinado: item.cocinado ?? false,
+    racionesOverride:
+      item.racionesOverride ??
+      null,
+    cocinado:
+      item.cocinado ?? false,
   }
 }
 
@@ -107,43 +152,81 @@ export const normalizarRegistroCocinado = (
 ): RegistroCocinado => {
   const recetaIds =
     Array.isArray(item.recetaIds)
-      ? item.recetaIds.filter(Boolean)
+      ? item.recetaIds.filter(
+          Boolean
+        )
       : item.recetaId
         ? [item.recetaId]
         : []
 
   return {
     id: item.id ?? generarId(),
-    planningId: item.planningId ?? '',
+    planningId:
+      item.planningId ?? '',
     fecha: item.fecha ?? '',
-    tipoComida: item.tipoComida ?? 'comida',
-    origen: item.origen ?? 'comida_libre',
-    recetaId: item.recetaId ?? recetaIds[0] ?? null,
+    tipoComida:
+      item.tipoComida ??
+      'comida',
+    origen:
+      item.origen ??
+      'comida_libre',
+    recetaId:
+      item.recetaId ??
+      recetaIds[0] ??
+      null,
     recetaIds,
-    recetaNombre: item.recetaNombre ?? null,
-    recetaNombres: Array.isArray(item.recetaNombres)
-      ? item.recetaNombres
-      : item.recetaNombre
-        ? [item.recetaNombre]
-        : [],
-    comidaLibre: item.comidaLibre ?? '',
+    recetaNombre:
+      item.recetaNombre ??
+      null,
+    recetaNombres:
+      Array.isArray(
+        item.recetaNombres
+      )
+        ? item.recetaNombres
+        : item.recetaNombre
+          ? [item.recetaNombre]
+          : [],
+    comidaLibre:
+      item.comidaLibre ?? '',
     raciones:
       item.raciones === null ||
-      item.raciones === undefined
+      item.raciones ===
+        undefined
         ? null
-        : Number(item.raciones),
-    ingredientesOriginales: Array.isArray(item.ingredientesOriginales)
-      ? item.ingredientesOriginales
-      : [],
-    cambiosInventario: Array.isArray(item.cambiosInventario)
-      ? item.cambiosInventario.map((c: any) => ({
-          itemId: c.itemId ?? '',
-          nombre: c.nombre ?? '',
-          unidad: c.unidad ?? '',
-          cantidadAnterior: Number(c.cantidadAnterior) || 0,
-          cantidadNueva: Number(c.cantidadNueva) || 0,
-        }))
-      : [],
-    creadoEn: item.creadoEn ?? new Date().toISOString(),
+        : Number(
+            item.raciones
+          ),
+    ingredientesOriginales:
+      Array.isArray(
+        item.ingredientesOriginales
+      )
+        ? item.ingredientesOriginales
+        : [],
+    cambiosInventario:
+      Array.isArray(
+        item.cambiosInventario
+      )
+        ? item.cambiosInventario.map(
+            (c: any) => ({
+              itemId:
+                c.itemId ?? '',
+              nombre:
+                c.nombre ?? '',
+              unidad:
+                c.unidad ?? '',
+              cantidadAnterior:
+                Number(
+                  c.cantidadAnterior
+                ) || 0,
+              cantidadNueva:
+                Number(
+                  c.cantidadNueva
+                ) || 0,
+            })
+          )
+        : [],
+    creadoEn:
+      item.creadoEn ??
+      new Date().toISOString(),
   }
 }
