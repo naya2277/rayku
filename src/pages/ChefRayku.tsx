@@ -20,6 +20,10 @@ import {
   obtenerRecetasParaIngredientesUrgentes,
 } from '../lib/chefRayku'
 
+import ChefRaykuCard from '../components/chef-rayku/ChefRaykuCard'
+
+
+
 type Props = {
   onAbrirReceta: (
     recetaId: string
@@ -144,6 +148,8 @@ export default function ChefRayku({
             flexWrap: 'wrap',
           }}
         >
+          <ChefRaykuCard />
+          
           <div
             style={{
               width: 120,
