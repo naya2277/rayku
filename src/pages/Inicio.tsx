@@ -317,8 +317,8 @@ export default function Inicio({
       width: '100%',
       height: '100%',
       objectFit: 'cover',
-      objectPosition: 'center 30%',
-      transform: 'scale(1.18)',
+      objectPosition: 'center 40%',
+      transform: 'scale(1.56)',
     }}
   />
 </div>
