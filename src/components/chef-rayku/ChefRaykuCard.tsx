@@ -14,6 +14,8 @@ import type {
   TipoConsultaChefRayku,
 } from '../../lib/chef-rayku/tipos'
 
+import ChefRaykuRespuesta from './ChefRaykuRespuesta'
+
 const ACCIONES: {
   tipo: TipoConsultaChefRayku
   titulo: string
@@ -113,29 +115,29 @@ export default function ChefRaykuCard() {
           marginBottom: 14,
         }}
       >
-        <div
+        <img
+          src="/rayku-chef.png"
+          alt="Chef Rayku"
           style={{
-            width: 56,
-            height: 56,
+            width: 64,
+            height: 64,
             borderRadius: '50%',
-            background:
-              'linear-gradient(135deg, #ffe4ec, #efe3ff)',
-            display: 'grid',
-            placeItems: 'center',
-            fontSize: 30,
+            objectFit: 'cover',
+            border: '3px solid #f5bfd2',
+            background: '#fff0f6',
             boxShadow:
               '0 8px 20px rgba(196, 91, 134, 0.18)',
           }}
-        >
-          🍼
-        </div>
+        />
 
         <div>
           <h2
             style={{
               color: '#c45b86',
-              fontSize: 20,
+              fontSize: 22,
               marginBottom: 4,
+              fontFamily:
+                "'Comic Sans MS', 'Trebuchet MS', cursive",
             }}
           >
             Chef Rayku IA
@@ -145,7 +147,7 @@ export default function ChefRaykuCard() {
             style={{
               color: 'var(--txt2)',
               fontSize: 13,
-              fontWeight: 700,
+              fontWeight: 800,
             }}
           >
             Tu ayudante cute para cocinar con lo que ya tienes 💕
@@ -191,7 +193,7 @@ export default function ChefRaykuCard() {
             >
               <strong>
                 {estaCargando
-                  ? '✨ Pensando...'
+                  ? '✨ Rayku está pensando...'
                   : accion.titulo}
               </strong>
 
@@ -225,21 +227,9 @@ export default function ChefRaykuCard() {
       )}
 
       {respuesta && (
-        <div
-          className="card"
-          style={{
-            background:
-              'rgba(255,255,255,0.78)',
-            borderColor: '#f5dde8',
-            marginTop: 12,
-            whiteSpace: 'pre-wrap',
-            color: '#6f4e5f',
-            lineHeight: 1.55,
-            fontWeight: 650,
-          }}
-        >
-          {respuesta}
-        </div>
+        <ChefRaykuRespuesta
+          respuesta={respuesta}
+        />
       )}
     </section>
   )
