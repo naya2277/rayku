@@ -24,6 +24,10 @@ import {
   separarIngredientesPorInventario,
 } from '../lib/generarListaCompra'
 
+import {
+  obtenerRecetasChefRayku,
+} from '../lib/chefRayku'
+
 import type {
   TipoComida,
 } from '../store/types'
@@ -276,8 +280,52 @@ export default function Inicio({
       )
       .slice(0, 5)
 
-  const sugerencia =
+  const recetasChef =
+    obtenerRecetasChefRayku(
+      recetas,
+      inventario
+    )
+
+  const recetaLista =
+    recetasChef.find(
+      (item) => item.tieneTodo
+    )
+
+  const recetaCasiLista =
+    recetasChef.find(
+      (item) =>
+        item.faltan.length === 1
+    )
+
+  const favorita =
     favoritos[0] ?? null
+
+  const sugerenciaChef =
+    recetaLista
+      ? {
+          receta: recetaLista.receta,
+          texto:
+            '🐶 Tienes todo para cocinar:',
+          detalle:
+            'Rayku cree que es buena opción para hoy ✅',
+        }
+      : recetaCasiLista
+        ? {
+            receta:
+              recetaCasiLista.receta,
+            texto:
+              '🐶 Solo te falta un ingrediente para:',
+            detalle: `Falta: ${recetaCasiLista.faltan[0]}`,
+          }
+        : favorita
+          ? {
+              receta: favorita,
+              texto:
+                '🐶 Hoy podría apetecerte una favorita:',
+              detalle:
+                'Basado en tus recetas mejor valoradas 💜',
+            }
+          : null
 
   return (
     <div>
@@ -297,31 +345,31 @@ export default function Inicio({
             gap: 14,
           }}
         >
-        <div
-  style={{
-    width: 74,
-    height: 74,
-    borderRadius: '50%',
-    overflow: 'hidden',
-    border: '3px solid #f5bfd2',
-    background: '#fff0f6',
-    boxShadow:
-      '0 8px 18px rgba(180,120,150,0.14)',
-    flexShrink: 0,
-  }}
->
-  <img
-    src="/rayku-buenosdias.png"
-    alt="Rayku dando los buenos días"
-    style={{
-      width: '100%',
-      height: '100%',
-      objectFit: 'cover',
-      objectPosition: 'center 40%',
-      transform: 'scale(1.56)',
-    }}
-  />
-</div>
+          <div
+            style={{
+              width: 74,
+              height: 74,
+              borderRadius: '50%',
+              overflow: 'hidden',
+              border: '3px solid #f5bfd2',
+              background: '#fff0f6',
+              boxShadow:
+                '0 8px 18px rgba(180,120,150,0.14)',
+              flexShrink: 0,
+            }}
+          >
+            <img
+              src="/rayku-buenosdias.png"
+              alt="Rayku dando los buenos días"
+              style={{
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover',
+                objectPosition: 'center 40%',
+                transform: 'scale(1.56)',
+              }}
+            />
+          </div>
 
           <div>
             <h1
@@ -644,30 +692,46 @@ export default function Inicio({
         </DashboardCard>
 
         <DashboardCard
-          titulo="🔥 Sugerencia"
-          subtitulo="Una idea basada en tus recetas favoritas."
+          titulo="🔥 Recomendación de Rayku"
+          subtitulo="Una idea basada en tu inventario y tus gustos."
           color="linear-gradient(135deg, #fff8ee, #ffeaf4)"
         >
-          {sugerencia ? (
+          {sugerenciaChef ? (
             <button
               type="button"
               className="btn-principal"
               onClick={() =>
                 onAbrirReceta(
-                  sugerencia.id
+                  sugerenciaChef.receta.id
                 )
               }
               style={{
                 justifyContent:
                   'flex-start',
                 textAlign: 'left',
+                display: 'grid',
+                gap: 4,
               }}
             >
-              ✨ Hoy podría apetecerte:{' '}
-              {sugerencia.nombre}
+              <span>
+                {sugerenciaChef.texto}
+              </span>
+
+              <strong>
+                {sugerenciaChef.receta.nombre}
+              </strong>
+
+              <small
+                style={{
+                  fontWeight: 800,
+                  opacity: 0.9,
+                }}
+              >
+                {sugerenciaChef.detalle}
+              </small>
             </button>
           ) : (
-            <EmptyState texto="Cuando tengas recetas favoritas, Rayku podrá sugerirte una aquí 💕" />
+            <EmptyState texto="Cuando tengas más recetas e inventario, Rayku podrá recomendarte algo aquí 💕" />
           )}
         </DashboardCard>
       </div>
