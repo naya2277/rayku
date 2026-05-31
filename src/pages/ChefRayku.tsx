@@ -100,34 +100,34 @@ export default function ChefRayku({
         <div
           style={{
             display: 'flex',
-            gap: 16,
+            gap: 18,
             alignItems: 'center',
             flexWrap: 'wrap',
           }}
         >
           <div
-  style={{
-    width: 100,
-    height: 100,
-    borderRadius: '50%',
-    overflow: 'hidden',
-    border: '3px solid #f5bfd2',
-    background: '#fff0f6',
-    flexShrink: 0,
-    boxShadow:
-      '0 10px 24px rgba(180,120,150,0.15)',
-  }}
->
-  <img
-    src="/rayku-chef.png"
-    alt="Chef Rayku"
-    style={{
-      width: '100%',
-      height: '100%',
-      objectFit: 'cover',
-    }}
-  />
-</div>
+            style={{
+              width: 120,
+              height: 120,
+              borderRadius: '50%',
+              overflow: 'hidden',
+              border: '3px solid #f5bfd2',
+              background: '#fff0f6',
+              flexShrink: 0,
+              boxShadow:
+                '0 10px 24px rgba(180,120,150,0.15)',
+            }}
+          >
+            <img
+              src="/rayku-chef.png"
+              alt="Chef Rayku"
+              style={{
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover',
+              }}
+            />
+          </div>
 
           <div
             style={{
@@ -135,9 +135,31 @@ export default function ChefRayku({
               minWidth: 220,
             }}
           >
-            <h1>
-              👩‍🍳 Chef Rayku
+            <h1
+              style={{
+                margin: 0,
+                color: '#c45b86',
+                fontSize: '2.15rem',
+                fontWeight: 900,
+                letterSpacing: '0.4px',
+                fontFamily:
+                  "'Comic Sans MS', 'Trebuchet MS', cursive",
+              }}
+            >
+              Chef Rayku
             </h1>
+
+            <p
+              style={{
+                marginTop: 2,
+                marginBottom: 8,
+                color: '#c45b86',
+                fontWeight: 800,
+                fontSize: 14,
+              }}
+            >
+              Tu ayudante de cocina 💕
+            </p>
 
             <p
               style={{
@@ -147,7 +169,7 @@ export default function ChefRayku({
                 lineHeight: 1.5,
               }}
             >
-              ¡Guau! Con lo que tienes en casa puedo ayudarte a decidir qué cocinar hoy 💕
+              ¡Guau! Con lo que tienes en casa puedo ayudarte a decidir qué cocinar hoy 🐾
             </p>
           </div>
         </div>
@@ -483,15 +505,39 @@ export default function ChefRayku({
             borderColor: '#f5c8d8',
           }}
         >
-          <h2
+          <div
             style={{
-              color: '#c45b86',
-              fontSize: 18,
+              display: 'flex',
+              gap: 12,
+              alignItems: 'center',
               marginBottom: 8,
             }}
           >
-            🐾 Consejo de Rayku
-          </h2>
+            <img
+              src="/rayku-chef.png"
+              alt="Rayku"
+              style={{
+                width: 42,
+                height: 42,
+                borderRadius: '50%',
+                objectFit: 'cover',
+                border: '2px solid #f5bfd2',
+                background: '#fff0f6',
+              }}
+            />
+
+            <h2
+              style={{
+                color: '#c45b86',
+                fontSize: 18,
+                margin: 0,
+                fontFamily:
+                  "'Comic Sans MS', 'Trebuchet MS', cursive",
+              }}
+            >
+              Consejo de Rayku
+            </h2>
+          </div>
 
           <p
             style={{
