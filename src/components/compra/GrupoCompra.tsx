@@ -52,12 +52,13 @@ export default function GrupoCompra({
   onToggleComprado,
   onEliminarManual,
 }: Props) {
-  const buscarManualPorNombre = (
-    nombre: string
+  const buscarManual = (
+    item: IngredienteCompra
   ) =>
     compraManual.find(
-      (item) =>
-        item.nombre === nombre
+      (manual) =>
+        item.clave ===
+        `manual-${manual.id}`
     )
 
   const entradas =
@@ -112,14 +113,16 @@ export default function GrupoCompra({
             >
               {items.map((item) => {
                 const manual =
-                  buscarManualPorNombre(
-                    item.nombre
-                  )
+                  buscarManual(item)
 
                 const idCheck =
                   manual
                     ? `manual-${manual.id}`
                     : item.nombre
+
+                const cantidadPendiente =
+                  item.cantidadFaltante ??
+                  item.cantidad
 
                 return (
                   <ItemCompra
@@ -142,9 +145,10 @@ export default function GrupoCompra({
                         idCheck,
                         {
                           nombre:
+                            manual?.nombre ??
                             item.nombre,
                           cantidad:
-                            item.cantidad,
+                            cantidadPendiente,
                           unidad:
                             item.unidad,
                         }

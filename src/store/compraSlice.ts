@@ -9,25 +9,23 @@ import {
 
 import {
   normalizarCompraManual,
-  normalizarInventario,
 } from './normalizers'
 
 import {
-  detectarCategoriaIngrediente,
   normalizarIngrediente,
 } from '../lib/ingredientes'
+
+import {
+  convertirCompraAPendienteInventario,
+  type ItemCompraParaInventario,
+  yaExistePendienteCompra,
+} from '../lib/compra/compradosAPendientesInventario'
 
 import {
   guardarCompraManualLocal,
   guardarChecksCompraLocal,
   guardarInventarioLocal,
 } from './storage'
-
-type ItemCompraParaInventario = {
-  nombre: string
-  cantidad: number | null
-  unidad: string | null
-}
 
 type StoreGet = () => {
   compraManual: ItemCompraManual[]
@@ -65,21 +63,6 @@ export type CompraSlice = {
   limpiarChecksCompra: () => void
 
   finalizarCompra: () => void
-}
-
-function yaExistePendiente(
-  inventario: ItemInventario[],
-  itemCompra: ItemCompraParaInventario
-) {
-  return inventario.some(
-    (item) =>
-      item.ubicacion === 'pendiente' &&
-      item.nombre === itemCompra.nombre &&
-      item.unidad ===
-        (itemCompra.unidad ?? 'u.') &&
-      item.cantidad ===
-        (itemCompra.cantidad ?? 1)
-  )
 }
 
 function nombresCoinciden(
@@ -267,35 +250,15 @@ export const crearCompraSlice = (
       if (
         !estabaComprado &&
         itemCompra &&
-        !yaExistePendiente(
+        !yaExistePendienteCompra(
           estado.inventario,
           itemCompra
         )
       ) {
         const nuevoItem =
-          normalizarInventario({
-            id: generarId(),
-            nombre:
-              itemCompra.nombre,
-            cantidad:
-              itemCompra.cantidad ??
-              1,
-            unidad:
-              itemCompra.unidad ??
-              'u.',
-            categoria:
-              detectarCategoriaIngrediente(
-                itemCompra.nombre
-              ),
-            ubicacion:
-              'pendiente',
-            fechaCaducidad:
-              null,
-            fechaDescongelar:
-              null,
-            necesitaDescongelar:
-              false,
-          })
+          convertirCompraAPendienteInventario(
+            itemCompra
+          )
 
         const nuevoInventario =
           [
