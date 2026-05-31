@@ -23,6 +23,6 @@ export type ContextoRayku = {
 }
 
 export type TipoConsultaChefRayku =
-  | 'cocinar'
-  | 'gastar'
-  | 'menu_keto'
+  | 'ideas_recetas'
+  | 'cocinar_inventario'
+  | 'menu_dieta'

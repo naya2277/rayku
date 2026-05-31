@@ -22,22 +22,22 @@ const ACCIONES: {
   descripcion: string
 }[] = [
   {
-    tipo: 'cocinar',
-    titulo: '🍳 ¿Qué puedo cocinar?',
+    tipo: 'ideas_recetas',
+    titulo: '🍳 Dame ideas de recetas',
     descripcion:
-      'Ideas usando tu inventario y recetas guardadas.',
+      'Ideas ricas aunque falte algún ingrediente.',
   },
   {
-    tipo: 'gastar',
-    titulo: '📦 ¿Qué debería gastar primero?',
+    tipo: 'cocinar_inventario',
+    titulo: '📦 Cocina con lo que tengo',
     descripcion:
-      'Prioriza productos que caducan pronto.',
+      'Usa inventario real y prioriza caducidades.',
   },
   {
-    tipo: 'menu_keto',
-    titulo: '🥑 Hazme un menú keto',
+    tipo: 'menu_dieta',
+    titulo: '🥑 Menú según mi dieta',
     descripcion:
-      'Comidas sencillas y bajas en carbohidratos.',
+      'Menú keto o bajo en carbohidratos adaptado a ti.',
   },
 ]
 
@@ -150,7 +150,7 @@ export default function ChefRaykuCard() {
               fontWeight: 800,
             }}
           >
-            Tu ayudante cute para cocinar con lo que ya tienes 💕
+            Tu ayudante cute para cocinar, organizar ideas y cuidar tu planning 💕
           </p>
         </div>
       </div>
