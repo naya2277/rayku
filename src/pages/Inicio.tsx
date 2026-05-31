@@ -305,7 +305,7 @@ export default function Inicio({
       ? {
           receta: recetaLista.receta,
           texto:
-            '🐶 Tienes todo para cocinar:',
+            ' Tienes todo para cocinar:',
           detalle:
             'Rayku cree que es buena opción para hoy ✅',
         }
@@ -314,14 +314,14 @@ export default function Inicio({
             receta:
               recetaCasiLista.receta,
             texto:
-              '🐶 Solo te falta un ingrediente para:',
+              ' Solo te falta un ingrediente para:',
             detalle: `Falta: ${recetaCasiLista.faltan[0]}`,
           }
         : favorita
           ? {
               receta: favorita,
               texto:
-                '🐶 Hoy podría apetecerte una favorita:',
+                ' Hoy podría apetecerte una favorita:',
               detalle:
                 'Basado en tus recetas mejor valoradas 💜',
             }

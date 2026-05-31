@@ -143,11 +143,36 @@ function cantidadDisponible(
   )
 }
 
+function recetaUsaIngrediente(
+  receta: Receta,
+  ingrediente: ItemInventario
+) {
+  const ingredientes =
+    calcularIngredientesEscalados(
+      receta,
+      receta.raciones || 1
+    )
+
+  return ingredientes.some(
+    (item) =>
+      coincidenNombres(
+        item.nombre,
+        ingrediente.nombre
+      )
+  )
+}
+
 export type RecetaChefRayku = {
   receta: Receta
   faltan: string[]
   tieneTodo: boolean
   puntuacion: number
+}
+
+export type RecetaParaIngredienteUrgente = {
+  ingrediente: ItemInventario
+  diasCaducidad: number | null
+  recetas: Receta[]
 }
 
 export function obtenerRecetasChefRayku(
@@ -260,4 +285,55 @@ export function obtenerIngredientesUrgentes(
 
       return diasA - diasB
     })
+}
+
+export function obtenerRecetasParaIngredientesUrgentes(
+  recetas: Receta[],
+  inventario: ItemInventario[]
+): RecetaParaIngredienteUrgente[] {
+  const urgentes =
+    obtenerIngredientesUrgentes(
+      inventario
+    )
+
+  return urgentes
+    .map((ingrediente) => {
+      const recetasCompatibles =
+        recetas
+          .filter((receta) =>
+            recetaUsaIngrediente(
+              receta,
+              ingrediente
+            )
+          )
+          .sort((a, b) => {
+            const puntuacionA =
+              (a.favorita ? 20 : 0) +
+              Number(a.valoracion || 0) * 4
+
+            const puntuacionB =
+              (b.favorita ? 20 : 0) +
+              Number(b.valoracion || 0) * 4
+
+            return (
+              puntuacionB -
+              puntuacionA
+            )
+          })
+          .slice(0, 3)
+
+      return {
+        ingrediente,
+        diasCaducidad:
+          calcularDiasCaducidad(
+            ingrediente.fechaCaducidad
+          ),
+        recetas:
+          recetasCompatibles,
+      }
+    })
+    .filter(
+      (item) =>
+        item.recetas.length > 0
+    )
 }

@@ -17,6 +17,7 @@ import {
 import {
   obtenerIngredientesUrgentes,
   obtenerRecetasChefRayku,
+  obtenerRecetasParaIngredientesUrgentes,
 } from '../lib/chefRayku'
 
 type Props = {
@@ -71,6 +72,16 @@ export default function ChefRayku({
       [inventario]
     )
 
+  const recetasUrgentes =
+    useMemo(
+      () =>
+        obtenerRecetasParaIngredientesUrgentes(
+          recetas,
+          inventario
+        ).slice(0, 3),
+      [recetas, inventario]
+    )
+
   const favoritas =
     recetas
       .filter(
@@ -86,31 +97,31 @@ export default function ChefRayku({
       .slice(0, 5)
 
   let consejoRayku =
-    '🐶 Todo está bajo control. Hoy puedes cocinar tranquilamente 💕'
+    'Todo está bajo control. Hoy puedes cocinar tranquilamente 💕'
 
   if (urgentes.length > 0) {
     consejoRayku =
-      `🐶 ${urgentes[0].nombre} conviene usarlo pronto para evitar desperdicios 💕`
+      `${urgentes[0].nombre} conviene usarlo pronto para evitar desperdicios 💕`
   } else if (
     puedesCocinar.length >= 5
   ) {
     consejoRayku =
-      `🐶 Puedes cocinar ${puedesCocinar.length} recetas sin comprar nada. ¡Tu despensa está genial! ✨`
+      `Puedes cocinar ${puedesCocinar.length} recetas sin comprar nada. ¡Tu despensa está genial! ✨`
   } else if (
     puedesCocinar.length > 0
   ) {
     consejoRayku =
-      `🐶 Ya tienes ingredientes para ${puedesCocinar[0].receta.nombre}. ¿Te animas a prepararla hoy? 🍽️`
+      `Ya tienes ingredientes para ${puedesCocinar[0].receta.nombre}. ¿Te animas a prepararla hoy? 🍽️`
   } else if (
     faltaPoco.length > 0
   ) {
     consejoRayku =
-      `🐶 Solo te falta ${faltaPoco[0].faltan[0]} para cocinar ${faltaPoco[0].receta.nombre} 🛒`
+      `Solo te falta ${faltaPoco[0].faltan[0]} para cocinar ${faltaPoco[0].receta.nombre} 🛒`
   } else if (
     favoritas.length > 0
   ) {
     consejoRayku =
-      `🐶 Hace tiempo que no veo ${favoritas[0].nombre}. Podría ser una buena opción esta semana 💜`
+      `Hace tiempo que no veo ${favoritas[0].nombre}. Podría ser una buena opción esta semana 💜`
   }
 
   return (
@@ -443,6 +454,86 @@ export default function ChefRayku({
                   </span>
                 )
               })}
+            </div>
+          )}
+
+          {recetasUrgentes.length > 0 && (
+            <div
+              style={{
+                marginTop: 16,
+                display: 'grid',
+                gap: 10,
+              }}
+            >
+              <strong
+                style={{
+                  color: '#8a6ec7',
+                }}
+              >
+                🐶 Recetas para aprovecharlos
+              </strong>
+
+              {recetasUrgentes.map(
+                ({
+                  ingrediente,
+                  recetas,
+                }) => (
+                  <div
+                    key={ingrediente.id}
+                    style={{
+                      background:
+                        'rgba(255,255,255,0.65)',
+                      border:
+                        '1px solid var(--borde)',
+                      borderRadius: 12,
+                      padding: 10,
+                    }}
+                  >
+                    <div
+                      style={{
+                        fontWeight: 800,
+                        marginBottom: 6,
+                        color: '#8a6ec7',
+                      }}
+                    >
+                      {emojiIngrediente(
+                        ingrediente.nombre
+                      )}{' '}
+                      {ingrediente.nombre}
+                    </div>
+
+                    <div
+                      style={{
+                        display: 'flex',
+                        flexWrap: 'wrap',
+                        gap: 6,
+                      }}
+                    >
+                      {recetas.map(
+                        (receta) => (
+                          <button
+                            key={receta.id}
+                            type="button"
+                            className="btn-secundario"
+                            onClick={() =>
+                              onAbrirReceta(
+                                receta.id
+                              )
+                            }
+                            style={{
+                              fontSize: 12,
+                              padding:
+                                '7px 10px',
+                            }}
+                          >
+                            🍽️ {receta.nombre}
+                          </button>
+                        )
+                      )}
+                    </div>
+                  </div>
+                )
+              )}
             </div>
           )}
         </section>
