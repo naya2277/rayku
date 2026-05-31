@@ -567,6 +567,73 @@ export default function ItemInventario({
                 </option>
               </select>
             </div>
+            <div
+  style={{
+    display: 'grid',
+    gap: 6,
+  }}
+>
+  <label
+    style={{
+      fontSize: 12,
+      fontWeight: 800,
+      color: 'var(--txt2)',
+    }}
+  >
+    📅 Fecha de caducidad
+  </label>
+
+  <div
+    style={{
+      display: 'flex',
+      gap: 8,
+      flexWrap: 'wrap',
+    }}
+  >
+    <input
+      type="date"
+      value={
+        item.fechaCaducidad || ''
+      }
+      onChange={(e) =>
+        editarItemInventario(
+          item.id,
+          {
+            fechaCaducidad:
+              e.target.value || null,
+          }
+        )
+      }
+      style={{
+        minHeight: 36,
+        padding: '6px 8px',
+        fontSize: 12,
+      }}
+    />
+
+    {item.fechaCaducidad && (
+      <button
+        type="button"
+        className="btn-secundario"
+        onClick={() =>
+          editarItemInventario(
+            item.id,
+            {
+              fechaCaducidad:
+                null,
+            }
+          )
+        }
+        style={{
+          minHeight: 36,
+          fontSize: 12,
+        }}
+      >
+        ❌ Quitar fecha
+      </button>
+    )}
+  </div>
+</div>
 
             <div
               style={{
