@@ -297,21 +297,22 @@ export default function Inicio({
             gap: 14,
           }}
         >
-          <img
-            src="/rayku-buenosdias.png"
-            alt="Rayku dando los buenos días"
-            style={{
-              width: 74,
-              height: 74,
-              borderRadius: '50%',
-              objectFit: 'cover',
-              border: '3px solid #f5bfd2',
-              background: '#fff0f6',
-              boxShadow:
-                '0 8px 18px rgba(180,120,150,0.14)',
-              flexShrink: 0,
-            }}
-          />
+         <img
+  src="/rayku-buenosdias.png"
+  alt="Rayku dando los buenos días"
+  style={{
+    width: 74,
+    height: 74,
+    borderRadius: '50%',
+    objectFit: 'cover',
+    objectPosition: 'center 30%',
+    border: '3px solid #f5bfd2',
+    background: '#fff0f6',
+    boxShadow:
+      '0 8px 18px rgba(180,120,150,0.14)',
+    flexShrink: 0,
+  }}
+/>
 
           <div>
             <h1
