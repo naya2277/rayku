@@ -18,16 +18,45 @@ Si falta información, propón opciones flexibles.
 No des consejos médicos.
 `
 
-const INSTRUCCIONES_FORMATO = `
-Responde en español.
-Usa títulos claros.
-No hagas una respuesta larguísima.
-Da opciones concretas.
-Cuando propongas recetas, indica:
-- nombre
-- por qué encaja
-- ingredientes principales
-- si aprovecha algo que caduca pronto
+const INSTRUCCIONES_JSON = `
+Responde SIEMPRE en español.
+
+IMPORTANTE:
+Devuelve únicamente JSON válido.
+No uses markdown.
+No uses bloques de código.
+No escribas texto antes ni después del JSON.
+
+El JSON debe seguir exactamente esta estructura:
+
+{
+  "titulo": "string",
+  "subtitulo": "string",
+  "mensajeRayku": "string",
+  "prioridad": {
+    "titulo": "string",
+    "texto": "string"
+  },
+  "ideas": [
+    {
+      "nombre": "string",
+      "emoji": "string",
+      "motivo": "string",
+      "ingredientes": ["string"],
+      "aprovecha": "string",
+      "consejo": "string"
+    }
+  ],
+  "notaFinal": "string"
+}
+
+Reglas:
+- "ideas" debe tener entre 2 y 5 elementos.
+- "emoji" debe ser un solo emoji representativo.
+- Si no hay prioridad clara, usa una prioridad suave.
+- No inventes ingredientes principales que no estén en el contexto.
+- Puedes mencionar básicos opcionales como sal, aceite, especias o agua.
+- Mantén frases cortas y visuales.
 `
 
 export function crearPromptChefRayku(
@@ -38,14 +67,14 @@ export function crearPromptChefRayku(
     tipo === 'cocinar'
       ? `
 La usuaria quiere saber qué puede cocinar con lo que tiene.
-Propón entre 3 y 6 ideas realistas usando su inventario y recetas guardadas.
+Propón ideas realistas usando su inventario y recetas guardadas.
 Prioriza productos que caducan pronto.
 `
       : tipo === 'gastar'
         ? `
 La usuaria quiere saber qué debería gastar primero.
 Analiza productos próximos a caducar y su inventario.
-Propón un orden de prioridad y recetas/ideas rápidas para aprovecharlos.
+Propón un orden de prioridad y recetas o ideas rápidas para aprovecharlos.
 `
         : `
 La usuaria quiere un menú keto.
@@ -55,7 +84,7 @@ Prioriza platos realistas y bajos en carbohidratos.
 
   return [
     PERSONALIDAD_RAYKU,
-    INSTRUCCIONES_FORMATO,
+    INSTRUCCIONES_JSON,
     'CONTEXTO DE RAYKU:',
     contexto,
     'TAREA:',

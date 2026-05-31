@@ -28,6 +28,8 @@ import {
   obtenerRecetasChefRayku,
 } from '../lib/chefRayku'
 
+import ChefRaykuCard from '../components/chef-rayku/ChefRaykuCard'
+
 import type {
   TipoComida,
 } from '../store/types'
@@ -403,6 +405,8 @@ export default function Inicio({
           gap: 18,
         }}
       >
+        <ChefRaykuCard />
+
         <DashboardCard
           titulo="📅 Hoy tienes"
           subtitulo="Tu comida y cena planificadas para hoy."
@@ -714,33 +718,33 @@ export default function Inicio({
               }}
             >
               <div
-  style={{
-    display: 'flex',
-    gap: 10,
-    alignItems: 'center',
-  }}
->
-  <img
-    src="/rayku-chef.png"
-    alt="Rayku"
-    style={{
-      width: 28,
-      height: 28,
-      borderRadius: '50%',
-      objectFit: 'cover',
-      border: '2px solid #f5bfd2',
-      background: '#fff0f6',
-      flexShrink: 0,
-    }}
-  />
+                style={{
+                  display: 'flex',
+                  gap: 10,
+                  alignItems: 'center',
+                }}
+              >
+                <img
+                  src="/rayku-chef.png"
+                  alt="Rayku"
+                  style={{
+                    width: 28,
+                    height: 28,
+                    borderRadius: '50%',
+                    objectFit: 'cover',
+                    border: '2px solid #f5bfd2',
+                    background: '#fff0f6',
+                    flexShrink: 0,
+                  }}
+                />
 
-  <span>
-    {sugerenciaChef.texto.replace(
-      ' ',
-      ''
-    )}
-  </span>
-</div>
+                <span>
+                  {sugerenciaChef.texto.replace(
+                    ' ',
+                    ''
+                  )}
+                </span>
+              </div>
 
               <strong>
                 {sugerenciaChef.receta.nombre}

@@ -16,6 +16,17 @@ import type {
   TipoConsultaChefRayku,
 } from './tipos'
 
+function limpiarRespuestaJson(
+  texto: string
+) {
+  return texto
+    .trim()
+    .replace(/^```json/i, '')
+    .replace(/^```/i, '')
+    .replace(/```$/i, '')
+    .trim()
+}
+
 export async function consultarChefRayku(
   tipo: TipoConsultaChefRayku,
   datos: DatosContextoRayku
@@ -39,5 +50,10 @@ export async function consultarChefRayku(
       prompt
     )
 
-  return resultado.response.text()
+  const texto =
+    resultado.response.text()
+
+  return limpiarRespuestaJson(
+    texto
+  )
 }
