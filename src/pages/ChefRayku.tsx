@@ -85,6 +85,34 @@ export default function ChefRayku({
       )
       .slice(0, 5)
 
+  let consejoRayku =
+    '🐶 Todo está bajo control. Hoy puedes cocinar tranquilamente 💕'
+
+  if (urgentes.length > 0) {
+    consejoRayku =
+      `🐶 ${urgentes[0].nombre} conviene usarlo pronto para evitar desperdicios 💕`
+  } else if (
+    puedesCocinar.length >= 5
+  ) {
+    consejoRayku =
+      `🐶 Puedes cocinar ${puedesCocinar.length} recetas sin comprar nada. ¡Tu despensa está genial! ✨`
+  } else if (
+    puedesCocinar.length > 0
+  ) {
+    consejoRayku =
+      `🐶 Ya tienes ingredientes para ${puedesCocinar[0].receta.nombre}. ¿Te animas a prepararla hoy? 🍽️`
+  } else if (
+    faltaPoco.length > 0
+  ) {
+    consejoRayku =
+      `🐶 Solo te falta ${faltaPoco[0].faltan[0]} para cocinar ${faltaPoco[0].receta.nombre} 🛒`
+  } else if (
+    favoritas.length > 0
+  ) {
+    consejoRayku =
+      `🐶 Hace tiempo que no veo ${favoritas[0].nombre}. Podría ser una buena opción esta semana 💜`
+  }
+
   return (
     <div>
       <div
@@ -546,7 +574,7 @@ export default function ChefRayku({
               lineHeight: 1.5,
             }}
           >
-            Planifica tus comidas, aprovecha lo que tienes y deja que Rayku te ayude a desperdiciar menos 💕
+            {consejoRayku}
           </p>
         </section>
       </div>
