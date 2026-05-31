@@ -157,7 +157,8 @@ export default function Inicio({
         const hueco =
           huecosHoy.find(
             (h) =>
-              h.tipoComida === tipoComida
+              h.tipoComida ===
+              tipoComida
           )
 
         if (!hueco) {
@@ -281,24 +282,61 @@ export default function Inicio({
   return (
     <div>
       <div
+        className="card"
         style={{
           marginBottom: 20,
+          background:
+            'linear-gradient(135deg, #fff0f6, #fffaf8)',
+          borderColor: '#f5c8d8',
         }}
       >
-        <h1>
-          🌸 Buenos días
-        </h1>
-
-        <p
+        <div
           style={{
-            color: 'var(--txt2)',
-            fontWeight: 700,
-            marginTop: 4,
-            textTransform: 'capitalize',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 14,
           }}
         >
-          {nombreHoy}
-        </p>
+          <img
+            src="/rayku-buenosdias.png"
+            alt="Rayku dando los buenos días"
+            style={{
+              width: 74,
+              height: 74,
+              borderRadius: '50%',
+              objectFit: 'cover',
+              border: '3px solid #f5bfd2',
+              background: '#fff0f6',
+              boxShadow:
+                '0 8px 18px rgba(180,120,150,0.14)',
+              flexShrink: 0,
+            }}
+          />
+
+          <div>
+            <h1
+              style={{
+                margin: 0,
+                color: '#c45b86',
+                fontFamily:
+                  "'Comic Sans MS', 'Trebuchet MS', cursive",
+              }}
+            >
+              Buenos días 💕
+            </h1>
+
+            <p
+              style={{
+                color: 'var(--txt2)',
+                fontWeight: 700,
+                marginTop: 4,
+                textTransform: 'capitalize',
+              }}
+            >
+              {nombreHoy}
+            </p>
+          </div>
+        </div>
       </div>
 
       <div
