@@ -713,9 +713,34 @@ export default function Inicio({
                 gap: 4,
               }}
             >
-              <span>
-                {sugerenciaChef.texto}
-              </span>
+              <div
+  style={{
+    display: 'flex',
+    gap: 10,
+    alignItems: 'center',
+  }}
+>
+  <img
+    src="/rayku-chef.png"
+    alt="Rayku"
+    style={{
+      width: 28,
+      height: 28,
+      borderRadius: '50%',
+      objectFit: 'cover',
+      border: '2px solid #f5bfd2',
+      background: '#fff0f6',
+      flexShrink: 0,
+    }}
+  />
+
+  <span>
+    {sugerenciaChef.texto.replace(
+      ' ',
+      ''
+    )}
+  </span>
+</div>
 
               <strong>
                 {sugerenciaChef.receta.nombre}
