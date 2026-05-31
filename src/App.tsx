@@ -22,9 +22,11 @@ import Recetas from './pages/Recetas'
 import Inventario from './pages/Inventario'
 import Compra from './pages/Compra'
 import Auth from './pages/Auth'
+import ChefRayku from './pages/ChefRayku'
 
 type Pagina =
   | 'inicio'
+  | 'chef'
   | 'planning'
   | 'calendario'
   | 'recetas'
@@ -36,6 +38,7 @@ const PAGINA_KEY =
 
 const PAGINAS_VALIDAS: Pagina[] = [
   'inicio',
+  'chef',
   'planning',
   'calendario',
   'recetas',
@@ -225,6 +228,21 @@ export default function App() {
           >
             🏠 Inicio
           </button>
+          <button
+  type="button"
+  className={
+    paginaActual === 'chef'
+      ? 'activo'
+      : ''
+  }
+  onClick={() =>
+    setPaginaActual(
+      'chef'
+    )
+  }
+>
+  🐶‍🍳 Chef Rayku
+</button>
 
           <button
             type="button"
@@ -361,6 +379,14 @@ export default function App() {
             }
           />
         )}
+        {paginaActual ===
+  'chef' && (
+  <ChefRayku
+    onAbrirReceta={
+      abrirReceta
+    }
+  />
+)}
 
         {paginaActual ===
           'planning' && (
