@@ -176,6 +176,13 @@ export function descontarIngredientesInventario(
               return item
             }
 
+            if (
+              item.ubicacion ===
+              'pendiente'
+            ) {
+              return item
+            }
+
             const coincide =
               clavesCoinciden(
                 item.nombre,
