@@ -47,12 +47,18 @@ export default function ChefRaykuCard() {
     inventario,
     planning,
     historialCocinado,
+    addReceta,
   } = useRaykuStore()
 
   const [
     respuesta,
     setRespuesta,
   ] = useState('')
+
+  const [
+    guardadas,
+    setGuardadas,
+  ] = useState<string[]>([])
 
   const [
     cargando,
@@ -72,6 +78,7 @@ export default function ChefRaykuCard() {
     setCargando(tipo)
     setError('')
     setRespuesta('')
+    setGuardadas([])
 
     try {
       const texto =
@@ -95,6 +102,81 @@ export default function ChefRaykuCard() {
     } finally {
       setCargando(null)
     }
+  }
+
+  const guardarRecetaIA = (
+    idea: {
+      nombre?: string
+      ingredientes?: string[]
+      pasos?: string
+      raciones?: number
+      tiempo?: number
+      dificultad?: string
+      dietas?: string[]
+      caracteristicas?: string[]
+      consejo?: string
+    }
+  ) => {
+    if (!idea.nombre) {
+      return
+    }
+
+    addReceta({
+      id: '',
+      nombre: idea.nombre,
+      imagen: '',
+      favorita: false,
+      ingredientes:
+        Array.isArray(
+          idea.ingredientes
+        )
+          ? idea.ingredientes
+          : [],
+      pasos:
+        idea.pasos ||
+        idea.consejo ||
+        'Receta generada por Chef Rayku.',
+      tiposComida: [
+        'comida',
+        'cena',
+      ],
+      ingredientesBase: [],
+      dietas:
+        Array.isArray(idea.dietas)
+          ? idea.dietas
+          : ['keto'],
+      caracteristicas:
+        Array.isArray(
+          idea.caracteristicas
+        )
+          ? idea.caracteristicas
+          : ['Chef Rayku'],
+      tiempo:
+        Number(idea.tiempo) ||
+        20,
+      raciones:
+        Number(idea.raciones) ||
+        2,
+      dificultad:
+        idea.dificultad ===
+          'Media' ||
+        idea.dificultad ===
+          'Elaborada'
+          ? idea.dificultad
+          : 'Fácil',
+      requiereDescongelar:
+        false,
+      valoracion: 0,
+      nota:
+        'Receta creada desde Chef Rayku IA 💕',
+    })
+
+    setGuardadas(
+      (actual) => [
+        ...actual,
+        idea.nombre || '',
+      ]
+    )
   }
 
   return (
@@ -229,6 +311,12 @@ export default function ChefRaykuCard() {
       {respuesta && (
         <ChefRaykuRespuesta
           respuesta={respuesta}
+          onGuardarReceta={
+            guardarRecetaIA
+          }
+          recetasGuardadas={
+            guardadas
+          }
         />
       )}
     </section>

@@ -38,8 +38,15 @@ El JSON debe seguir exactamente esta estructura:
     {
       "nombre": "string",
       "emoji": "string",
+      "origen": "nueva",
       "motivo": "string",
       "ingredientes": ["string"],
+      "pasos": "string",
+      "raciones": 2,
+      "tiempo": 20,
+      "dificultad": "Fácil",
+      "dietas": ["keto"],
+      "caracteristicas": ["rápida"],
       "aprovecha": "string",
       "consejo": "string"
     }
@@ -50,9 +57,15 @@ El JSON debe seguir exactamente esta estructura:
 Reglas:
 - "ideas" debe tener entre 2 y 5 elementos.
 - "emoji" debe ser un solo emoji representativo.
+- "origen" debe ser exactamente "nueva" o "guardada".
+- Si es una receta que ya existe en Rayku, usa "origen": "guardada".
+- Si es una receta inventada por ti, usa "origen": "nueva".
+- "pasos" debe ser breve pero suficiente para poder guardar la receta.
+- "ingredientes" debe incluir cantidades cuando sea posible, por ejemplo "200g queso rallado".
+- "dificultad" debe ser "Fácil", "Media" o "Elaborada".
+- "raciones" debe ser un número.
+- "tiempo" debe ser un número en minutos.
 - Mantén frases cortas y visuales.
-- Si mencionas una receta guardada, dilo claramente.
-- Si propones una receta nueva, dilo claramente.
 `
 
 export function crearPromptChefRayku(
@@ -71,9 +84,7 @@ REGLAS:
 - Devuelve entre 4 y 5 ideas.
 - Mínimo 3 ideas deben ser NUEVAS creadas por ti.
 - Máximo 2 ideas pueden ser recetas guardadas de Rayku.
-- Indica claramente si una idea es:
-  - "Receta guardada"
-  - "Idea nueva de Chef Rayku"
+- Indica claramente en "origen" si es "nueva" o "guardada".
 - Puedes sugerir ingredientes que tendría que comprar.
 - Prioriza recetas keto o bajas en carbohidratos.
 - Busca sorprender e inspirar.
@@ -92,6 +103,7 @@ REGLAS:
 - Puedes mencionar básicos opcionales como sal, aceite, especias o agua.
 - Indica claramente qué producto se está aprovechando.
 - Devuelve entre 3 y 5 ideas.
+- Si propones una receta nueva, debe poder guardarse correctamente.
 `
         : `
 La usuaria quiere un menú adaptado a su alimentación.
@@ -108,6 +120,7 @@ REGLAS:
 - Si falta algún ingrediente importante, indícalo.
 - Prioriza opciones keto o bajas en carbohidratos.
 - Piensa como una planificadora de menús semanal.
+- Si propones ideas nuevas, deben poder guardarse correctamente como recetas.
 `
 
   return [

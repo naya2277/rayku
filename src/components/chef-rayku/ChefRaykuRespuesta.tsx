@@ -1,5 +1,25 @@
+type IdeaChefRayku = {
+  nombre?: string
+  emoji?: string
+  origen?: 'nueva' | 'guardada'
+  motivo?: string
+  ingredientes?: string[]
+  pasos?: string
+  raciones?: number
+  tiempo?: number
+  dificultad?: string
+  dietas?: string[]
+  caracteristicas?: string[]
+  aprovecha?: string
+  consejo?: string
+}
+
 type Props = {
   respuesta: string
+  onGuardarReceta?: (
+    idea: IdeaChefRayku
+  ) => void
+  recetasGuardadas?: string[]
 }
 
 type RespuestaChefRayku = {
@@ -10,18 +30,13 @@ type RespuestaChefRayku = {
     titulo?: string
     texto?: string
   }
-  ideas?: {
-    nombre?: string
-    emoji?: string
-    motivo?: string
-    ingredientes?: string[]
-    aprovecha?: string
-    consejo?: string
-  }[]
+  ideas?: IdeaChefRayku[]
   notaFinal?: string
 }
 
-function limpiarJson(texto: string) {
+function limpiarJson(
+  texto: string
+) {
   return texto
     .trim()
     .replace(/^```json/i, '')
@@ -153,6 +168,8 @@ function MiniBloque({
 
 export default function ChefRaykuRespuesta({
   respuesta,
+  onGuardarReceta,
+  recetasGuardadas = [],
 }: Props) {
   const datos =
     parsearRespuesta(respuesta)
@@ -188,8 +205,7 @@ export default function ChefRaykuRespuesta({
           `,
         backgroundSize:
           'auto, auto, 28px 28px, 28px 28px, auto',
-        border:
-          '2px solid #f5bfd2',
+        border: '2px solid #f5bfd2',
         boxShadow:
           '0 18px 42px rgba(180,120,150,0.16)',
       }}
@@ -206,30 +222,6 @@ export default function ChefRaykuRespuesta({
           opacity: 0.5,
         }}
       />
-
-      <div
-        style={{
-          position: 'absolute',
-          right: 20,
-          top: 18,
-          fontSize: 34,
-          opacity: 0.45,
-        }}
-      >
-        💗
-      </div>
-
-      <div
-        style={{
-          position: 'absolute',
-          right: 28,
-          bottom: 20,
-          fontSize: 34,
-          opacity: 0.35,
-        }}
-      >
-        ✨
-      </div>
 
       <section
         style={{
@@ -250,8 +242,7 @@ export default function ChefRaykuRespuesta({
             borderRadius: '50%',
             background:
               'linear-gradient(135deg, #fff0f6, #ffe4ec)',
-            border:
-              '4px solid #f5bfd2',
+            border: '4px solid #f5bfd2',
             display: 'grid',
             placeItems: 'center',
             boxShadow:
@@ -454,210 +445,234 @@ export default function ChefRaykuRespuesta({
           gap: 20,
         }}
       >
-        {ideas.map((idea, index) => (
-          <article
-            key={`${idea.nombre}-${index}`}
-            style={{
-              position: 'relative',
-              background:
-                index % 2 === 0
-                  ? 'linear-gradient(135deg, rgba(255,255,255,0.92), #fff0f6)'
-                  : 'linear-gradient(135deg, rgba(255,255,255,0.92), #f8f1ff)',
-              border:
-                index % 2 === 0
-                  ? '2px solid #f5bfd2'
-                  : '2px solid #d7c3f3',
-              borderRadius: 26,
-              padding: '22px',
-              boxShadow:
-                '0 16px 34px rgba(180,120,150,0.13)',
-              overflow: 'hidden',
-            }}
-          >
-            <div
-              style={{
-                position: 'absolute',
-                right: 16,
-                top: 14,
-                fontSize: 58,
-                opacity: 0.15,
-              }}
-            >
-              {idea.emoji || '🍽️'}
-            </div>
+        {ideas.map((idea, index) => {
+          const esNueva =
+            idea.origen === 'nueva'
 
-            <div
+          const yaGuardada =
+            Boolean(
+              idea.nombre &&
+                recetasGuardadas.includes(
+                  idea.nombre
+                )
+            )
+
+          return (
+            <article
+              key={`${idea.nombre}-${index}`}
               style={{
-                position: 'absolute',
-                right: 18,
-                top: 0,
-                transform:
-                  'rotate(10deg)',
+                position: 'relative',
                 background:
-                  '#d7b6f3',
-                width: 72,
-                height: 24,
-                borderRadius: 8,
-                opacity: 0.45,
-              }}
-            />
-
-            <header
-              style={{
-                display: 'grid',
-                gridTemplateColumns:
-                  '60px 1fr',
-                gap: 14,
-                alignItems: 'center',
-                marginBottom: 16,
-                paddingRight: 40,
+                  index % 2 === 0
+                    ? 'linear-gradient(135deg, rgba(255,255,255,0.92), #fff0f6)'
+                    : 'linear-gradient(135deg, rgba(255,255,255,0.92), #f8f1ff)',
+                border:
+                  index % 2 === 0
+                    ? '2px solid #f5bfd2'
+                    : '2px solid #d7c3f3',
+                borderRadius: 26,
+                padding: '22px',
+                boxShadow:
+                  '0 16px 34px rgba(180,120,150,0.13)',
+                overflow: 'hidden',
               }}
             >
               <div
                 style={{
-                  width: 56,
-                  height: 56,
-                  borderRadius: '50%',
-                  background:
-                    'linear-gradient(135deg, #ffd6e5, #f4d7ff)',
-                  border:
-                    '2px solid rgba(255,255,255,0.85)',
-                  display: 'grid',
-                  placeItems: 'center',
-                  fontSize: 30,
-                  boxShadow:
-                    '0 10px 22px rgba(196,91,134,0.17)',
+                  position: 'absolute',
+                  right: 16,
+                  top: 14,
+                  fontSize: 58,
+                  opacity: 0.15,
                 }}
               >
                 {idea.emoji || '🍽️'}
               </div>
 
-              <div>
-                <span
+              <header
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns:
+                    '60px 1fr',
+                  gap: 14,
+                  alignItems: 'center',
+                  marginBottom: 16,
+                  paddingRight: 40,
+                }}
+              >
+                <div
                   style={{
-                    display: 'inline-flex',
+                    width: 56,
+                    height: 56,
+                    borderRadius: '50%',
                     background:
-                      index % 2 === 0
-                        ? '#e25291'
-                        : '#9b6fd3',
-                    color: 'white',
-                    borderRadius: 999,
-                    padding: '5px 12px',
-                    fontSize: 12,
-                    fontWeight: 950,
-                    marginBottom: 6,
+                      'linear-gradient(135deg, #ffd6e5, #f4d7ff)',
+                    border:
+                      '2px solid rgba(255,255,255,0.85)',
+                    display: 'grid',
+                    placeItems: 'center',
+                    fontSize: 30,
+                    boxShadow:
+                      '0 10px 22px rgba(196,91,134,0.17)',
                   }}
                 >
-                  Idea {index + 1}
-                </span>
+                  {idea.emoji || '🍽️'}
+                </div>
 
-                <h3
-                  style={{
-                    color:
-                      index % 2 === 0
-                        ? '#e25291'
-                        : '#9b6fd3',
-                    fontSize: 25,
-                    margin: 0,
-                    lineHeight: 1.12,
-                    fontFamily:
-                      "'Comic Sans MS', 'Trebuchet MS', cursive",
-                  }}
-                >
-                  {idea.nombre ||
-                    'Idea rica de Rayku'}
-                </h3>
-              </div>
-            </header>
-
-            <MiniBloque
-              icono="💕"
-              titulo="Por qué encaja"
-              texto={idea.motivo}
-              fondo="rgba(255,255,255,0.74)"
-              borde="#f5c8d8"
-              color="#e25291"
-            />
-
-            <div
-              style={{
-                marginTop: 12,
-                display: 'grid',
-                gridTemplateColumns:
-                  'repeat(auto-fit, minmax(220px, 1fr))',
-                gap: 12,
-              }}
-            >
-              {Array.isArray(
-                idea.ingredientes
-              ) &&
-                idea.ingredientes.length >
-                  0 && (
-                  <div
+                <div>
+                  <span
                     style={{
+                      display: 'inline-flex',
                       background:
-                        'rgba(255,255,255,0.74)',
-                      border:
-                        '1.5px solid #f5c8d8',
-                      borderRadius: 18,
-                      padding: '13px 14px',
-                      minHeight: 112,
+                        esNueva
+                          ? '#e25291'
+                          : '#9b6fd3',
+                      color: 'white',
+                      borderRadius: 999,
+                      padding: '5px 12px',
+                      fontSize: 12,
+                      fontWeight: 950,
+                      marginBottom: 6,
                     }}
                   >
-                    <div
-                      style={{
-                        color: '#e25291',
-                        fontSize: 14,
-                        fontWeight: 950,
-                        marginBottom: 9,
-                        fontFamily:
-                          "'Comic Sans MS', 'Trebuchet MS', cursive",
-                      }}
-                    >
-                      🧺 Ingredientes principales
-                    </div>
+                    {esNueva
+                      ? 'Idea nueva de Chef Rayku'
+                      : 'Receta guardada'}
+                  </span>
 
-                    <div
-                      style={{
-                        display: 'flex',
-                        flexWrap: 'wrap',
-                        gap: 8,
-                      }}
-                    >
-                      {idea.ingredientes.map(
-                        (ingrediente) => (
-                          <IngredienteChip
-                            key={ingrediente}
-                            ingrediente={
-                              ingrediente
-                            }
-                          />
-                        )
-                      )}
-                    </div>
-                  </div>
-                )}
+                  <h3
+                    style={{
+                      color:
+                        index % 2 === 0
+                          ? '#e25291'
+                          : '#9b6fd3',
+                      fontSize: 25,
+                      margin: 0,
+                      lineHeight: 1.12,
+                      fontFamily:
+                        "'Comic Sans MS', 'Trebuchet MS', cursive",
+                    }}
+                  >
+                    {idea.nombre ||
+                      'Idea rica de Rayku'}
+                  </h3>
+                </div>
+              </header>
 
               <MiniBloque
-                icono="🌿"
-                titulo="Aprovecha"
-                texto={idea.aprovecha}
-                fondo="linear-gradient(135deg, #fbfff2, #ffffff)"
-                borde="#d9eab8"
-                color="#6f9f65"
+                icono="💕"
+                titulo="Por qué encaja"
+                texto={idea.motivo}
+                fondo="rgba(255,255,255,0.74)"
+                borde="#f5c8d8"
+                color="#e25291"
               />
 
-              <MiniBloque
-                icono="🐾"
-                titulo="Consejito de Rayku"
-                texto={idea.consejo}
-                fondo="linear-gradient(135deg, #fbf7ff, #ffffff)"
-                borde="#d7c3f3"
-                color="#8a6ec7"
-              />
-            </div>
-          </article>
-        ))}
+              <div
+                style={{
+                  marginTop: 12,
+                  display: 'grid',
+                  gridTemplateColumns:
+                    'repeat(auto-fit, minmax(220px, 1fr))',
+                  gap: 12,
+                }}
+              >
+                {Array.isArray(
+                  idea.ingredientes
+                ) &&
+                  idea.ingredientes.length >
+                    0 && (
+                    <div
+                      style={{
+                        background:
+                          'rgba(255,255,255,0.74)',
+                        border:
+                          '1.5px solid #f5c8d8',
+                        borderRadius: 18,
+                        padding: '13px 14px',
+                        minHeight: 112,
+                      }}
+                    >
+                      <div
+                        style={{
+                          color: '#e25291',
+                          fontSize: 14,
+                          fontWeight: 950,
+                          marginBottom: 9,
+                          fontFamily:
+                            "'Comic Sans MS', 'Trebuchet MS', cursive",
+                        }}
+                      >
+                        🧺 Ingredientes principales
+                      </div>
+
+                      <div
+                        style={{
+                          display: 'flex',
+                          flexWrap: 'wrap',
+                          gap: 8,
+                        }}
+                      >
+                        {idea.ingredientes.map(
+                          (ingrediente) => (
+                            <IngredienteChip
+                              key={ingrediente}
+                              ingrediente={
+                                ingrediente
+                              }
+                            />
+                          )
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                <MiniBloque
+                  icono="🌿"
+                  titulo="Aprovecha"
+                  texto={idea.aprovecha}
+                  fondo="linear-gradient(135deg, #fbfff2, #ffffff)"
+                  borde="#d9eab8"
+                  color="#6f9f65"
+                />
+
+                <MiniBloque
+                  icono="🐾"
+                  titulo="Consejito de Rayku"
+                  texto={idea.consejo}
+                  fondo="linear-gradient(135deg, #fbf7ff, #ffffff)"
+                  borde="#d7c3f3"
+                  color="#8a6ec7"
+                />
+              </div>
+
+              {esNueva && onGuardarReceta && (
+                <button
+                  type="button"
+                  className={
+                    yaGuardada
+                      ? 'btn-secundario'
+                      : 'btn-principal'
+                  }
+                  disabled={yaGuardada}
+                  onClick={() =>
+                    onGuardarReceta(idea)
+                  }
+                  style={{
+                    marginTop: 16,
+                    opacity: yaGuardada
+                      ? 0.7
+                      : 1,
+                  }}
+                >
+                  {yaGuardada
+                    ? '✅ Receta guardada'
+                    : '💾 Guardar receta'}
+                </button>
+              )}
+            </article>
+          )
+        })}
       </div>
 
       {datos.notaFinal && (
