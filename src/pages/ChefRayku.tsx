@@ -106,23 +106,28 @@ export default function ChefRayku({
           }}
         >
           <div
-            style={{
-              width: 92,
-              height: 92,
-              borderRadius: 999,
-              background:
-                'linear-gradient(135deg, #ffe4ec, #fff8ee)',
-              border:
-                '2px solid #f5bfd2',
-              display: 'grid',
-              placeItems: 'center',
-              fontSize: 46,
-              boxShadow:
-                '0 10px 24px rgba(180, 120, 150, 0.12)',
-            }}
-          >
-            🐶‍🍳
-          </div>
+  style={{
+    width: 100,
+    height: 100,
+    borderRadius: '50%',
+    overflow: 'hidden',
+    border: '3px solid #f5bfd2',
+    background: '#fff0f6',
+    flexShrink: 0,
+    boxShadow:
+      '0 10px 24px rgba(180,120,150,0.15)',
+  }}
+>
+  <img
+    src="/rayku-chef.png"
+    alt="Chef Rayku"
+    style={{
+      width: '100%',
+      height: '100%',
+      objectFit: 'cover',
+    }}
+  />
+</div>
 
           <div
             style={{
