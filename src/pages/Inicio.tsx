@@ -299,8 +299,8 @@ export default function Inicio({
         >
         <div
   style={{
-    width: 90,
-    height: 90,
+    width: 74,
+    height: 74,
     borderRadius: '50%',
     overflow: 'hidden',
     border: '3px solid #f5bfd2',
