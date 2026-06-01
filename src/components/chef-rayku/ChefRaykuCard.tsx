@@ -97,8 +97,10 @@ export default function ChefRaykuCard() {
       console.error(err)
 
       setError(
-        'Chef Rayku no ha podido responder ahora mismo. Revisa la API key de Gemini o inténtalo de nuevo más tarde 💕'
-      )
+  err instanceof Error
+    ? err.message
+    : 'Chef Rayku no ha podido responder ahora mismo 💕'
+         )
     } finally {
       setCargando(null)
     }
