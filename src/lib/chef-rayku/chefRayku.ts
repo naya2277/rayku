@@ -47,14 +47,15 @@ function esErrorRecuperable(
   error: unknown
 ) {
   const mensaje =
-    mensajeError(error).toLowerCase()
+    mensajeError(error)
+      .toLowerCase()
 
   return (
     mensaje.includes('429') ||
     mensaje.includes('503') ||
-mensaje.includes('service unavailable') ||
-mensaje.includes('high demand') ||
-mensaje.includes('try again later') ||
+    mensaje.includes('service unavailable') ||
+    mensaje.includes('high demand') ||
+    mensaje.includes('try again later') ||
     mensaje.includes('quota') ||
     mensaje.includes('rate') ||
     mensaje.includes('limit') ||
@@ -80,6 +81,32 @@ async function consultarGemini(
   )
 }
 
+async function consultarOpenRouterLimpio(
+  prompt: string
+) {
+  const respuesta =
+    await consultarOpenRouter(
+      prompt
+    )
+
+  return limpiarRespuestaJson(
+    respuesta
+  )
+}
+
+async function consultarOllamaLimpio(
+  prompt: string
+) {
+  const respuesta =
+    await consultarOllama(
+      prompt
+    )
+
+  return limpiarRespuestaJson(
+    respuesta
+  )
+}
+
 export async function consultarChefRayku(
   tipo: TipoConsultaChefRayku,
   datos: DatosContextoRayku
@@ -99,33 +126,31 @@ export async function consultarChefRayku(
     )
 
   try {
-    return await consultarGemini(
+    return await consultarOpenRouterLimpio(
       prompt
     )
-  } catch (errorGemini) {
+  } catch (errorOpenRouter) {
     console.warn(
-      'Gemini no disponible, probando OpenRouter...',
-      errorGemini
+      'OpenRouter no disponible, probando Gemini...',
+      errorOpenRouter
     )
 
     if (
       !esErrorRecuperable(
-        errorGemini
+        errorOpenRouter
       )
     ) {
-      throw errorGemini
+      throw errorOpenRouter
     }
 
     try {
-      return limpiarRespuestaJson(
-        await consultarOpenRouter(
-          prompt
-        )
+      return await consultarGemini(
+        prompt
       )
-    } catch (errorOpenRouter) {
+    } catch (errorGemini) {
       console.warn(
-        'OpenRouter no disponible.',
-        errorOpenRouter
+        'Gemini no disponible.',
+        errorGemini
       )
 
       if (
@@ -135,14 +160,12 @@ export async function consultarChefRayku(
           'Probando Ollama local...'
         )
 
-        return limpiarRespuestaJson(
-          await consultarOllama(
-            prompt
-          )
+        return await consultarOllamaLimpio(
+          prompt
         )
       }
 
-      throw errorOpenRouter
+      throw errorGemini
     }
   }
 }

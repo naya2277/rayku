@@ -13,6 +13,11 @@ export type UbicacionInventario =
   | 'congelador'
   | 'despensa'
 
+export type PreferenciasAlimentarias = {
+  ingredientesProhibidos: string[]
+  ingredientesFavoritos: string[]
+}
+
 export type Receta = {
   id: string
   nombre: string

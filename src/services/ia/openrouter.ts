@@ -8,7 +8,7 @@ const OPENROUTER_URL =
 const OPENROUTER_MODEL =
   import.meta.env
     .VITE_OPENROUTER_MODEL ||
-  'openrouter/free'
+  'qwen/qwen3-coder:free'
 
 export async function consultarOpenRouter(
   prompt: string
@@ -29,16 +29,27 @@ export async function consultarOpenRouter(
             `Bearer ${OPENROUTER_API_KEY}`,
           'Content-Type':
             'application/json',
+          'HTTP-Referer':
+            window.location.origin,
+          'X-Title': 'Rayku',
         },
         body: JSON.stringify({
           model: OPENROUTER_MODEL,
           messages: [
             {
+              role: 'system',
+              content:
+                'Eres Chef Rayku. Debes responder SIEMPRE con JSON válido y completo. No uses markdown ni texto fuera del JSON.',
+            },
+            {
               role: 'user',
               content: prompt,
             },
           ],
-          temperature: 0.8,
+          temperature: 0.6,
+          response_format: {
+            type: 'json_object',
+          },
         }),
       }
     )

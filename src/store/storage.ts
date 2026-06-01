@@ -6,6 +6,7 @@ import type {
   ItemPlanning,
   ItemCompraManual,
   RegistroCocinado,
+  PreferenciasAlimentarias,
 } from './types'
 
 export const STORAGE_KEYS = {
@@ -15,6 +16,7 @@ export const STORAGE_KEYS = {
   compraManual: 'rayku-compra-manual',
   checksCompra: 'rayku-checks-compra',
   historialCocinado: 'rayku-historial-cocinado',
+  preferenciasAlimentarias: 'rayku-preferencias-alimentarias',
 }
 
 export const guardarRecetasLocal = (
@@ -68,5 +70,14 @@ export const guardarHistorialCocinadoLocal = (
   guardar(
     STORAGE_KEYS.historialCocinado,
     historial
+  )
+}
+
+export const guardarPreferenciasAlimentariasLocal = (
+  preferencias: PreferenciasAlimentarias
+) => {
+  guardar(
+    STORAGE_KEYS.preferenciasAlimentarias,
+    preferencias
   )
 }

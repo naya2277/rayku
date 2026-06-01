@@ -41,14 +41,170 @@ const ACCIONES: {
   },
 ]
 
+function ListaPreferencias({
+  titulo,
+  emoji,
+  items,
+  placeholder,
+  valor,
+  onChange,
+  onAgregar,
+  onEliminar,
+  color,
+}: {
+  titulo: string
+  emoji: string
+  items: string[]
+  placeholder: string
+  valor: string
+  onChange: (valor: string) => void
+  onAgregar: () => void
+  onEliminar: (valor: string) => void
+  color: string
+}) {
+  return (
+    <div
+      style={{
+        background:
+          'rgba(255,255,255,0.72)',
+        border:
+          '1.5px solid #f5dde8',
+        borderRadius: 18,
+        padding: 14,
+      }}
+    >
+      <h3
+        style={{
+          color,
+          fontSize: 16,
+          marginBottom: 10,
+          fontFamily:
+            "'Comic Sans MS', 'Trebuchet MS', cursive",
+        }}
+      >
+        {emoji} {titulo}
+      </h3>
+
+      <div
+        style={{
+          display: 'flex',
+          gap: 8,
+          marginBottom: 10,
+          flexWrap: 'wrap',
+        }}
+      >
+        <input
+          value={valor}
+          onChange={(e) =>
+            onChange(e.target.value)
+          }
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              e.preventDefault()
+              onAgregar()
+            }
+          }}
+          placeholder={placeholder}
+          style={{
+            flex: '1 1 160px',
+            border:
+              '1.5px solid var(--borde)',
+            borderRadius: 999,
+            padding: '9px 12px',
+            fontWeight: 800,
+            color: '#70465b',
+            background: '#fffafc',
+          }}
+        />
+
+        <button
+          type="button"
+          className="btn-secundario"
+          onClick={onAgregar}
+        >
+          ➕ Añadir
+        </button>
+      </div>
+
+      {items.length === 0 ? (
+        <p
+          style={{
+            color: 'var(--txt2)',
+            fontSize: 13,
+            fontWeight: 700,
+          }}
+        >
+          Todavía no hay ingredientes en esta lista.
+        </p>
+      ) : (
+        <div
+          style={{
+            display: 'flex',
+            flexWrap: 'wrap',
+            gap: 8,
+          }}
+        >
+          {items.map((item) => (
+            <span
+              key={item}
+              className="pill pill-rosa"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 7,
+              }}
+            >
+              {item}
+
+              <button
+                type="button"
+                onClick={() =>
+                  onEliminar(item)
+                }
+                aria-label={`Eliminar ${item}`}
+                style={{
+                  border: 'none',
+                  background: 'transparent',
+                  color: '#c45b86',
+                  cursor: 'pointer',
+                  fontWeight: 900,
+                  fontSize: 14,
+                  padding: 0,
+                }}
+              >
+                ✕
+              </button>
+            </span>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
 export default function ChefRaykuCard() {
   const {
     recetas,
     inventario,
     planning,
     historialCocinado,
+    preferenciasAlimentarias,
+    agregarIngredienteProhibido,
+    eliminarIngredienteProhibido,
+    agregarIngredienteFavorito,
+    eliminarIngredienteFavorito,
     addReceta,
   } = useRaykuStore()
+
+  const [
+    nuevoProhibido,
+    setNuevoProhibido,
+  ] = useState('')
+
+  const [
+    nuevoFavorito,
+    setNuevoFavorito,
+  ] = useState('')
 
   const [
     respuesta,
@@ -72,6 +228,20 @@ export default function ChefRaykuCard() {
     setError,
   ] = useState('')
 
+  const agregarProhibido = () => {
+    agregarIngredienteProhibido(
+      nuevoProhibido
+    )
+    setNuevoProhibido('')
+  }
+
+  const agregarFavorito = () => {
+    agregarIngredienteFavorito(
+      nuevoFavorito
+    )
+    setNuevoFavorito('')
+  }
+
   const consultar = async (
     tipo: TipoConsultaChefRayku
   ) => {
@@ -89,6 +259,7 @@ export default function ChefRaykuCard() {
             inventario,
             planning,
             historialCocinado,
+            preferenciasAlimentarias,
           }
         )
 
@@ -97,10 +268,10 @@ export default function ChefRaykuCard() {
       console.error(err)
 
       setError(
-  err instanceof Error
-    ? err.message
-    : 'Chef Rayku no ha podido responder ahora mismo 💕'
-         )
+        err instanceof Error
+          ? err.message
+          : 'Chef Rayku no ha podido responder ahora mismo 💕'
+      )
     } finally {
       setCargando(null)
     }
@@ -236,6 +407,82 @@ export default function ChefRaykuCard() {
           >
             Tu ayudante cute para cocinar, organizar ideas y cuidar tu planning 💕
           </p>
+        </div>
+      </div>
+
+      <div
+        className="card"
+        style={{
+          background:
+            'linear-gradient(135deg, #fff8fb, #fffaf0)',
+          borderColor: '#f5c8d8',
+          marginBottom: 14,
+        }}
+      >
+        <h2
+          style={{
+            color: '#c45b86',
+            fontSize: 18,
+            marginBottom: 6,
+            fontFamily:
+              "'Comic Sans MS', 'Trebuchet MS', cursive",
+          }}
+        >
+          💕 Preferencias alimentarias
+        </h2>
+
+        <p
+          style={{
+            color: 'var(--txt2)',
+            fontSize: 13,
+            fontWeight: 800,
+            marginBottom: 12,
+          }}
+        >
+          Rayku tendrá esto en cuenta al generar recetas e ideas.
+        </p>
+
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns:
+              'repeat(auto-fit, minmax(240px, 1fr))',
+            gap: 12,
+          }}
+        >
+          <ListaPreferencias
+            titulo="Ingredientes prohibidos"
+            emoji="🚫"
+            items={
+              preferenciasAlimentarias
+                .ingredientesProhibidos
+            }
+            placeholder="Ej: pimiento"
+            valor={nuevoProhibido}
+            onChange={setNuevoProhibido}
+            onAgregar={agregarProhibido}
+            onEliminar={
+              eliminarIngredienteProhibido
+            }
+            color="#c45b86"
+          />
+
+          <ListaPreferencias
+            titulo="Ingredientes favoritos"
+            emoji="❤️"
+            items={
+              preferenciasAlimentarias
+                .ingredientesFavoritos
+            }
+            placeholder="Ej: bacon"
+            valor={nuevoFavorito}
+            onChange={setNuevoFavorito}
+            onAgregar={agregarFavorito}
+            onEliminar={
+              eliminarIngredienteFavorito
+            }
+            color="#8a6ec7"
+          />
         </div>
       </div>
 

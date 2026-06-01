@@ -60,6 +60,7 @@ export function crearContextoRayku({
   inventario,
   planning,
   historialCocinado,
+  preferenciasAlimentarias,
 }: DatosContextoRayku): ContextoRayku {
   const inventarioDisponible =
     inventario
@@ -202,6 +203,14 @@ export function crearContextoRayku({
         ].join(' | ')
       )
 
+  const ingredientesProhibidos =
+    preferenciasAlimentarias
+      .ingredientesProhibidos
+
+  const ingredientesFavoritos =
+    preferenciasAlimentarias
+      .ingredientesFavoritos
+
   const resumen = [
     `Recetas guardadas: ${recetas.length}`,
     `Productos en inventario: ${inventario.length}`,
@@ -210,6 +219,8 @@ export function crearContextoRayku({
     `Productos que caducan pronto: ${productosCaducanPronto.length}`,
     `Huecos de planning: ${planning.length}`,
     `Cocinados registrados: ${historialCocinado.length}`,
+    `Ingredientes prohibidos: ${ingredientesProhibidos.length}`,
+    `Ingredientes favoritos: ${ingredientesFavoritos.length}`,
   ].join('\n')
 
   return {
@@ -220,6 +231,8 @@ export function crearContextoRayku({
     recetasDisponibles,
     planningActual,
     historialReciente,
+    ingredientesProhibidos,
+    ingredientesFavoritos,
   }
 }
 
@@ -229,6 +242,14 @@ export function contextoRaykuATexto(
   return [
     'RESUMEN',
     contexto.resumen,
+
+    'INGREDIENTES PROHIBIDOS',
+    contexto.ingredientesProhibidos.join('\n') ||
+      'Sin ingredientes prohibidos.',
+
+    'INGREDIENTES FAVORITOS',
+    contexto.ingredientesFavoritos.join('\n') ||
+      'Sin ingredientes favoritos.',
 
     'INVENTARIO DISPONIBLE',
     contexto.inventarioDisponible.join('\n') ||

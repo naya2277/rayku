@@ -3,6 +3,7 @@ import type {
   ItemPlanning,
   Receta,
   RegistroCocinado,
+  PreferenciasAlimentarias,
 } from '../../store'
 
 export type DatosContextoRayku = {
@@ -10,6 +11,7 @@ export type DatosContextoRayku = {
   inventario: ItemInventario[]
   planning: ItemPlanning[]
   historialCocinado: RegistroCocinado[]
+  preferenciasAlimentarias: PreferenciasAlimentarias
 }
 
 export type ContextoRayku = {
@@ -20,6 +22,8 @@ export type ContextoRayku = {
   recetasDisponibles: string[]
   planningActual: string[]
   historialReciente: string[]
+  ingredientesProhibidos: string[]
+  ingredientesFavoritos: string[]
 }
 
 export type TipoConsultaChefRayku =

@@ -14,6 +14,7 @@ import {
   normalizarPlanning,
   normalizarCompraManual,
   normalizarRegistroCocinado,
+  normalizarPreferenciasAlimentarias,
 } from './store/normalizers'
 
 import {
@@ -41,12 +42,18 @@ import {
   type SyncSlice,
 } from './store/syncSlice'
 
+import {
+  crearPreferenciasSlice,
+  type PreferenciasSlice,
+} from './store/preferenciasSlice'
+
 type Estado =
   RecetasSlice &
   PlanningSlice &
   InventarioSlice &
   CompraSlice &
-  SyncSlice & {
+  SyncSlice &
+  PreferenciasSlice & {
     semanas: any[]
     listaCompra: any[]
     recordatorios: any[]
@@ -76,6 +83,11 @@ export const useRaykuStore =
       ),
 
       ...crearSyncSlice(
+        set,
+        get
+      ),
+
+      ...crearPreferenciasSlice(
         set,
         get
       ),
@@ -110,6 +122,17 @@ export const useRaykuStore =
         []
       ).map(normalizarRegistroCocinado),
 
+      preferenciasAlimentarias:
+        normalizarPreferenciasAlimentarias(
+          cargar<any>(
+            STORAGE_KEYS.preferenciasAlimentarias,
+            {
+              ingredientesProhibidos: [],
+              ingredientesFavoritos: [],
+            }
+          )
+        ),
+
       semanas: [],
 
       listaCompra: [],
@@ -127,4 +150,5 @@ export type {
   Dificultad,
   RegistroCocinado,
   CambioInventarioCocinado,
+  PreferenciasAlimentarias,
 } from './store/types'

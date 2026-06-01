@@ -8,11 +8,26 @@ import type {
   ItemPlanning,
   ItemCompraManual,
   RegistroCocinado,
+  PreferenciasAlimentarias,
 } from './types'
 
 import {
   normalizarCantidadUnidad,
 } from '../lib/cantidadesIngredientes'
+
+function limpiarListaTexto(
+  lista: any
+) {
+  if (!Array.isArray(lista)) {
+    return []
+  }
+
+  return lista
+    .map((item) =>
+      String(item).trim()
+    )
+    .filter(Boolean)
+}
 
 export const normalizarReceta = (
   r: any
@@ -230,3 +245,16 @@ export const normalizarRegistroCocinado = (
       new Date().toISOString(),
   }
 }
+
+export const normalizarPreferenciasAlimentarias = (
+  item: any
+): PreferenciasAlimentarias => ({
+  ingredientesProhibidos:
+    limpiarListaTexto(
+      item?.ingredientesProhibidos
+    ),
+  ingredientesFavoritos:
+    limpiarListaTexto(
+      item?.ingredientesFavoritos
+    ),
+})
