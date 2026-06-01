@@ -61,6 +61,7 @@ REGLAS IMPORTANTES:
 - "ideas" debe tener entre 2 y 5 elementos.
 - "emoji" debe ser un solo emoji representativo.
 - "origen" debe ser exactamente "nueva" o "guardada".
+- Solo menciona recetas guardadas cuando la tarea lo permita.
 - Si es una receta que ya existe en Rayku usa "guardada".
 - Si es una receta inventada por ti usa "nueva".
 
@@ -106,16 +107,19 @@ export function crearPromptChefRayku(
   const tarea =
     tipo === 'ideas_recetas'
       ? `
-La usuaria quiere inspiración culinaria.
+La usuaria quiere inspiración culinaria NUEVA.
 
 OBJETIVO:
-Dar ideas de recetas interesantes aunque no tenga todos los ingredientes disponibles.
+Dar ideas de recetas nuevas, interesantes y guardables, aunque no tenga todos los ingredientes disponibles.
 
 REGLAS:
-- Devuelve entre 4 y 5 ideas.
-- Mínimo 3 ideas deben ser NUEVAS creadas por ti.
-- Máximo 2 ideas pueden ser recetas guardadas de Rayku.
-- Indica claramente si una idea es nueva o guardada.
+- Devuelve exactamente 5 ideas.
+- Las 5 ideas deben ser NUEVAS creadas por ti.
+- Todas las ideas deben tener "origen": "nueva".
+- NO uses recetas guardadas de Rayku como ideas principales.
+- NO repitas nombres de recetas existentes en el contexto.
+- Puedes inspirarte en sus gustos, dietas y características, pero no copies recetas guardadas.
+- No importa si faltan ingredientes.
 - Puedes sugerir ingredientes que tendría que comprar.
 - Prioriza recetas keto o bajas en carbohidratos.
 - Busca sorprender e inspirar.

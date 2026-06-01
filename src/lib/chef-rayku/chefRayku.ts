@@ -3,6 +3,10 @@ import {
 } from '../../services/ia/gemini'
 
 import {
+  consultarOllama,
+} from '../../services/ia/ollama'
+
+import {
   crearContextoRayku,
   contextoRaykuATexto,
 } from './contextoRayku'
@@ -27,6 +31,38 @@ function limpiarRespuestaJson(
     .trim()
 }
 
+function esErrorCuotaGemini(
+  error: unknown
+) {
+  const mensaje =
+    error instanceof Error
+      ? error.message
+      : String(error)
+
+  return (
+    mensaje.includes('429') ||
+    mensaje
+      .toLowerCase()
+      .includes('quota')
+  )
+}
+
+async function consultarGemini(
+  prompt: string
+) {
+  const resultado =
+    await geminiModel.generateContent(
+      prompt
+    )
+
+  const texto =
+    resultado.response.text()
+
+  return limpiarRespuestaJson(
+    texto
+  )
+}
+
 export async function consultarChefRayku(
   tipo: TipoConsultaChefRayku,
   datos: DatosContextoRayku
@@ -45,15 +81,25 @@ export async function consultarChefRayku(
       contextoTexto
     )
 
-  const resultado =
-    await geminiModel.generateContent(
+  try {
+    return await consultarGemini(
       prompt
     )
+  } catch (error) {
+    console.warn(
+      'Gemini no disponible, probando Ollama...',
+      error
+    )
 
-  const texto =
-    resultado.response.text()
+    if (!esErrorCuotaGemini(error)) {
+      throw error
+    }
 
-  return limpiarRespuestaJson(
-    texto
-  )
+    const respuestaOllama =
+      await consultarOllama(prompt)
+
+    return limpiarRespuestaJson(
+      respuestaOllama
+    )
+  }
 }
