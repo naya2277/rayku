@@ -47,8 +47,7 @@ function esErrorRecuperable(
   error: unknown
 ) {
   const mensaje =
-    mensajeError(error)
-      .toLowerCase()
+    mensajeError(error).toLowerCase()
 
   return (
     mensaje.includes('429') ||
@@ -60,6 +59,10 @@ function esErrorRecuperable(
   )
 }
 
+function puedeUsarOllamaLocal() {
+  return import.meta.env.DEV
+}
+
 async function consultarGemini(
   prompt: string
 ) {
@@ -68,11 +71,8 @@ async function consultarGemini(
       prompt
     )
 
-  const texto =
-    resultado.response.text()
-
   return limpiarRespuestaJson(
-    texto
+    resultado.response.text()
   )
 }
 
@@ -113,36 +113,32 @@ export async function consultarChefRayku(
     }
 
     try {
-      const respuestaOpenRouter =
+      return limpiarRespuestaJson(
         await consultarOpenRouter(
           prompt
         )
-
-      return limpiarRespuestaJson(
-        respuestaOpenRouter
       )
     } catch (errorOpenRouter) {
       console.warn(
-        'OpenRouter no disponible, probando Ollama...',
+        'OpenRouter no disponible.',
         errorOpenRouter
       )
 
       if (
-        !esErrorRecuperable(
-          errorOpenRouter
-        )
+        puedeUsarOllamaLocal()
       ) {
-        throw errorOpenRouter
+        console.warn(
+          'Probando Ollama local...'
+        )
+
+        return limpiarRespuestaJson(
+          await consultarOllama(
+            prompt
+          )
+        )
       }
 
-      const respuestaOllama =
-        await consultarOllama(
-          prompt
-        )
-
-      return limpiarRespuestaJson(
-        respuestaOllama
-      )
+      throw errorOpenRouter
     }
   }
 }
