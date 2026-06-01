@@ -3,6 +3,10 @@ import {
 } from '../../services/ia/gemini'
 
 import {
+  consultarOpenRouter,
+} from '../../services/ia/openrouter'
+
+import {
   consultarOllama,
 } from '../../services/ia/ollama'
 
@@ -31,19 +35,28 @@ function limpiarRespuestaJson(
     .trim()
 }
 
-function esErrorCuotaGemini(
+function mensajeError(
+  error: unknown
+) {
+  return error instanceof Error
+    ? error.message
+    : String(error)
+}
+
+function esErrorRecuperable(
   error: unknown
 ) {
   const mensaje =
-    error instanceof Error
-      ? error.message
-      : String(error)
+    mensajeError(error)
+      .toLowerCase()
 
   return (
     mensaje.includes('429') ||
-    mensaje
-      .toLowerCase()
-      .includes('quota')
+    mensaje.includes('quota') ||
+    mensaje.includes('rate') ||
+    mensaje.includes('limit') ||
+    mensaje.includes('network') ||
+    mensaje.includes('failed to fetch')
   )
 }
 
@@ -85,21 +98,51 @@ export async function consultarChefRayku(
     return await consultarGemini(
       prompt
     )
-  } catch (error) {
+  } catch (errorGemini) {
     console.warn(
-      'Gemini no disponible, probando Ollama...',
-      error
+      'Gemini no disponible, probando OpenRouter...',
+      errorGemini
     )
 
-    if (!esErrorCuotaGemini(error)) {
-      throw error
+    if (
+      !esErrorRecuperable(
+        errorGemini
+      )
+    ) {
+      throw errorGemini
     }
 
-    const respuestaOllama =
-      await consultarOllama(prompt)
+    try {
+      const respuestaOpenRouter =
+        await consultarOpenRouter(
+          prompt
+        )
 
-    return limpiarRespuestaJson(
-      respuestaOllama
-    )
+      return limpiarRespuestaJson(
+        respuestaOpenRouter
+      )
+    } catch (errorOpenRouter) {
+      console.warn(
+        'OpenRouter no disponible, probando Ollama...',
+        errorOpenRouter
+      )
+
+      if (
+        !esErrorRecuperable(
+          errorOpenRouter
+        )
+      ) {
+        throw errorOpenRouter
+      }
+
+      const respuestaOllama =
+        await consultarOllama(
+          prompt
+        )
+
+      return limpiarRespuestaJson(
+        respuestaOllama
+      )
+    }
   }
 }
