@@ -51,6 +51,10 @@ function esErrorRecuperable(
 
   return (
     mensaje.includes('429') ||
+    mensaje.includes('503') ||
+mensaje.includes('service unavailable') ||
+mensaje.includes('high demand') ||
+mensaje.includes('try again later') ||
     mensaje.includes('quota') ||
     mensaje.includes('rate') ||
     mensaje.includes('limit') ||
