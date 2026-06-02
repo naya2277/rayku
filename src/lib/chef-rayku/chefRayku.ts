@@ -20,6 +20,7 @@ import {
 } from './prompts'
 
 import type {
+  ContextoRayku,
   DatosContextoRayku,
   TipoConsultaChefRayku,
 } from './tipos'
@@ -66,6 +67,58 @@ function esErrorRecuperable(
 
 function puedeUsarOllamaLocal() {
   return import.meta.env.DEV
+}
+
+function obtenerNombresRecetas(
+  contexto: ContextoRayku
+) {
+  return contexto.recetasDisponibles
+    .map((linea) =>
+      linea.split('|')[0]?.trim()
+    )
+    .filter(Boolean)
+}
+
+function contextoInspiracionLibre(
+  contexto: ContextoRayku
+) {
+  const nombresRecetas =
+    obtenerNombresRecetas(
+      contexto
+    )
+
+  return [
+    'MODO INSPIRACIÓN LIBRE',
+    'No uses inventario, caducidades, planning ni historial.',
+    'La respuesta debe ser creativa y variada.',
+    '',
+    'INGREDIENTES PROHIBIDOS',
+    contexto.ingredientesProhibidos.join('\n') ||
+      'Sin ingredientes prohibidos.',
+    '',
+    'INGREDIENTES FAVORITOS',
+    contexto.ingredientesFavoritos.join('\n') ||
+      'Sin ingredientes favoritos.',
+    '',
+    'NOMBRES DE RECETAS YA EXISTENTES',
+    nombresRecetas.join('\n') ||
+      'Sin recetas guardadas.',
+  ].join('\n')
+}
+
+function crearContextoTextoPorTipo(
+  tipo: TipoConsultaChefRayku,
+  contexto: ContextoRayku
+) {
+  if (tipo === 'ideas_recetas') {
+    return contextoInspiracionLibre(
+      contexto
+    )
+  }
+
+  return contextoRaykuATexto(
+    contexto
+  )
 }
 
 async function consultarGemini(
@@ -115,7 +168,8 @@ export async function consultarChefRayku(
     crearContextoRayku(datos)
 
   const contextoTexto =
-    contextoRaykuATexto(
+    crearContextoTextoPorTipo(
+      tipo,
       contexto
     )
 
