@@ -3,6 +3,13 @@ import {
   useState,
 } from 'react'
 
+import {
+  endOfWeek,
+  isWithinInterval,
+  parseISO,
+  startOfWeek,
+} from 'date-fns'
+
 import { useRaykuStore } from '../store'
 
 import {
@@ -16,6 +23,33 @@ import FormularioCompraManual from '../components/compra/FormularioCompraManual'
 import ResumenCompra from '../components/compra/ResumenCompra'
 import GrupoCompra from '../components/compra/GrupoCompra'
 import ModoSupermercado from '../components/compra/ModoSupermercado'
+
+function estaEnSemanaActual(
+  fecha: string
+) {
+  const hoy = new Date()
+
+  const inicioSemana =
+    startOfWeek(hoy, {
+      weekStartsOn: 1,
+    })
+
+  const finSemana =
+    endOfWeek(hoy, {
+      weekStartsOn: 1,
+    })
+
+  const fechaPlanning =
+    parseISO(fecha)
+
+  return isWithinInterval(
+    fechaPlanning,
+    {
+      start: inicioSemana,
+      end: finSemana,
+    }
+  )
+}
 
 export default function Compra() {
   const {
@@ -40,12 +74,23 @@ export default function Compra() {
     setModoSupermercado,
   ] = useState(false)
 
+  const planningSemanaActual =
+    useMemo(() => {
+      return planning.filter(
+        (item) =>
+          estaEnSemanaActual(
+            item.fecha
+          ) &&
+          !item.cocinado
+      )
+    }, [planning])
+
   const ingredientes = useMemo(() => {
     return generarIngredientesCompra(
-      planning,
+      planningSemanaActual,
       recetas
     )
-  }, [planning, recetas])
+  }, [planningSemanaActual, recetas])
 
   const itemsManualesComoCompra =
     useMemo<IngredienteCompra[]>(
@@ -182,7 +227,7 @@ export default function Compra() {
             }}
           >
             Lista inteligente
-            desde tu planning
+            de la semana actual
             + extras manuales
             💕
           </p>
@@ -229,6 +274,23 @@ export default function Compra() {
               : '👁️ Mostrar comprados'}
           </button>
         </div>
+      </div>
+
+      <div
+        className="card"
+        style={{
+          marginBottom: 18,
+          background:
+            'linear-gradient(135deg, #fffafc, #f7f0ff)',
+          borderColor:
+            '#f5dde8',
+          color: '#8f7080',
+          fontWeight: 800,
+        }}
+      >
+        📅 Esta lista solo cuenta comidas y cenas
+        pendientes de la semana actual. Las comidas ya
+        cocinadas o de semanas anteriores no se incluyen.
       </div>
 
       {!modoSupermercado && (
@@ -361,7 +423,8 @@ export default function Compra() {
             >
               Aún no hay
               ingredientes en el
-              planning ni extras
+              planning de esta
+              semana ni extras
               manuales 💕
             </p>
           </div>
