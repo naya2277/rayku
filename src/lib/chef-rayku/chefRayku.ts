@@ -3,10 +3,6 @@ import {
 } from '../../services/ia/gemini'
 
 import {
-  consultarOpenRouter,
-} from '../../services/ia/openrouter'
-
-import {
   consultarOllama,
 } from '../../services/ia/ollama'
 
@@ -34,35 +30,6 @@ function limpiarRespuestaJson(
     .replace(/^```/i, '')
     .replace(/```$/i, '')
     .trim()
-}
-
-function mensajeError(
-  error: unknown
-) {
-  return error instanceof Error
-    ? error.message
-    : String(error)
-}
-
-function esErrorRecuperable(
-  error: unknown
-) {
-  const mensaje =
-    mensajeError(error)
-      .toLowerCase()
-
-  return (
-    mensaje.includes('429') ||
-    mensaje.includes('503') ||
-    mensaje.includes('service unavailable') ||
-    mensaje.includes('high demand') ||
-    mensaje.includes('try again later') ||
-    mensaje.includes('quota') ||
-    mensaje.includes('rate') ||
-    mensaje.includes('limit') ||
-    mensaje.includes('network') ||
-    mensaje.includes('failed to fetch')
-  )
 }
 
 function puedeUsarOllamaLocal() {
@@ -134,19 +101,6 @@ async function consultarGemini(
   )
 }
 
-async function consultarOpenRouterLimpio(
-  prompt: string
-) {
-  const respuesta =
-    await consultarOpenRouter(
-      prompt
-    )
-
-  return limpiarRespuestaJson(
-    respuesta
-  )
-}
-
 async function consultarOllamaLimpio(
   prompt: string
 ) {
@@ -180,46 +134,29 @@ export async function consultarChefRayku(
     )
 
   try {
-    return await consultarOpenRouterLimpio(
+    return await consultarGemini(
       prompt
     )
-  } catch (errorOpenRouter) {
+  } catch (errorGemini) {
     console.warn(
-      'OpenRouter no disponible, probando Gemini...',
-      errorOpenRouter
+      'Gemini no disponible.',
+      errorGemini
     )
 
     if (
-      !esErrorRecuperable(
-        errorOpenRouter
-      )
+      puedeUsarOllamaLocal()
     ) {
-      throw errorOpenRouter
-    }
+      console.warn(
+        'Probando Ollama local...'
+      )
 
-    try {
-      return await consultarGemini(
+      return await consultarOllamaLimpio(
         prompt
       )
-    } catch (errorGemini) {
-      console.warn(
-        'Gemini no disponible.',
-        errorGemini
-      )
-
-      if (
-        puedeUsarOllamaLocal()
-      ) {
-        console.warn(
-          'Probando Ollama local...'
-        )
-
-        return await consultarOllamaLimpio(
-          prompt
-        )
-      }
-
-      throw errorGemini
     }
+
+    throw new Error(
+      'Chef Rayku está descansando un momento 💕 La IA está temporalmente saturada. Prueba de nuevo más tarde.'
+    )
   }
 }
