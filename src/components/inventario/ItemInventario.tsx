@@ -10,6 +10,10 @@ import {
 } from '../../lib/ingredientes'
 
 import {
+  normalizarIngredienteRayku,
+} from '../../lib/ingredientes/normalizacion'
+
+import {
   detectarCaducidad,
 } from '../../lib/inventario'
 
@@ -175,6 +179,25 @@ export default function ItemInventario({
       {
         cantidad: 1,
         ubicacion: 'pendiente',
+      }
+    )
+  }
+
+  const normalizarNombre = () => {
+    const nombreNormalizado =
+      normalizarIngredienteRayku(
+        item.nombre
+      )
+
+    if (!nombreNormalizado) {
+      return
+    }
+
+    editarItemInventario(
+      item.id,
+      {
+        nombre:
+          nombreNormalizado,
       }
     )
   }
@@ -496,6 +519,57 @@ export default function ItemInventario({
               padding: 10,
             }}
           >
+            <div
+              style={{
+                display: 'grid',
+                gap: 6,
+              }}
+            >
+              <label
+                style={{
+                  fontSize: 12,
+                  fontWeight: 800,
+                  color: 'var(--txt2)',
+                }}
+              >
+                🏷️ Nombre del producto
+              </label>
+
+              <div
+                style={{
+                  display: 'flex',
+                  gap: 8,
+                  flexWrap: 'wrap',
+                }}
+              >
+                <input
+                  type="text"
+                  value={item.nombre}
+                  onChange={(e) =>
+                    editarItemInventario(
+                      item.id,
+                      {
+                        nombre:
+                          e.target.value,
+                      }
+                    )
+                  }
+                  style={{
+                    flex: 1,
+                    minWidth: 180,
+                  }}
+                />
+
+                <button
+                  type="button"
+                  className="btn-secundario"
+                  onClick={normalizarNombre}
+                >
+                  ✨ Normalizar
+                </button>
+              </div>
+            </div>
+
             <div
               style={{
                 display: 'grid',
