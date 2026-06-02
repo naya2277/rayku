@@ -64,7 +64,7 @@ function asegurarCantidadComidaLibre(
   return {
     ...ingrediente,
     cantidad: 1,
-    unidad: ingrediente.unidad || 'unidad',
+    unidad: 'comida',
   }
 }
 

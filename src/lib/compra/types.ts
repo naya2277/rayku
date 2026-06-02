@@ -15,6 +15,7 @@ export type ItemInventarioListaCompra = {
   nombre: string
   cantidad: string | number
   unidad: string
+  ubicacion?: string
 }
 
 export type IngredienteCompra = {

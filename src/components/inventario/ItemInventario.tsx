@@ -40,7 +40,8 @@ function obtenerPasoRapido(unidad: string) {
     unidadNormalizada === 'u' ||
     unidadNormalizada === 'unidad' ||
     unidadNormalizada === 'lata' ||
-    unidadNormalizada === 'paquete'
+    unidadNormalizada === 'paquete' ||
+    unidadNormalizada === 'comida'
   ) {
     return 1
   }
@@ -168,6 +169,16 @@ export default function ItemInventario({
     setConsumoActivo(false)
   }
 
+  const volverAComprar = () => {
+    editarItemInventario(
+      item.id,
+      {
+        cantidad: 1,
+        ubicacion: 'pendiente',
+      }
+    )
+  }
+
   return (
     <div
       style={{
@@ -175,7 +186,7 @@ export default function ItemInventario({
         borderBottom: !ultimo
           ? '1px solid var(--borde)'
           : 'none',
-        opacity: agotado ? 0.72 : 1,
+        opacity: agotado ? 0.82 : 1,
       }}
     >
       <div
@@ -343,98 +354,136 @@ export default function ItemInventario({
           </div>
         )}
 
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns:
-              'auto 1fr auto',
-            gap: 8,
-            alignItems: 'center',
-            background:
-              'rgba(255, 255, 255, 0.72)',
-            border:
-              '1.5px solid #f5dde8',
-            borderRadius: 18,
-            padding: 8,
-          }}
-        >
-          <button
-            type="button"
-            className="btn-secundario"
-            onClick={() =>
-              cambiarCantidadRapida(
-                -pasoRapido
-              )
-            }
-            disabled={
-              item.cantidad <= 0
-            }
-            style={{
-              minHeight: 40,
-              fontSize: 13,
-              padding:
-                '8px 12px',
-              opacity:
-                item.cantidad <= 0
-                  ? 0.45
-                  : 1,
-            }}
-          >
-            − {pasoRapido}
-          </button>
-
+        {agotado ? (
           <div
             style={{
-              textAlign: 'center',
-              fontWeight: 900,
-              color: '#9b3f68',
-              fontSize: 16,
+              display: 'flex',
+              gap: 8,
+              flexWrap: 'wrap',
+              background:
+                'rgba(255, 255, 255, 0.72)',
+              border:
+                '1.5px solid #ffcc80',
+              borderRadius: 18,
+              padding: 10,
             }}
           >
-            {item.cantidad}
-            {item.unidad}
-          </div>
+            <button
+              type="button"
+              className="btn-secundario"
+              onClick={volverAComprar}
+            >
+              🔁 Volver a comprar
+            </button>
 
+            <button
+              type="button"
+              className="btn-secundario"
+              onClick={() =>
+                eliminarItemInventario(
+                  item.id
+                )
+              }
+            >
+              🗑️ Borrar definitivamente
+            </button>
+          </div>
+        ) : (
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns:
+                'auto 1fr auto',
+              gap: 8,
+              alignItems: 'center',
+              background:
+                'rgba(255, 255, 255, 0.72)',
+              border:
+                '1.5px solid #f5dde8',
+              borderRadius: 18,
+              padding: 8,
+            }}
+          >
+            <button
+              type="button"
+              className="btn-secundario"
+              onClick={() =>
+                cambiarCantidadRapida(
+                  -pasoRapido
+                )
+              }
+              disabled={
+                item.cantidad <= 0
+              }
+              style={{
+                minHeight: 40,
+                fontSize: 13,
+                padding:
+                  '8px 12px',
+                opacity:
+                  item.cantidad <= 0
+                    ? 0.45
+                    : 1,
+              }}
+            >
+              − {pasoRapido}
+            </button>
+
+            <div
+              style={{
+                textAlign: 'center',
+                fontWeight: 900,
+                color: '#9b3f68',
+                fontSize: 16,
+              }}
+            >
+              {item.cantidad}
+              {item.unidad}
+            </div>
+
+            <button
+              type="button"
+              className="btn-secundario"
+              onClick={() =>
+                cambiarCantidadRapida(
+                  pasoRapido
+                )
+              }
+              style={{
+                minHeight: 40,
+                fontSize: 13,
+                padding:
+                  '8px 12px',
+              }}
+            >
+              + {pasoRapido}
+            </button>
+          </div>
+        )}
+
+        {!agotado && (
           <button
             type="button"
             className="btn-secundario"
             onClick={() =>
-              cambiarCantidadRapida(
-                pasoRapido
+              setPanelEdicionAbierto(
+                !panelEdicionAbierto
               )
             }
             style={{
-              minHeight: 40,
-              fontSize: 13,
-              padding:
-                '8px 12px',
+              justifySelf: 'start',
+              minHeight: 34,
+              fontSize: 12,
+              padding: '7px 12px',
             }}
           >
-            + {pasoRapido}
+            {panelEdicionAbierto
+              ? '🌸 Ocultar ajustes'
+              : '⚙️ Editar ajustes'}
           </button>
-        </div>
+        )}
 
-        <button
-          type="button"
-          className="btn-secundario"
-          onClick={() =>
-            setPanelEdicionAbierto(
-              !panelEdicionAbierto
-            )
-          }
-          style={{
-            justifySelf: 'start',
-            minHeight: 34,
-            fontSize: 12,
-            padding: '7px 12px',
-          }}
-        >
-          {panelEdicionAbierto
-            ? '🌸 Ocultar ajustes'
-            : '⚙️ Editar ajustes'}
-        </button>
-
-        {panelEdicionAbierto && (
+        {!agotado && panelEdicionAbierto && (
           <div
             style={{
               display: 'grid',
@@ -467,25 +516,16 @@ export default function ItemInventario({
                     }
                   )
                 }
-                style={{
-                  minHeight: 36,
-                  fontSize: 12,
-                  padding:
-                    '6px 8px',
-                }}
               >
                 <option value="pendiente">
                   🛍️ Pendiente
                 </option>
-
                 <option value="nevera">
                   🧊 Nevera
                 </option>
-
                 <option value="congelador">
                   ❄️ Congelador
                 </option>
-
                 <option value="despensa">
                   🗄️ Despensa
                 </option>
@@ -508,16 +548,6 @@ export default function ItemInventario({
                     }
                   )
                 }
-                style={{
-                  minHeight: 36,
-                  appearance:
-                    'textfield',
-                  textAlign:
-                    'center',
-                  fontSize: 12,
-                  padding:
-                    '6px 8px',
-                }}
               />
 
               <select
@@ -531,109 +561,92 @@ export default function ItemInventario({
                     }
                   )
                 }
-                style={{
-                  minHeight: 36,
-                  fontSize: 12,
-                  padding:
-                    '6px 8px',
-                }}
               >
+                <option value="comida">
+                  comida
+                </option>
                 <option value="g">
                   g
                 </option>
-
                 <option value="kg">
                   kg
                 </option>
-
                 <option value="ml">
                   ml
                 </option>
-
                 <option value="l">
                   l
                 </option>
-
                 <option value="u.">
                   u.
                 </option>
-
                 <option value="paquete">
                   paquete
                 </option>
-
                 <option value="lata">
                   lata
                 </option>
               </select>
             </div>
+
             <div
-  style={{
-    display: 'grid',
-    gap: 6,
-  }}
->
-  <label
-    style={{
-      fontSize: 12,
-      fontWeight: 800,
-      color: 'var(--txt2)',
-    }}
-  >
-    📅 Fecha de caducidad
-  </label>
+              style={{
+                display: 'grid',
+                gap: 6,
+              }}
+            >
+              <label
+                style={{
+                  fontSize: 12,
+                  fontWeight: 800,
+                  color: 'var(--txt2)',
+                }}
+              >
+                📅 Fecha de caducidad
+              </label>
 
-  <div
-    style={{
-      display: 'flex',
-      gap: 8,
-      flexWrap: 'wrap',
-    }}
-  >
-    <input
-      type="date"
-      value={
-        item.fechaCaducidad || ''
-      }
-      onChange={(e) =>
-        editarItemInventario(
-          item.id,
-          {
-            fechaCaducidad:
-              e.target.value || null,
-          }
-        )
-      }
-      style={{
-        minHeight: 36,
-        padding: '6px 8px',
-        fontSize: 12,
-      }}
-    />
+              <div
+                style={{
+                  display: 'flex',
+                  gap: 8,
+                  flexWrap: 'wrap',
+                }}
+              >
+                <input
+                  type="date"
+                  value={
+                    item.fechaCaducidad || ''
+                  }
+                  onChange={(e) =>
+                    editarItemInventario(
+                      item.id,
+                      {
+                        fechaCaducidad:
+                          e.target.value || null,
+                      }
+                    )
+                  }
+                />
 
-    {item.fechaCaducidad && (
-      <button
-        type="button"
-        className="btn-secundario"
-        onClick={() =>
-          editarItemInventario(
-            item.id,
-            {
-              fechaCaducidad:
-                null,
-            }
-          )
-        }
-        style={{
-          minHeight: 36,
-          fontSize: 12,
-        }}
-      >
-        ❌ Quitar fecha
-      </button>
-    )}
-  </div>
-</div>
+                {item.fechaCaducidad && (
+                  <button
+                    type="button"
+                    className="btn-secundario"
+                    onClick={() =>
+                      editarItemInventario(
+                        item.id,
+                        {
+                          fechaCaducidad:
+                            null,
+                        }
+                      )
+                    }
+                  >
+                    ❌ Quitar fecha
+                  </button>
+                )}
+              </div>
+            </div>
 
             <div
               style={{
@@ -654,12 +667,6 @@ export default function ItemInventario({
                   )
                 }
                 className="btn-secundario"
-                style={{
-                  minHeight: 34,
-                  fontSize: 12,
-                  padding:
-                    '6px 10px',
-                }}
               >
                 {item.avisarStockBajo
                   ? '🔔 Aviso stock activado'
@@ -678,12 +685,6 @@ export default function ItemInventario({
                   )
                 }
                 className="btn-secundario"
-                style={{
-                  minHeight: 34,
-                  fontSize: 12,
-                  padding:
-                    '6px 10px',
-                }}
               >
                 {item.necesitaDescongelar
                   ? '❄️ Descongelar activado'
@@ -698,12 +699,6 @@ export default function ItemInventario({
                   )
                 }
                 className="btn-secundario"
-                style={{
-                  minHeight: 34,
-                  fontSize: 12,
-                  padding:
-                    '6px 10px',
-                }}
               >
                 ✏️ Ajustar cantidad exacta
               </button>
@@ -716,12 +711,6 @@ export default function ItemInventario({
                   )
                 }
                 className="btn-secundario"
-                style={{
-                  minHeight: 34,
-                  fontSize: 12,
-                  padding:
-                    '6px 10px',
-                }}
               >
                 🗑️ Eliminar
               </button>
@@ -756,13 +745,6 @@ export default function ItemInventario({
                       e.target.value
                     )
                   }
-                  style={{
-                    width: 130,
-                    minHeight: 34,
-                    fontSize: 12,
-                    padding:
-                      '6px 8px',
-                  }}
                 />
 
                 <span className="pill pill-rosa">
@@ -774,12 +756,6 @@ export default function ItemInventario({
                   onClick={
                     consumirProducto
                   }
-                  style={{
-                    minHeight: 34,
-                    fontSize: 12,
-                    padding:
-                      '6px 12px',
-                  }}
                 >
                   💕 Aplicar
                 </button>

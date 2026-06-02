@@ -113,6 +113,10 @@ function coincidenIngredientesCompra(
 function tieneStockDisponible(
   item: ItemInventarioListaCompra
 ) {
+  if (item.ubicacion === 'pendiente') {
+    return false
+  }
+
   return Number(item.cantidad || 0) > 0
 }
 
