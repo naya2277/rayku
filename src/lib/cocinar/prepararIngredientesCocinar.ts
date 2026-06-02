@@ -9,6 +9,7 @@ import {
 } from '../recetas/calcularIngredientesEscalados'
 
 import {
+  parsearIngredienteConCantidad,
   separarTextoIngredientes,
 } from '../cantidadesIngredientes'
 
@@ -34,6 +35,38 @@ function obtenerRecetaIds(
   return hueco.recetaId
     ? [hueco.recetaId]
     : []
+}
+
+function prepararIngredienteLibre(
+  ingrediente: string
+): IngredienteEscalado {
+  const parsed =
+    parsearIngredienteConCantidad(
+      ingrediente
+    )
+
+  if (
+    parsed.cantidad !== null &&
+    parsed.unidad
+  ) {
+    return {
+      ingredienteOriginal:
+        parsed.original,
+      nombre: parsed.nombre,
+      cantidad: parsed.cantidad,
+      unidad: parsed.unidad,
+      multiplicador: 1,
+    }
+  }
+
+  return {
+    ingredienteOriginal:
+      parsed.original,
+    nombre: parsed.nombre,
+    cantidad: 1,
+    unidad: 'comida',
+    multiplicador: 1,
+  }
 }
 
 export function prepararIngredientesCocinar(
@@ -93,13 +126,8 @@ export function prepararIngredientesCocinar(
     )
 
     ingredientes.push(
-      ...calcularIngredientesEscalados(
-        {
-          ingredientes:
-            ingredientesLibres,
-          raciones: 1,
-        },
-        1
+      ...ingredientesLibres.map(
+        prepararIngredienteLibre
       )
     )
   }
