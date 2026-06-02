@@ -23,6 +23,11 @@ const UNIDADES = [
   'paquetes',
   'lata',
   'latas',
+  'comida',
+  'comidas',
+  'racion',
+  'ración',
+  'raciones',
 ]
 
 export function separarTextoIngredientes(texto: string) {
@@ -91,6 +96,19 @@ export function normalizarCantidadUnidad(
     return {
       cantidad,
       unidad: 'lata',
+    }
+  }
+
+  if (
+    limpia === 'comida' ||
+    limpia === 'comidas' ||
+    limpia === 'racion' ||
+    limpia === 'ración' ||
+    limpia === 'raciones'
+  ) {
+    return {
+      cantidad,
+      unidad: 'comida',
     }
   }
 

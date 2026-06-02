@@ -40,7 +40,7 @@ export default function FormularioInventario({
   ] = useState('')
 
   const [unidad, setUnidad] =
-    useState('g')
+    useState('comida')
 
   const [
     categoria,
@@ -65,12 +65,20 @@ export default function FormularioInventario({
   const guardar = () => {
     if (!nombre.trim()) return
 
+    const cantidadLimpia =
+      parseFloat(cantidad)
+
     agregarItemInventario({
       id: crypto.randomUUID(),
       nombre: nombre.trim(),
       cantidad:
-        parseFloat(cantidad) || 1,
-      unidad,
+        Number.isFinite(cantidadLimpia)
+          ? cantidadLimpia
+          : 1,
+      unidad:
+        cantidad.trim()
+          ? unidad
+          : 'comida',
       categoria,
       ubicacion: ubicacionForm,
       fechaCaducidad:
@@ -153,6 +161,9 @@ export default function FormularioInventario({
               setUnidad(e.target.value)
             }
           >
+            <option value="comida">
+              comida
+            </option>
             <option value="g">g</option>
             <option value="kg">kg</option>
             <option value="ml">ml</option>
@@ -166,6 +177,17 @@ export default function FormularioInventario({
             </option>
           </select>
         </div>
+
+        <p
+          style={{
+            color: '#9e7d90',
+            fontSize: 12,
+            fontWeight: 800,
+            margin: 0,
+          }}
+        >
+          Si no pones cantidad, Rayku lo guardará como 1 comida.
+        </p>
 
         <select
           value={ubicacionForm}

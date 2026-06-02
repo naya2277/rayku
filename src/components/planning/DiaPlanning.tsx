@@ -14,6 +14,10 @@ import {
   calcularAvisosIngredientesPlanning,
 } from '../../lib/planning/avisosIngredientesPlanning'
 
+import {
+  obtenerSugerenciasPlanning,
+} from '../../lib/sugerencias/obtenerSugerenciasPlanning'
+
 type Props = {
   dia: Date
   indice: number
@@ -118,6 +122,14 @@ export default function DiaPlanning({
           .slice(0, 5)
       : []
 
+    const sugerenciasRayku =
+      obtenerSugerenciasPlanning({
+        recetas,
+        inventario,
+        tipoComida,
+        recetaIdsActuales: recetaIds,
+      })
+
     const avisosIngredientes =
       calcularAvisosIngredientesPlanning(
         hueco,
@@ -134,6 +146,7 @@ export default function DiaPlanning({
       hayContenido,
       busqueda,
       sugerencias,
+      sugerenciasRayku,
       avisosIngredientes,
     }
   }
@@ -154,6 +167,7 @@ export default function DiaPlanning({
         hayContenido={datos.hayContenido}
         busqueda={datos.busqueda}
         sugerencias={datos.sugerencias}
+        sugerenciasRayku={datos.sugerenciasRayku}
         avisosIngredientes={datos.avisosIngredientes}
         onAbrirReceta={onAbrirReceta}
         activarEdicion={() => activarEdicion(datos.clave)}

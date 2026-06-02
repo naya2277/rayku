@@ -1,5 +1,9 @@
 import {
+  endOfWeek,
   format,
+  isWithinInterval,
+  parseISO,
+  startOfDay,
 } from 'date-fns'
 
 import {
@@ -24,12 +28,6 @@ import {
   separarIngredientesPorInventario,
 } from '../lib/generarListaCompra'
 
-import {
-  obtenerRecetasChefRayku,
-} from '../lib/chefRayku'
-
-import ChefRaykuCard from '../components/chef-rayku/ChefRaykuCard'
-
 import type {
   TipoComida,
 } from '../store/types'
@@ -38,6 +36,29 @@ type Props = {
   onAbrirReceta: (
     recetaId: string
   ) => void
+}
+
+function estaDesdeHoyHastaFinSemana(
+  fecha: string
+) {
+  const hoy =
+    startOfDay(new Date())
+
+  const finSemana =
+    endOfWeek(hoy, {
+      weekStartsOn: 1,
+    })
+
+  const fechaPlanning =
+    startOfDay(parseISO(fecha))
+
+  return isWithinInterval(
+    fechaPlanning,
+    {
+      start: hoy,
+      end: finSemana,
+    }
+  )
 }
 
 function obtenerRecetaIds(
@@ -254,9 +275,18 @@ export default function Inicio({
       })
       .slice(0, 5)
 
+  const planningDesdeHoy =
+    planning.filter(
+      (item) =>
+        estaDesdeHoyHastaFinSemana(
+          item.fecha
+        ) &&
+        !item.cocinado
+    )
+
   const ingredientesCompra =
     generarIngredientesCompra(
-      planning,
+      planningDesdeHoy,
       recetas
     )
 
@@ -267,67 +297,6 @@ export default function Inicio({
       ingredientesCompra,
       inventario
     )
-
-  const favoritos =
-    recetas
-      .filter(
-        (receta) =>
-          receta.favorita ||
-          receta.valoracion >= 4
-      )
-      .sort(
-        (a, b) =>
-          Number(b.valoracion || 0) -
-          Number(a.valoracion || 0)
-      )
-      .slice(0, 5)
-
-  const recetasChef =
-    obtenerRecetasChefRayku(
-      recetas,
-      inventario
-    )
-
-  const recetaLista =
-    recetasChef.find(
-      (item) => item.tieneTodo
-    )
-
-  const recetaCasiLista =
-    recetasChef.find(
-      (item) =>
-        item.faltan.length === 1
-    )
-
-  const favorita =
-    favoritos[0] ?? null
-
-  const sugerenciaChef =
-    recetaLista
-      ? {
-          receta: recetaLista.receta,
-          texto:
-            ' Tienes todo para cocinar:',
-          detalle:
-            'Rayku cree que es buena opción para hoy ✅',
-        }
-      : recetaCasiLista
-        ? {
-            receta:
-              recetaCasiLista.receta,
-            texto:
-              ' Solo te falta un ingrediente para:',
-            detalle: `Falta: ${recetaCasiLista.faltan[0]}`,
-          }
-        : favorita
-          ? {
-              receta: favorita,
-              texto:
-                ' Hoy podría apetecerte una favorita:',
-              detalle:
-                'Basado en tus recetas mejor valoradas 💜',
-            }
-          : null
 
   return (
     <div>
@@ -405,8 +374,6 @@ export default function Inicio({
           gap: 18,
         }}
       >
-        <ChefRaykuCard />
-
         <DashboardCard
           titulo="📅 Hoy tienes"
           subtitulo="Tu comida y cena planificadas para hoy."
@@ -605,12 +572,12 @@ export default function Inicio({
         </DashboardCard>
 
         <DashboardCard
-          titulo="🛒 Faltan para esta semana"
-          subtitulo="Ingredientes detectados desde el planning."
+          titulo="🛒 Faltan desde hoy"
+          subtitulo="Ingredientes pendientes desde hoy hasta final de semana."
           color="linear-gradient(135deg, #fffaf8, #f1f8e9)"
         >
           {paraComprar.length === 0 ? (
-            <EmptyState texto="No parece faltar nada para el planning actual ✅" />
+            <EmptyState texto="No parece faltar nada pendiente desde hoy ✅" />
           ) : (
             <div
               style={{
@@ -644,123 +611,6 @@ export default function Inicio({
                 </span>
               )}
             </div>
-          )}
-        </DashboardCard>
-
-        <DashboardCard
-          titulo="💜 Tus recetas favoritas"
-          subtitulo="Recetas que has marcado o valorado alto."
-          color="linear-gradient(135deg, #fff0f6, #f8f1ff)"
-        >
-          {favoritos.length === 0 ? (
-            <EmptyState texto="Todavía no tienes recetas favoritas o muy valoradas 💕" />
-          ) : (
-            <div
-              style={{
-                display: 'grid',
-                gap: 8,
-              }}
-            >
-              {favoritos.map(
-                (receta) => (
-                  <button
-                    key={receta.id}
-                    type="button"
-                    className="btn-secundario"
-                    onClick={() =>
-                      onAbrirReceta(
-                        receta.id
-                      )
-                    }
-                    style={{
-                      justifyContent:
-                        'space-between',
-                      gap: 10,
-                      textAlign: 'left',
-                    }}
-                  >
-                    <span>
-                      ⭐ {receta.nombre}
-                    </span>
-
-                    <span>
-                      {'★'.repeat(
-                        receta.valoracion || 0
-                      )}
-                    </span>
-                  </button>
-                )
-              )}
-            </div>
-          )}
-        </DashboardCard>
-
-        <DashboardCard
-          titulo="🔥 Recomendación de Rayku"
-          subtitulo="Una idea basada en tu inventario y tus gustos."
-          color="linear-gradient(135deg, #fff8ee, #ffeaf4)"
-        >
-          {sugerenciaChef ? (
-            <button
-              type="button"
-              className="btn-principal"
-              onClick={() =>
-                onAbrirReceta(
-                  sugerenciaChef.receta.id
-                )
-              }
-              style={{
-                justifyContent:
-                  'flex-start',
-                textAlign: 'left',
-                display: 'grid',
-                gap: 4,
-              }}
-            >
-              <div
-                style={{
-                  display: 'flex',
-                  gap: 10,
-                  alignItems: 'center',
-                }}
-              >
-                <img
-                  src="/rayku-chef.png"
-                  alt="Rayku"
-                  style={{
-                    width: 28,
-                    height: 28,
-                    borderRadius: '50%',
-                    objectFit: 'cover',
-                    border: '2px solid #f5bfd2',
-                    background: '#fff0f6',
-                    flexShrink: 0,
-                  }}
-                />
-
-                <span>
-                  {sugerenciaChef.texto.replace(
-                    ' ',
-                    ''
-                  )}
-                </span>
-              </div>
-
-              <strong>
-                {sugerenciaChef.receta.nombre}
-              </strong>
-
-              <small
-                style={{
-                  fontWeight: 800,
-                  opacity: 0.9,
-                }}
-              >
-                {sugerenciaChef.detalle}
-              </small>
-            </button>
-          ) : (
-            <EmptyState texto="Cuando tengas más recetas e inventario, Rayku podrá recomendarte algo aquí 💕" />
           )}
         </DashboardCard>
       </div>

@@ -1,4 +1,8 @@
 import {
+  useState,
+} from 'react'
+
+import {
   separarIngredientes,
   emojiIngrediente,
   claseIngrediente,
@@ -9,6 +13,10 @@ import {
 } from '../../store'
 
 import RacionesPlanning from './RacionesPlanning'
+
+import type {
+  SugerenciaPlanning,
+} from '../../lib/sugerencias/obtenerSugerenciasPlanning'
 
 type AvisoIngredientePlanning = {
   nombre: string
@@ -30,6 +38,7 @@ type Props = {
   toggleCocinado: () => void
   busqueda: string
   sugerencias: any[]
+  sugerenciasRayku: SugerenciaPlanning[]
   avisosIngredientes: AvisoIngredientePlanning[]
   onAbrirReceta: (recetaId: string) => void
   activarEdicion: () => void
@@ -50,6 +59,7 @@ export default function HuecoPlanning({
   hayContenido,
   busqueda,
   sugerencias,
+  sugerenciasRayku,
   avisosIngredientes,
   onAbrirReceta,
   activarEdicion,
@@ -60,6 +70,11 @@ export default function HuecoPlanning({
   toggleCocinado,
   updateReceta,
 }: Props) {
+  const [
+    mostrarSugerenciasRayku,
+    setMostrarSugerenciasRayku,
+  ] = useState(false)
+
   const esComida = tipoComida === 'comida'
 
   const recetaPrincipal =
@@ -120,6 +135,7 @@ export default function HuecoPlanning({
     })
 
     setBusqueda('')
+    setMostrarSugerenciasRayku(false)
   }
 
   const quitarReceta = (
@@ -255,6 +271,109 @@ export default function HuecoPlanning({
     )
   }
 
+  const renderSugerenciasRayku = () => {
+    if (hayContenido || estaEditando) {
+      return null
+    }
+
+    return (
+      <div
+        style={{
+          marginTop: 10,
+        }}
+      >
+        <button
+          type="button"
+          className="btn-secundario"
+          onClick={() =>
+            setMostrarSugerenciasRayku(
+              (actual) => !actual
+            )
+          }
+          style={{
+            width: '100%',
+            justifyContent: 'center',
+          }}
+        >
+          ✨ Sugerencias Rayku
+        </button>
+
+        {mostrarSugerenciasRayku && (
+          <div
+            className="card"
+            style={{
+              marginTop: 8,
+              padding: 10,
+              display: 'grid',
+              gap: 8,
+              background: '#fffaf8',
+              borderColor: esComida
+                ? '#f3bfd2'
+                : '#d7c3f3',
+            }}
+          >
+            {sugerenciasRayku.length === 0 ? (
+              <p
+                style={{
+                  color: '#9e7d90',
+                  fontWeight: 800,
+                  fontSize: 13,
+                  margin: 0,
+                  textAlign: 'center',
+                }}
+              >
+                Rayku todavía no tiene una sugerencia clara para este hueco 💕
+              </p>
+            ) : (
+              sugerenciasRayku.map(
+                (sugerencia, indice) => (
+                  <button
+                    key={sugerencia.receta.id}
+                    type="button"
+                    className="btn-secundario"
+                    onClick={() =>
+                      agregarReceta(
+                        sugerencia.receta
+                      )
+                    }
+                    style={{
+                      justifyContent:
+                        'flex-start',
+                      width: '100%',
+                      textAlign: 'left',
+                      display: 'grid',
+                      gap: 4,
+                    }}
+                  >
+                    <strong>
+                      {indice === 0
+                        ? '🥇'
+                        : indice === 1
+                          ? '🥈'
+                          : indice === 2
+                            ? '🥉'
+                            : '✨'}{' '}
+                      {sugerencia.receta.nombre}
+                    </strong>
+
+                    <small
+                      style={{
+                        color: '#8f7080',
+                        fontWeight: 800,
+                      }}
+                    >
+                      {sugerencia.motivo}
+                    </small>
+                  </button>
+                )
+              )
+            )}
+          </div>
+        )}
+      </div>
+    )
+  }
+
   return (
     <div
       style={{
@@ -314,6 +433,8 @@ export default function HuecoPlanning({
           Huequito libre 💕
         </div>
       )}
+
+      {renderSugerenciasRayku()}
 
       {(!hayContenido || estaEditando) && (
         <div style={{ marginTop: 10 }}>

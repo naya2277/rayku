@@ -124,6 +124,18 @@ function normalizarUnidadInventario(
     return 'u'
   }
 
+  if (
+    [
+      'comida',
+      'comidas',
+      'racion',
+      'ración',
+      'raciones',
+    ].includes(limpia)
+  ) {
+    return 'comida'
+  }
+
   return limpia
 }
 
@@ -148,6 +160,44 @@ function unidadesCompatibles(
   )
 }
 
+function prepararIngredienteParaDescuento(
+  ingrediente: IngredienteEscalado,
+  inventario: ItemInventario[]
+) {
+  if (
+    ingrediente.cantidad !== null &&
+    ingrediente.unidad
+  ) {
+    return {
+      cantidad: ingrediente.cantidad,
+      unidad: ingrediente.unidad,
+    }
+  }
+
+  const existeComoComida =
+    inventario.some(
+      (item) =>
+        item.ubicacion !== 'pendiente' &&
+        item.cantidad > 0 &&
+        normalizarUnidadInventario(
+          item.unidad
+        ) === 'comida' &&
+        clavesCoinciden(
+          item.nombre,
+          ingrediente.nombre
+        )
+    )
+
+  if (existeComoComida) {
+    return {
+      cantidad: 1,
+      unidad: 'comida',
+    }
+  }
+
+  return null
+}
+
 export function descontarIngredientesInventario(
   inventario: ItemInventario[],
   ingredientes: IngredienteEscalado[]
@@ -157,15 +207,18 @@ export function descontarIngredientesInventario(
 
   ingredientes.forEach(
     (ingrediente) => {
-      if (
-        ingrediente.cantidad === null ||
-        !ingrediente.unidad
-      ) {
+      const ingredientePreparado =
+        prepararIngredienteParaDescuento(
+          ingrediente,
+          nuevoInventario
+        )
+
+      if (!ingredientePreparado) {
         return
       }
 
       let cantidadPendiente =
-        ingrediente.cantidad
+        ingredientePreparado.cantidad
 
       nuevoInventario =
         nuevoInventario.map(
@@ -192,7 +245,7 @@ export function descontarIngredientesInventario(
             const unidadCompatible =
               unidadesCompatibles(
                 item.unidad,
-                ingrediente.unidad
+                ingredientePreparado.unidad
               )
 
             if (
