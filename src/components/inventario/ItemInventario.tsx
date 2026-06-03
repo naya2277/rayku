@@ -153,7 +153,7 @@ export default function ItemInventario({
   return (
     <div
       style={{
-        padding: '4px 8px',
+        padding: '3px 6px',
         borderBottom: !ultimo
           ? '1px solid var(--borde)'
           : 'none',
@@ -168,33 +168,39 @@ export default function ItemInventario({
           border: agotado
             ? '1.5px solid #ffcc80'
             : '1px solid #f5dde8',
-          borderRadius: 14,
-          padding: '7px 9px',
+          borderRadius: 12,
+          padding: '6px 7px',
           display: 'grid',
-          gap: 6,
+          gap: 4,
         }}
       >
         <div
           style={{
-            display: 'grid',
-            gridTemplateColumns:
-              'minmax(0, 1fr) minmax(80px, 140px) minmax(120px, 180px) auto',
-            gap: 10,
+            display: 'flex',
+            flexWrap: 'wrap',
+            gap: 6,
             alignItems: 'center',
           }}
         >
-          <CabeceraItemInventario
-            item={item}
-            agotado={agotado}
-          />
+          <div
+            style={{
+              flex: '1 1 150px',
+              minWidth: 120,
+            }}
+          >
+            <CabeceraItemInventario
+              item={item}
+              agotado={agotado}
+            />
+          </div>
 
           <div
             style={{
               color: agotado ? '#a07030' : '#9b3f68',
               fontWeight: 900,
-              fontSize: 14,
-              textAlign: 'center',
+              fontSize: 13,
               whiteSpace: 'nowrap',
+              marginLeft: 'auto',
             }}
           >
             {item.cantidad} {item.unidad}
@@ -204,9 +210,9 @@ export default function ItemInventario({
             <span
               className="pill pill-naranja"
               style={{
-                justifySelf: 'end',
-                fontSize: 11,
-                padding: '5px 9px',
+                fontSize: 10,
+                padding: '4px 7px',
+                whiteSpace: 'nowrap',
               }}
             >
               🪫 Agotado
@@ -229,9 +235,10 @@ export default function ItemInventario({
                 )
               }
               style={{
-                minHeight: 28,
-                fontSize: 12,
-                padding: '4px 8px',
+                minHeight: 26,
+                minWidth: 32,
+                fontSize: 11,
+                padding: '3px 7px',
               }}
             >
               {panelEdicionAbierto ? '▲' : '⚙️'}
@@ -242,10 +249,11 @@ export default function ItemInventario({
         {estado && !agotado && (
           <div
             style={{
-              fontSize: 11,
+              fontSize: 10,
               color: estado.color,
               fontWeight: 800,
-              paddingLeft: 34,
+              paddingLeft: 30,
+              lineHeight: 1.15,
             }}
           >
             📅 {estado.texto}
