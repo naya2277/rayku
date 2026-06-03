@@ -169,81 +169,101 @@ export default function ItemInventario({
             ? '1.5px solid #ffcc80'
             : '1px solid #f5dde8',
           borderRadius: 12,
-          padding: '6px 7px',
+          padding: '6px 8px',
           display: 'grid',
-          gap: 4,
+          gap: 5,
         }}
       >
         <div
           style={{
-            display: 'flex',
-            flexWrap: 'wrap',
-            gap: 6,
-            alignItems: 'center',
+            display: 'grid',
+            gap: 4,
           }}
         >
           <div
             style={{
-              flex: '1 1 150px',
-              minWidth: 120,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: 10,
+              minWidth: 0,
             }}
           >
-            <CabeceraItemInventario
-              item={item}
-              agotado={agotado}
-            />
+            <div
+              style={{
+                flex: 1,
+                minWidth: 0,
+              }}
+            >
+              <CabeceraItemInventario
+                item={item}
+                agotado={agotado}
+              />
+            </div>
+
+            <div
+              style={{
+                color: agotado ? '#a07030' : '#9b3f68',
+                fontWeight: 900,
+                fontSize: 14,
+                whiteSpace: 'nowrap',
+                flexShrink: 0,
+              }}
+            >
+              {item.cantidad} {item.unidad}
+            </div>
           </div>
 
           <div
             style={{
-              color: agotado ? '#a07030' : '#9b3f68',
-              fontWeight: 900,
-              fontSize: 13,
-              whiteSpace: 'nowrap',
-              marginLeft: 'auto',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: 10,
+              paddingLeft: 34,
             }}
           >
-            {item.cantidad} {item.unidad}
+            {!agotado && (
+              <button
+                type="button"
+                className="btn-secundario"
+                onClick={() =>
+                  setPanelEdicionAbierto(
+                    !panelEdicionAbierto
+                  )
+                }
+                style={{
+                  minHeight: 26,
+                  minWidth: 32,
+                  fontSize: 11,
+                  padding: '3px 7px',
+                  flexShrink: 0,
+                }}
+              >
+                {panelEdicionAbierto ? '▲' : '⚙️'}
+              </button>
+            )}
+
+            {agotado ? (
+              <span
+                className="pill pill-naranja"
+                style={{
+                  fontSize: 10,
+                  padding: '4px 7px',
+                  whiteSpace: 'nowrap',
+                  marginLeft: 'auto',
+                }}
+              >
+                🪫 Agotado
+              </span>
+            ) : (
+              <ControlesCantidadInventario
+                item={item}
+                pasoRapido={pasoRapido}
+                onCambiarCantidad={cambiarCantidadRapida}
+              />
+            )}
           </div>
-
-          {agotado ? (
-            <span
-              className="pill pill-naranja"
-              style={{
-                fontSize: 10,
-                padding: '4px 7px',
-                whiteSpace: 'nowrap',
-              }}
-            >
-              🪫 Agotado
-            </span>
-          ) : (
-            <ControlesCantidadInventario
-              item={item}
-              pasoRapido={pasoRapido}
-              onCambiarCantidad={cambiarCantidadRapida}
-            />
-          )}
-
-          {!agotado && (
-            <button
-              type="button"
-              className="btn-secundario"
-              onClick={() =>
-                setPanelEdicionAbierto(
-                  !panelEdicionAbierto
-                )
-              }
-              style={{
-                minHeight: 26,
-                minWidth: 32,
-                fontSize: 11,
-                padding: '3px 7px',
-              }}
-            >
-              {panelEdicionAbierto ? '▲' : '⚙️'}
-            </button>
-          )}
         </div>
 
         {estado && !agotado && (
@@ -252,7 +272,7 @@ export default function ItemInventario({
               fontSize: 10,
               color: estado.color,
               fontWeight: 800,
-              paddingLeft: 30,
+              paddingLeft: 34,
               lineHeight: 1.15,
             }}
           >
