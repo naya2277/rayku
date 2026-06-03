@@ -43,7 +43,7 @@ export default function ControlesCantidadInventario({
           color: '#8f7080',
           fontSize: 12,
           fontWeight: 900,
-          minWidth: 72,
+          minWidth: 48,
           textAlign: 'center',
         }}
       >
