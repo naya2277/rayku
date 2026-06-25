@@ -239,7 +239,7 @@ export default function Compra() {
     const idCheck =
       manual
         ? `manual-${manual.id}`
-        : item.nombre
+        : item.clave
 
     return checksCompra.includes(
       idCheck
@@ -266,6 +266,24 @@ export default function Compra() {
   const compradosOcultos =
     paraComprar.length -
     paraComprarVisibles.length
+
+    console.log('======== COMPRA ========')
+
+console.table(
+  paraComprar.map((item) => ({
+    clave: item.clave,
+    nombre: item.nombre,
+    cantidad: item.cantidad,
+    disponible: item.cantidadDisponible,
+    faltante: item.cantidadFaltante,
+  }))
+)
+
+console.log('Inventario', inventario)
+
+console.log('Checks', checksCompra)
+
+console.log('========================')
 
   const agrupadosComprar =
     useMemo(() => {

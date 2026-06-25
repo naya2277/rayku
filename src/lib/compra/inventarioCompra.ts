@@ -241,15 +241,36 @@ export function separarIngredientesPorInventario(
             ),
         }
 
-        if (faltante > 0) {
-          paraComprar.push(
-            ingredienteCalculado
-          )
-        } else {
-          yaDisponibles.push(
-            ingredienteCalculado
-          )
-        }
+       if (faltante > 0) {
+  console.log(
+    '[COMPRA]',
+    ingrediente.nombre,
+    {
+      necesita: ingrediente.cantidad,
+      disponible,
+      faltante,
+      unidad: ingrediente.unidad,
+    }
+  )
+
+  paraComprar.push(
+    ingredienteCalculado
+  )
+} else {
+  console.log(
+    '[INVENTARIO]',
+    ingrediente.nombre,
+    {
+      necesita: ingrediente.cantidad,
+      disponible,
+      unidad: ingrediente.unidad,
+    }
+  )
+
+  yaDisponibles.push(
+    ingredienteCalculado
+  )
+}
 
         return
       }

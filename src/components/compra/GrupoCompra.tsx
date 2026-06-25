@@ -118,7 +118,7 @@ export default function GrupoCompra({
                 const idCheck =
                   manual
                     ? `manual-${manual.id}`
-                    : item.nombre
+                    : item.clave
 
                 const cantidadPendiente =
                   item.cantidadFaltante ??
@@ -129,7 +129,7 @@ export default function GrupoCompra({
                     key={
                       manual
                         ? manual.id
-                        : item.nombre
+                        : item.clave
                     }
                     item={item}
                     modo={modo}
