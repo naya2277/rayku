@@ -25,20 +25,22 @@ const CANTIDADES = ['1 unidad', '2 unidades', '500 g', '1 kg', '1 paquete', '2 p
 type Props = { onSalir: () => void }
 
 export default function TabletMode({ onSalir }: Props) {
-  const { planning, recetas, inventario, compraManual, checksCompra, agregarItemCompraManual, eliminarItemCompraManual } = useRaykuStore()
+  const { planning, recetas, inventario, compraManual, checksCompra, agregarItemCompraManual, eliminarItemCompraManual, guardarHuecoPlanning, limpiarHuecoPlanning } = useRaykuStore()
   const vistaPrevia = window.location.hostname.includes('rayku-git-rayku-20')
   const [panel, setPanel] = useState<'calendario' | 'compra'>('calendario')
   const [semana, setSemana] = useState(new Date())
   const [recetaId, setRecetaId] = useState<string | null>(null)
   const [producto, setProducto] = useState<string | null>(null)
+  const [huecoEditando, setHuecoEditando] = useState<{ fecha: string; tipo: 'comida' | 'cena' } | null>(null)
+  const [busquedaReceta, setBusquedaReceta] = useState('')
   const [confirmacion, setConfirmacion] = useState('')
   const [categoria, setCategoria] = useState<typeof CATEGORIAS[number]>('Todos')
   const inicio = startOfWeek(semana, { weekStartsOn: 1 })
   const touchX = useRef<number | null>(null)
   const receta = recetas.find(r => r.id === recetaId)
   const dias = Array.from({ length: 7 }, (_, i) => addDays(inicio, i))
-  const hoy = format(new Date(), 'yyyy-MM-dd')
-  const fin = format(addDays(startOfWeek(new Date(), { weekStartsOn: 1 }), 6), 'yyyy-MM-dd')
+  const hoy = format(inicio, 'yyyy-MM-dd')
+  const fin = format(addDays(inicio, 6), 'yyyy-MM-dd')
   const ingredientesMenu = generarIngredientesCompra(
     planning.filter(p => p.fecha >= hoy && p.fecha <= fin && !p.cocinado),
     recetas
@@ -47,6 +49,21 @@ export default function TabletMode({ onSalir }: Props) {
   const pendientesGenerados = generados.filter(i => !checksCompra.includes(i.clave))
   const productosVisibles = PRODUCTOS.filter(([, nombre]) => categoria === 'Todos' || CATEGORIA_PRODUCTO[nombre] === categoria)
 
+
+  function elegirReceta(id: string | null) {
+    if (!huecoEditando || vistaPrevia) return
+    const { fecha, tipo } = huecoEditando
+    if (id === null) {
+      limpiarHuecoPlanning(fecha, tipo)
+    } else {
+      guardarHuecoPlanning({
+        fecha, tipoComida: tipo, recetaId: id, recetaIds: [id],
+        comidaLibre: '', nota: '', cocinado: false,
+      })
+    }
+    setHuecoEditando(null)
+    setBusquedaReceta('')
+  }
 
   function agregar(cantidad: string) {
     if (!producto || vistaPrevia) return
@@ -60,7 +77,7 @@ export default function TabletMode({ onSalir }: Props) {
       onTouchStart={e => { touchX.current = e.touches[0]?.clientX ?? null }}
       onTouchEnd={e => {
         const final = e.changedTouches[0]?.clientX
-        if (touchX.current === null || final === undefined || recetaId || producto) return
+        if (touchX.current === null || final === undefined || recetaId || producto || huecoEditando) return
         const distancia = final - touchX.current
         if (Math.abs(distancia) > 90) setPanel(distancia < 0 ? 'compra' : 'calendario')
         touchX.current = null
@@ -95,6 +112,7 @@ export default function TabletMode({ onSalir }: Props) {
                     {platos.map(r => <button key={r.id} onClick={() => setRecetaId(r.id)}>{r.nombre}</button>)}
                     {hueco?.comidaLibre && <p>{hueco.comidaLibre}</p>}
                     {!platos.length && !hueco?.comidaLibre && <p>Sin planificar</p>}
+                    <button className="tablet-edit-meal" disabled={vistaPrevia} onClick={() => setHuecoEditando({ fecha, tipo })}>✏️ Cambiar</button>
                   </div>
                 })}
               </section>
@@ -134,6 +152,17 @@ export default function TabletMode({ onSalir }: Props) {
           <p className="tablet-hint">← Desliza a la derecha para volver al menú</p>
         </main>
       )}
+      {huecoEditando && <div className="tablet-overlay" role="dialog" aria-modal="true" aria-label="Cambiar comida">
+        <div className="tablet-dialog">
+          <h2>✏️ Cambiar {huecoEditando.tipo} · {huecoEditando.fecha}</h2>
+          <input aria-label="Buscar recetas" placeholder="Buscar entre tus recetas…" value={busquedaReceta} onChange={e => setBusquedaReceta(e.target.value)} style={{ padding: 14, borderRadius: 12, border: '1px solid #e3c6dd', font: 'inherit' }} />
+          <div className="tablet-recipe-options">
+            {recetas.filter(r => r.nombre.toLocaleLowerCase('es').includes(busquedaReceta.toLocaleLowerCase('es'))).map(r => <button key={r.id} onClick={() => elegirReceta(r.id)}>🍽️ {r.nombre}</button>)}
+            <button onClick={() => elegirReceta(null)}>➖ Dejar sin planificar</button>
+          </div>
+          <button className="btn-secundario" onClick={() => { setHuecoEditando(null); setBusquedaReceta('') }}>Cancelar</button>
+        </div>
+      </div>}
       {producto && <div className="tablet-overlay" role="dialog" aria-modal="true" aria-label={`Cantidad de ${producto}`}>
         <div className="tablet-dialog">
           <h2>¿Cuánto necesitas de {producto}?</h2>
