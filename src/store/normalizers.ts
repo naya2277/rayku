@@ -91,6 +91,9 @@ export const normalizarInventario = (
     fechaCaducidad:
       item.fechaCaducidad ??
       null,
+    fechaPreparacion: item.fechaPreparacion ?? null,
+    fechaConsumoSugerida: item.fechaConsumoSugerida ?? null,
+    esCocinado: item.esCocinado ?? false,
     fechaDescongelar:
       item.fechaDescongelar ??
       null,
