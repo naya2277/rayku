@@ -26,6 +26,7 @@ type Props = { onSalir: () => void }
 
 export default function TabletMode({ onSalir }: Props) {
   const { planning, recetas, inventario, compraManual, checksCompra, agregarItemCompraManual, eliminarItemCompraManual } = useRaykuStore()
+  const vistaPrevia = window.location.hostname.includes('rayku-git-rayku-20')
   const [panel, setPanel] = useState<'calendario' | 'compra'>('calendario')
   const [semana, setSemana] = useState(new Date())
   const [recetaId, setRecetaId] = useState<string | null>(null)
@@ -48,7 +49,7 @@ export default function TabletMode({ onSalir }: Props) {
 
 
   function agregar(cantidad: string) {
-    if (!producto) return
+    if (!producto || vistaPrevia) return
     agregarItemCompraManual({ id: '', nombre: producto, cantidad })
     setConfirmacion(`${producto} · ${cantidad} añadido a la compra`)
     setProducto(null)
@@ -72,6 +73,7 @@ export default function TabletMode({ onSalir }: Props) {
           <button onClick={onSalir}>✕ Salir</button>
         </nav>
       </header>
+      {vistaPrevia && <div className="tablet-preview-warning" role="status">🔒 Vista previa segura: puedes explorar el menú y la compra, pero no modificar datos desde este modo.</div>}
       {panel === 'calendario' ? (
         <main className="tablet-content">
           <div className="tablet-week-nav">
@@ -103,7 +105,7 @@ export default function TabletMode({ onSalir }: Props) {
       ) : (
         <main className="tablet-content">
           <h1>🛒 Añadir sin escribir</h1>
-          <p>Toca un producto y elige la cantidad.</p>
+          <p>{vistaPrevia ? 'Catálogo visual de prueba. La edición está desactivada para proteger tus datos.' : 'Toca un producto y elige la cantidad.'}</p>
           <div className="tablet-categories" aria-label="Categorías de productos">
             {CATEGORIAS.map(c => <button key={c} className={categoria === c ? 'tablet-active' : ''} onClick={() => setCategoria(c)}>{c}</button>)}
           </div>
@@ -112,7 +114,7 @@ export default function TabletMode({ onSalir }: Props) {
           </div>
           <div className="tablet-products">
             {productosVisibles.map(([emoji, nombre]) =>
-              <button key={nombre} onClick={() => setProducto(nombre)}>
+              <button key={nombre} onClick={() => { if (!vistaPrevia) setProducto(nombre) }} disabled={vistaPrevia}>
                 <span aria-hidden="true">{emoji}</span>{nombre}
               </button>
             )}
@@ -125,7 +127,7 @@ export default function TabletMode({ onSalir }: Props) {
             {compraManual.length === 0 && <p>No has añadido productos manuales.</p>}
             {compraManual.map(item => <div key={item.id}>
               <span>{item.nombre} {item.cantidad ? '· ' + item.cantidad : ''}</span>
-              <button aria-label={`Quitar ${item.nombre}`} onClick={() => eliminarItemCompraManual(item.id)}>✕</button>
+              <button aria-label={`Quitar ${item.nombre}`} onClick={() => eliminarItemCompraManual(item.id)} disabled={vistaPrevia}>✕</button>
             </div>)}
           </div>
           {confirmacion && <p role="status">{confirmacion}</p>}
