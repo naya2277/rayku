@@ -1,0 +1,19 @@
+.workspace-switcher {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 10px 14px;
+  margin: 12px auto 0;
+  width: calc(100% - 28px);
+  max-width: 900px;
+  background: #fff8fc;
+  border: 1px solid #f5dde8;
+  border-radius: 16px;
+}
+.workspace-switcher label { font-weight: 800; color: #8f7080; font-size: 13px; }
+.workspace-switcher select { max-width: 360px; background: #fff; }
+.workspace-switcher-note { font-size: 12px; color: #8f7080; }
+@media (max-width: 768px) {
+  .workspace-switcher { margin-top: 8px; padding: 10px; }
+  .workspace-switcher select { max-width: none; }
+}
