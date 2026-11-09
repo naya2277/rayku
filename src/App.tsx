@@ -24,6 +24,7 @@ import Compra from './pages/Compra'
 import Auth from './pages/Auth'
 import ChefRayku from './pages/ChefRayku'
 import WorkspaceSwitcher from './components/workspaces/WorkspaceSwitcher'
+import TabletMode from './pages/TabletMode'
 
 type Pagina =
   | 'inicio'
@@ -66,6 +67,8 @@ function obtenerPaginaInicial(): Pagina {
 }
 
 export default function App() {
+  const [modoTablet, setModoTablet] = useState(false)
+
   const [session, setSession] =
     useState<Session | null>(null)
 
@@ -200,6 +203,10 @@ export default function App() {
     return <Auth />
   }
 
+  if (modoTablet) {
+    return <TabletMode onSalir={() => setModoTablet(false)} />
+  }
+
   return (
     <div className="app">
       <nav className="nav-principal">
@@ -328,6 +335,10 @@ export default function App() {
             }
           >
             📦 Inventario
+          </button>
+
+          <button type="button" className="btn-secundario" onClick={() => setModoTablet(true)}>
+            📱 Modo tablet
           </button>
 
           <button
