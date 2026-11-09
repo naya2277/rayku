@@ -263,6 +263,20 @@ export default function Compra() {
       compraManual,
     ])
 
+  const confirmarCompra = () => {
+    const comprados = paraComprar
+      .filter(item => checksCompra.includes(item.clave))
+      .map(item => {
+        const manual = compraManual.find(m => item.clave === `manual-${m.id}`)
+        return {
+          nombre: manual?.nombre ?? item.nombre,
+          cantidad: manual ? null : (item.cantidadFaltante ?? item.cantidad),
+          unidad: manual ? null : item.unidad,
+        }
+      })
+    finalizarCompra(comprados)
+  }
+
   const compradosOcultos =
     paraComprar.length -
     paraComprarVisibles.length
@@ -522,7 +536,7 @@ console.log('========================')
           checksCompra.length
         }
         onFinalizarCompra={
-          finalizarCompra
+          confirmarCompra
         }
       />
 
