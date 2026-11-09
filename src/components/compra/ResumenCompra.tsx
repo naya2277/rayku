@@ -85,7 +85,7 @@ export default function ResumenCompra({
                 : 'pointer',
           }}
         >
-          ✅ Finalizar compra
+          ✅ Compra hecha
         </button>
       </div>
 
@@ -97,7 +97,7 @@ export default function ResumenCompra({
           fontWeight: 700,
         }}
       >
-        Finalizar compra limpia los productos marcados como comprados y borra de la lista los extras manuales ya comprados.
+        Los productos marcados pasarán a Cocina, pendientes de asignar a nevera, congelador o despensa. Los no comprados seguirán en la lista.
       </p>
     </div>
   )
