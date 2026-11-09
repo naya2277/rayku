@@ -26,6 +26,9 @@ import ChefRayku from './pages/ChefRayku'
 import WorkspaceSwitcher from './components/workspaces/WorkspaceSwitcher'
 import TabletMode from './pages/TabletMode'
 import TabletDemo from './pages/TabletDemo'
+import { descargarCompra, subirCompra } from './lib/sync'
+import { normalizarCompraManual } from './store/normalizers'
+import { guardarCompraManualLocal, guardarChecksCompraLocal } from './store/storage'
 
 type Pagina =
   | 'inicio'
@@ -153,6 +156,16 @@ function MainApp() {
     sincronizarPlanningDesdeSupabase(
       session.user.id
     )
+
+    // Load shopping only when a cloud copy exists; preserve legacy local lists otherwise.
+    descargarCompra(session.user.id).then(compra => {
+      if (!compra) return
+      const compraManual = compra.compraManual.map(normalizarCompraManual)
+      const checksCompra = compra.checksCompra.filter((c): c is string => typeof c === 'string')
+      guardarCompraManualLocal(compraManual)
+      guardarChecksCompraLocal(checksCompra)
+      useRaykuStore.setState({ compraManual, checksCompra })
+    }).catch(error => console.error('No se pudo cargar la compra:', error))
   }, [
     session?.user.id,
 
@@ -190,6 +203,9 @@ function MainApp() {
       await guardarPlanningEnSupabase(
         session.user.id
       )
+
+      const { compraManual, checksCompra } = useRaykuStore.getState()
+      await subirCompra(compraManual, checksCompra, session.user.id)
 
       setMensajeNube(
         '✅ Datos guardados en la nube'
