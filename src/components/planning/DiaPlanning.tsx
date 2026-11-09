@@ -37,7 +37,7 @@ type Props = {
   limpiarHuecoPlanning: (fecha: string, tipoComida: TipoComida) => void
   toggleCocinadoPlanning: (id: string) => void
   updateReceta: (recetaId: string, datos: any) => void
-  onAplazar: (fecha: string, tipo: TipoComida, nuevaFecha: string, nuevoTipo: TipoComida) => boolean
+  onAplazar: (fecha: string, tipo: TipoComida, nuevaFecha: string, nuevoTipo: TipoComida, destino: 'intercambiar' | 'mover' | 'cancelar', fechaDesplazada?: string, tipoDesplazado?: TipoComida) => boolean
 }
 
 function obtenerRecetaIds(hueco: any) {
