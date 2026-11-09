@@ -52,6 +52,28 @@ export default function TabletMode({ onSalir }: Props) {
   const productosVisibles = PRODUCTOS.filter(([, nombre]) => categoria === 'Todos' || CATEGORIA_PRODUCTO[nombre] === categoria)
 
 
+  function activarEdicion() {
+    // Download a point-in-time copy before allowing test mutations.
+    const estado = useRaykuStore.getState()
+    const copia = {
+      exportadoEn: new Date().toISOString(),
+      recetas: estado.recetas,
+      planning: estado.planning,
+      inventario: estado.inventario,
+      compraManual: estado.compraManual,
+      checksCompra: estado.checksCompra,
+    }
+    const url = URL.createObjectURL(new Blob([JSON.stringify(copia, null, 2)], { type: 'application/json' }))
+    const enlace = document.createElement('a')
+    enlace.href = url
+    enlace.download = `rayku-copia-antes-de-pruebas-${format(new Date(), 'yyyy-MM-dd')}.json`
+    document.body.appendChild(enlace)
+    enlace.click()
+    enlace.remove()
+    URL.revokeObjectURL(url)
+    setEdicionPruebas(true)
+  }
+
   function elegirReceta(id: string | null) {
     if (!huecoEditando || soloLectura) return
     const { fecha, tipo } = huecoEditando
@@ -92,7 +114,7 @@ export default function TabletMode({ onSalir }: Props) {
           <button onClick={onSalir}>✕ Salir</button>
         </nav>
       </header>
-      {vistaPrevia && <div className="tablet-preview-warning" role="status">{soloLectura ? <>🔒 Edición bloqueada hasta que la actives. <button type="button" onClick={() => setEdicionPruebas(true)}>🧪 Activar edición de prueba</button></> : <>🧪 Edición activada en este navegador. Para subir cambios a la nube, sal del modo tablet y pulsa ☁️ Guardar. No edites a la vez desde otro dispositivo.</>}</div>}
+      {vistaPrevia && <div className="tablet-preview-warning" role="status">{soloLectura ? <>🔒 Edición bloqueada hasta que la actives. <button type="button" onClick={activarEdicion}>💾 Descargar copia y activar edición</button></> : <>🧪 Edición activada en este navegador. Para subir cambios a la nube, sal del modo tablet y pulsa ☁️ Guardar. No edites a la vez desde otro dispositivo.</>}</div>}
       {panel === 'calendario' ? (
         <main className="tablet-content">
           <div className="tablet-week-nav">
