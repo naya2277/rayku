@@ -27,7 +27,7 @@ type Props = { onSalir: () => void }
 export default function TabletMode({ onSalir }: Props) {
   const { planning, recetas, inventario, compraManual, checksCompra, agregarItemCompraManual, eliminarItemCompraManual, guardarHuecoPlanning, limpiarHuecoPlanning } = useRaykuStore()
   const vistaPrevia = window.location.hostname.includes('rayku-git-rayku-20')
-  const [edicionPruebas, setEdicionPruebas] = useState(false)
+  const [edicionPruebas, setEdicionPruebas] = useState(() => localStorage.getItem('rayku-tablet-edicion-activada-v1') === 'si')
   const soloLectura = vistaPrevia && !edicionPruebas
   const [panel, setPanel] = useState<'calendario' | 'compra'>('calendario')
   const [semana, setSemana] = useState(new Date())
@@ -71,6 +71,7 @@ export default function TabletMode({ onSalir }: Props) {
     enlace.click()
     enlace.remove()
     URL.revokeObjectURL(url)
+    localStorage.setItem('rayku-tablet-edicion-activada-v1', 'si')
     setEdicionPruebas(true)
   }
 
@@ -114,7 +115,7 @@ export default function TabletMode({ onSalir }: Props) {
           <button onClick={onSalir}>✕ Salir</button>
         </nav>
       </header>
-      {vistaPrevia && <div className="tablet-preview-warning" role="status">{soloLectura ? <>🔒 Edición bloqueada hasta que la actives. <button type="button" onClick={activarEdicion}>💾 Descargar copia y activar edición</button></> : <>🧪 Edición activada en este navegador. Para subir cambios a la nube, sal del modo tablet y pulsa ☁️ Guardar. No edites a la vez desde otro dispositivo.</>}</div>}
+      {soloLectura && <div className="tablet-preview-warning" role="status">🔒 Primera activación en este navegador. <button type="button" onClick={activarEdicion}>💾 Descargar copia y activar edición</button></div>}
       {panel === 'calendario' ? (
         <main className="tablet-content">
           <div className="tablet-week-nav">
