@@ -23,6 +23,7 @@ import Inventario from './pages/Inventario'
 import Compra from './pages/Compra'
 import Auth from './pages/Auth'
 import ChefRayku from './pages/ChefRayku'
+import WorkspaceSwitcher from './components/workspaces/WorkspaceSwitcher'
 
 type Pagina =
   | 'inicio'
@@ -350,6 +351,8 @@ export default function App() {
           </button>
         </div>
       </nav>
+
+      <WorkspaceSwitcher userId={session.user.id} />
 
       {mensajeNube && (
         <div
