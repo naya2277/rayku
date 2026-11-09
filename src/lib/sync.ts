@@ -114,3 +114,21 @@ export async function descargarPlanning(
 ) {
   return await descargarDato('planning', userId)
 }
+// Shopping data uses the existing authenticated rayku_data storage.
+// Keep it separate from inventory: a checked item is not stock until checkout.
+export async function subirCompra(
+  compraManual: import('../store/types').ItemCompraManual[],
+  checksCompra: string[],
+  userId: string
+) {
+  await guardarDato('compra', { compraManual, checksCompra }, userId)
+}
+
+export async function descargarCompra(userId: string): Promise<{
+  compraManual: import('../store/types').ItemCompraManual[]
+  checksCompra: string[]
+} | null> {
+  const data = await descargarDato('compra', userId)
+  if (!data || !Array.isArray(data.compraManual) || !Array.isArray(data.checksCompra)) return null
+  return data
+}
