@@ -21,6 +21,7 @@ import {
 } from '../lib/inventario'
 
 import FormularioInventario from '../components/inventario/FormularioInventario'
+import EntradaCocina from '../components/inventario/EntradaCocina'
 import SeccionInventario from '../components/inventario/SeccionInventario'
 import AccionesPendientesInventario from '../components/inventario/AccionesPendientesInventario'
 import AccionesAgotadosInventario from '../components/inventario/AccionesAgotadosInventario'
@@ -351,7 +352,7 @@ export default function Inventario() {
         }}
       >
         <div>
-          <h1>📦 Inventario</h1>
+          <h1>🍳 Cocina</h1>
 
           <p
             style={{
@@ -674,6 +675,8 @@ export default function Inventario() {
           </p>
         )}
       </div>
+
+      <EntradaCocina pendientes={productosPendientes} onGuardar={editarItemInventario} />
 
       <AccionesPendientesInventario
         totalPendientes={
