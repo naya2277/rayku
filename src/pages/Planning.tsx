@@ -111,14 +111,33 @@ export default function Planning({
         )
     )
 
-  function aplazarComida(fecha: string, tipo: 'comida' | 'cena', nuevaFecha: string, nuevoTipo: 'comida' | 'cena') {
+  function aplazarComida(
+    fecha: string, tipo: 'comida' | 'cena',
+    nuevaFecha: string, nuevoTipo: 'comida' | 'cena',
+    destino: 'intercambiar' | 'mover' | 'cancelar',
+    fechaDesplazada?: string, tipoDesplazado?: 'comida' | 'cena',
+  ) {
     const estado = useRaykuStore.getState()
     const origen = estado.planning.find(p => p.fecha === fecha && p.tipoComida === tipo)
-    if (!origen || origen.cocinado || !nuevaFecha || nuevaFecha < fecha) return false
-    if (estado.planning.some(p => p.fecha === nuevaFecha && p.tipoComida === nuevoTipo && p.id !== origen.id)) return false
-    if (nuevaFecha === fecha && nuevoTipo === tipo) return false
-    estado.guardarHuecoPlanning({ ...origen, fecha: nuevaFecha, tipoComida: nuevoTipo })
+    const ocupado = estado.planning.find(p => p.fecha === nuevaFecha && p.tipoComida === nuevoTipo)
+    if (!origen || origen.cocinado || !nuevaFecha || nuevaFecha < fecha ||
+      (fecha === nuevaFecha && tipo === nuevoTipo) || ocupado?.cocinado) return false
+    if (ocupado && destino === 'mover') {
+      if (!fechaDesplazada || !tipoDesplazado ||
+        (fechaDesplazada === nuevaFecha && tipoDesplazado === nuevoTipo) ||
+        (fechaDesplazada === fecha && tipoDesplazado === tipo) ||
+        estado.planning.some(p => p.fecha === fechaDesplazada && p.tipoComida === tipoDesplazado)) return false
+    }
+    // Clear both original slots first so moving meals never silently merges their contents.
     estado.limpiarHuecoPlanning(fecha, tipo)
+    if (ocupado) estado.limpiarHuecoPlanning(nuevaFecha, nuevoTipo)
+    if (ocupado && destino !== 'cancelar') {
+      const desplazado = destino === 'intercambiar'
+        ? { fecha, tipoComida: tipo }
+        : { fecha: fechaDesplazada!, tipoComida: tipoDesplazado! }
+      estado.guardarHuecoPlanning({ ...ocupado, ...desplazado })
+    }
+    estado.guardarHuecoPlanning({ ...origen, fecha: nuevaFecha, tipoComida: nuevoTipo })
     return true
   }
 
