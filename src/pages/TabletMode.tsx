@@ -2,6 +2,7 @@ import { useRef, useState } from 'react'
 import { addDays, addWeeks, format, startOfWeek, subWeeks } from 'date-fns'
 import { es } from 'date-fns/locale'
 import { useRaykuStore } from '../store'
+import { generarIngredientesCompra, separarIngredientesPorInventario } from '../lib/generarListaCompra'
 import './TabletMode.css'
 
 const PRODUCTOS = [
@@ -10,21 +11,41 @@ const PRODUCTOS = [
   ['🍝','Macarrones'],['🥕','Zanahorias'],['🥦','Brócoli'],
   ['🐟','Salmón'],['🧀','Queso'],['🍎','Manzanas'],['🍞','Pan'],
 ] as const
+const CATEGORIAS = ['Todos', 'Carnes y pescado', 'Verduras', 'Básicos', 'Lácteos y huevos'] as const
+const CATEGORIA_PRODUCTO: Record<string, typeof CATEGORIAS[number]> = {
+  'Muslitos de pollo': 'Carnes y pescado', 'Pechuga de pollo': 'Carnes y pescado',
+  'Salmón': 'Carnes y pescado', 'Tomates': 'Verduras', 'Patatas': 'Verduras',
+  'Zanahorias': 'Verduras', 'Brócoli': 'Verduras', 'Manzanas': 'Verduras',
+  'Huevos': 'Lácteos y huevos', 'Leche': 'Lácteos y huevos',
+  'Queso': 'Lácteos y huevos', 'Arroz': 'Básicos',
+  'Macarrones': 'Básicos', 'Pan': 'Básicos',
+}
 const CANTIDADES = ['1 unidad', '2 unidades', '500 g', '1 kg', '1 paquete', '2 paquetes']
 
 type Props = { onSalir: () => void }
 
 export default function TabletMode({ onSalir }: Props) {
-  const { planning, recetas, compraManual, agregarItemCompraManual, eliminarItemCompraManual } = useRaykuStore()
+  const { planning, recetas, inventario, compraManual, checksCompra, agregarItemCompraManual, eliminarItemCompraManual } = useRaykuStore()
   const [panel, setPanel] = useState<'calendario' | 'compra'>('calendario')
   const [semana, setSemana] = useState(new Date())
   const [recetaId, setRecetaId] = useState<string | null>(null)
   const [producto, setProducto] = useState<string | null>(null)
   const [confirmacion, setConfirmacion] = useState('')
+  const [categoria, setCategoria] = useState<typeof CATEGORIAS[number]>('Todos')
   const inicio = startOfWeek(semana, { weekStartsOn: 1 })
   const touchX = useRef<number | null>(null)
   const receta = recetas.find(r => r.id === recetaId)
   const dias = Array.from({ length: 7 }, (_, i) => addDays(inicio, i))
+  const hoy = format(new Date(), 'yyyy-MM-dd')
+  const fin = format(addDays(startOfWeek(new Date(), { weekStartsOn: 1 }), 6), 'yyyy-MM-dd')
+  const ingredientesMenu = generarIngredientesCompra(
+    planning.filter(p => p.fecha >= hoy && p.fecha <= fin && !p.cocinado),
+    recetas
+  )
+  const generados = separarIngredientesPorInventario(ingredientesMenu, inventario).paraComprar
+  const pendientesGenerados = generados.filter(i => !checksCompra.includes(i.clave))
+  const productosVisibles = PRODUCTOS.filter(([, nombre]) => categoria === 'Todos' || CATEGORIA_PRODUCTO[nombre] === categoria)
+
 
   function agregar(cantidad: string) {
     if (!producto) return
@@ -47,7 +68,7 @@ export default function TabletMode({ onSalir }: Props) {
         <strong>💜 Rayku · Modo tablet</strong>
         <nav aria-label="Pantallas del modo tablet">
           <button className={panel === 'calendario' ? 'tablet-active' : ''} onClick={() => setPanel('calendario')}>📅 Menú</button>
-          <button className={panel === 'compra' ? 'tablet-active' : ''} onClick={() => setPanel('compra')}>🛒 Compra ({compraManual.length})</button>
+          <button className={panel === 'compra' ? 'tablet-active' : ''} onClick={() => setPanel('compra')}>🛒 Compra ({compraManual.length + pendientesGenerados.length})</button>
           <button onClick={onSalir}>✕ Salir</button>
         </nav>
       </header>
@@ -83,16 +104,25 @@ export default function TabletMode({ onSalir }: Props) {
         <main className="tablet-content">
           <h1>🛒 Añadir sin escribir</h1>
           <p>Toca un producto y elige la cantidad.</p>
+          <div className="tablet-categories" aria-label="Categorías de productos">
+            {CATEGORIAS.map(c => <button key={c} className={categoria === c ? 'tablet-active' : ''} onClick={() => setCategoria(c)}>{c}</button>)}
+          </div>
+          <div className="tablet-shopping-summary">
+            🧺 En tu lista: {compraManual.length} añadidos a mano · {pendientesGenerados.length} ingredientes del menú
+          </div>
           <div className="tablet-products">
-            {PRODUCTOS.map(([emoji, nombre]) =>
+            {productosVisibles.map(([emoji, nombre]) =>
               <button key={nombre} onClick={() => setProducto(nombre)}>
                 <span aria-hidden="true">{emoji}</span>{nombre}
               </button>
             )}
           </div>
           <h2>Lista de compra</h2>
+          {pendientesGenerados.length > 0 && <div className="tablet-shopping">
+            {pendientesGenerados.map(item => <div key={item.clave}><span>📋 {item.nombre} · {item.cantidadFaltante ?? item.cantidad ?? 'cantidad por revisar'} {item.unidad ?? ''}</span></div>)}
+          </div>}
           <div className="tablet-shopping">
-            {compraManual.length === 0 && <p>La lista está vacía.</p>}
+            {compraManual.length === 0 && <p>No has añadido productos manuales.</p>}
             {compraManual.map(item => <div key={item.id}>
               <span>{item.nombre} {item.cantidad ? '· ' + item.cantidad : ''}</span>
               <button aria-label={`Quitar ${item.nombre}`} onClick={() => eliminarItemCompraManual(item.id)}>✕</button>
