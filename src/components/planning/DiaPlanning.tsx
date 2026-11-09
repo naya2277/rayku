@@ -37,6 +37,7 @@ type Props = {
   limpiarHuecoPlanning: (fecha: string, tipoComida: TipoComida) => void
   toggleCocinadoPlanning: (id: string) => void
   updateReceta: (recetaId: string, datos: any) => void
+  onAplazar: (fecha: string, tipo: TipoComida, nuevaFecha: string, nuevoTipo: TipoComida) => boolean
 }
 
 function obtenerRecetaIds(hueco: any) {
@@ -70,6 +71,7 @@ export default function DiaPlanning({
   limpiarHuecoPlanning,
   toggleCocinadoPlanning,
   updateReceta,
+  onAplazar,
 }: Props) {
   const fecha = format(dia, 'yyyy-MM-dd')
 
@@ -183,6 +185,9 @@ export default function DiaPlanning({
           }
         }}
         updateReceta={updateReceta}
+        onAplazar={onAplazar}
+        inventario={inventario}
+        planning={planning}
       />
     )
   }
