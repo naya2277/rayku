@@ -47,7 +47,7 @@ type Props = {
   guardarHueco: (datos: any) => void
   limpiarHueco: () => void
   updateReceta: (recetaId: string, datos: any) => void
-  onAplazar: (fecha: string, tipo: TipoComida, nuevaFecha: string, nuevoTipo: TipoComida) => boolean
+  onAplazar: (fecha: string, tipo: TipoComida, nuevaFecha: string, nuevoTipo: TipoComida, destino: 'intercambiar' | 'mover' | 'cancelar', fechaDesplazada?: string, tipoDesplazado?: TipoComida) => boolean
   inventario: { nombre: string; fechaCaducidad: string | null; fechaConsumoSugerida?: string | null }[]
   planning: { fecha: string; tipoComida: TipoComida }[]
 }
@@ -85,6 +85,9 @@ export default function HuecoPlanning({
   const [fechaDestino, setFechaDestino] = useState('')
   const [tipoDestino, setTipoDestino] = useState<TipoComida>(tipoComida)
   const [errorAplazar, setErrorAplazar] = useState('')
+  const [decisionOcupado, setDecisionOcupado] = useState<'intercambiar' | 'mover' | 'cancelar'>('intercambiar')
+  const [fechaDesplazada, setFechaDesplazada] = useState('')
+  const [tipoDesplazado, setTipoDesplazado] = useState<TipoComida>('comida')
   const esComida = tipoComida === 'comida'
 
   const recetaPrincipal =
@@ -686,17 +689,35 @@ export default function HuecoPlanning({
         <strong>📅 Aplazar esta comida</strong>
         <label>Nuevo día <input type="date" min={fecha} value={fechaDestino} onChange={e => setFechaDestino(e.target.value)} /></label>
         <label>Momento <select value={tipoDestino} onChange={e => setTipoDestino(e.target.value as TipoComida)}><option value="comida">☀️ Comida</option><option value="cena">🌙 Cena</option></select></label>
-        {planning.some(p => p.fecha === fechaDestino && p.tipoComida === tipoDestino && !(p.fecha === fecha && p.tipoComida === tipoComida)) && <p>⚠️ El destino ya tiene una comida planificada.</p>}
+        {(() => {
+          const otro = planning.find(p => p.fecha === fechaDestino && p.tipoComida === tipoDestino && !(p.fecha === fecha && p.tipoComida === tipoComida))
+          if (!otro) return null
+          return <div style={{ display: 'grid', gap: 8, padding: 12, background: '#fff0f6', borderRadius: 12 }}>
+            <strong>⚠️ Este hueco ya está ocupado</strong>
+            <p>La nueva comida sustituirá a la que tienes planificada. ¿Qué hacemos con la anterior?</p>
+            <label><input type="radio" checked={decisionOcupado === 'intercambiar'} onChange={() => setDecisionOcupado('intercambiar')} /> 🔁 Intercambiar: ponerla en el hueco original</label>
+            <label><input type="radio" checked={decisionOcupado === 'mover'} onChange={() => setDecisionOcupado('mover')} /> 📅 Moverla a otro día libre</label>
+            <label><input type="radio" checked={decisionOcupado === 'cancelar'} onChange={() => setDecisionOcupado('cancelar')} /> ❌ Cancelarla</label>
+            {decisionOcupado === 'mover' && <>
+              <label>Nuevo día de la comida desplazada <input type="date" value={fechaDesplazada} onChange={e => setFechaDesplazada(e.target.value)} /></label>
+              <label>Momento <select value={tipoDesplazado} onChange={e => setTipoDesplazado(e.target.value as TipoComida)}><option value="comida">☀️ Comida</option><option value="cena">🌙 Cena</option></select></label>
+              {planning.some(p => p.fecha === fechaDesplazada && p.tipoComida === tipoDesplazado) && <p>⚠️ El nuevo destino también está ocupado. Selecciona uno libre.</p>}
+            </>}
+          </div>
+        })()}
         {(() => {
           const ingredientes = recetasSeleccionadas.flatMap(r => [...r.ingredientes, ...r.ingredientesBase]).join(' ').toLocaleLowerCase('es')
           const caducados = inventario.filter(i => (i.fechaConsumoSugerida || i.fechaCaducidad || '') < fechaDestino && Boolean(i.fechaConsumoSugerida || i.fechaCaducidad) && i.nombre.length > 2 && ingredientes.includes(i.nombre.toLocaleLowerCase('es')))
           return caducados.length ? <p>⚠️ Revisa caducidades antes de aplazar: {caducados.map(i => i.nombre).join(', ')}.</p> : <p>ℹ️ Comprueba las fechas y el estado de los ingredientes frescos antes de aplazar.</p>
         })()}
         {errorAplazar && <p role="alert">{errorAplazar}</p>}
-        <button type="button" className="btn-principal" disabled={!fechaDestino || (fechaDestino === fecha && tipoDestino === tipoComida) || planning.some(p => p.fecha === fechaDestino && p.tipoComida === tipoDestino && !(p.fecha === fecha && p.tipoComida === tipoComida))} onClick={() => {
-          if (onAplazar(fecha, tipoComida, fechaDestino, tipoDestino)) { setMostrarAplazar(false); setFechaDestino(''); setErrorAplazar('') }
-          else setErrorAplazar('No se ha podido mover. Elige otro hueco libre.')
-        }}>💜 Confirmar aplazamiento</button>
+        <button type="button" className="btn-principal" disabled={!fechaDestino || (fechaDestino === fecha && tipoDestino === tipoComida) || Boolean(planning.find(p => p.fecha === fechaDestino && p.tipoComida === tipoDestino && !(p.fecha === fecha && p.tipoComida === tipoComida)) && decisionOcupado === 'mover' && (!fechaDesplazada || (fechaDesplazada === fecha && tipoDesplazado === tipoComida) || planning.some(p => p.fecha === fechaDesplazada && p.tipoComida === tipoDesplazado)))} onClick={() => {
+          const otro = planning.find(p => p.fecha === fechaDestino && p.tipoComida === tipoDestino)
+          if (otro && !window.confirm('Vas a sustituir una comida ya planificada. ¿Confirmas el cambio y qué hacer con la anterior?')) return
+          if (onAplazar(fecha, tipoComida, fechaDestino, tipoDestino, decisionOcupado, fechaDesplazada, tipoDesplazado)) {
+            setMostrarAplazar(false); setFechaDestino(''); setErrorAplazar('')
+          } else setErrorAplazar('No se ha podido reorganizar. Revisa las fechas y los huecos seleccionados.')
+        }}>💜 Confirmar reorganización</button>
         <button type="button" className="btn-secundario" onClick={() => setMostrarAplazar(false)}>Volver</button>
       </div>}
       {hayContenido && !estaEditando && (
