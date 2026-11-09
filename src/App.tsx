@@ -25,6 +25,7 @@ import Auth from './pages/Auth'
 import ChefRayku from './pages/ChefRayku'
 import WorkspaceSwitcher from './components/workspaces/WorkspaceSwitcher'
 import TabletMode from './pages/TabletMode'
+import TabletDemo from './pages/TabletDemo'
 
 type Pagina =
   | 'inicio'
@@ -66,7 +67,7 @@ function obtenerPaginaInicial(): Pagina {
   return 'inicio'
 }
 
-export default function App() {
+function MainApp() {
   const [modoTablet, setModoTablet] = useState(false)
 
   const [session, setSession] =
@@ -446,4 +447,12 @@ export default function App() {
       </main>
     </div>
   )
+}
+
+// The standalone demo never mounts the authenticated app or its Supabase sync effects.
+export default function App() {
+  if (window.location.pathname === '/demo-tablet') {
+    return <TabletDemo />
+  }
+  return <MainApp />
 }
