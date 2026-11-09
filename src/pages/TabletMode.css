@@ -48,3 +48,41 @@
 .tablet-quantities button{background:#f5edf4;border:1px solid #e6d5e3;border-radius:12px}
 @media(min-width:901px) and (orientation:landscape){.tablet-day{padding:12px}.tablet-content{padding-top:18px}.tablet-week-nav{margin-bottom:16px}}
 @media(max-width:600px){.tablet-header{padding:12px}.tablet-content{padding:14px}.tablet-week-nav{gap:8px}.tablet-week-nav h1{font-size:19px}.tablet-day{padding:11px}}
+
+
+/* Soft Luxury, with Rayku's original playful pastel identity restored. */
+.tablet-mode{background:linear-gradient(145deg,#fff7f9 0%,#faf5ff 50%,#f6fbfa 100%)}
+.tablet-header{border-bottom:2px solid #ead3e4;background:linear-gradient(105deg,#fff1f6,#f4ecff 72%,#effbf7)}
+.tablet-header strong{color:#945e89}
+.tablet-header .tablet-active{background:linear-gradient(120deg,#b38dcf,#d895b4);border-color:#b38dcf;color:#fff}
+.tablet-week-nav h1{color:#885b87}
+.tablet-week-nav button{background:#f5eafa;border-color:#e5cde9;color:#815e92}
+.tablet-calendar{gap:13px}
+.tablet-day,.tablet-day:nth-child(3n+1),.tablet-day:nth-child(3n+2),.tablet-day:nth-child(3n){
+  border:1px solid #e9d6e5;
+  border-top:5px solid var(--day-accent,#d7b4d4);
+  background:var(--day-background,#fff7fb);
+  box-shadow:0 7px 22px #8e608d12;
+}
+.tablet-day:nth-child(7n+1){--day-accent:#e8a6bd;--day-background:#fff0f5}
+.tablet-day:nth-child(7n+2){--day-accent:#c5ace8;--day-background:#f6f0ff}
+.tablet-day:nth-child(7n+3){--day-accent:#a7d6c0;--day-background:#effaf4}
+.tablet-day:nth-child(7n+4){--day-accent:#f0c28e;--day-background:#fff7ed}
+.tablet-day:nth-child(7n+5){--day-accent:#b3c8ec;--day-background:#f0f5ff}
+.tablet-day:nth-child(7n+6){--day-accent:#d9b1dc;--day-background:#faf0fc}
+.tablet-day:nth-child(7n){--day-accent:#e8b3a8;--day-background:#fff3ef}
+.tablet-day h2{color:#795478}
+.tablet-meal{border-top:1px solid #e8dce8}
+.tablet-meal small{color:#956985}
+.tablet-meal button{background:#ffffffd9;border:1px solid #e9d8e5;color:#634c63}
+.tablet-meal button:hover{background:#fff}
+.tablet-meal .tablet-edit-meal{background:#f4e6f7;border:1px solid #d9bce2;color:#855d95}
+.tablet-products button:nth-child(4n+1){background:#fff0f5;border-color:#efd0de}
+.tablet-products button:nth-child(4n+2){background:#f5efff;border-color:#e1d2f1}
+.tablet-products button:nth-child(4n+3){background:#eefaf5;border-color:#cfe9dc}
+.tablet-products button:nth-child(4n){background:#fff7ec;border-color:#f1dfc5}
+.tablet-categories .tablet-active{background:#b58bca;border-color:#b58bca}
+.tablet-shopping-summary{background:#fff0f7;border-color:#e9cde0;color:#805b7a}
+.tablet-recipe-options button:nth-child(odd){background:#fff1f7}
+.tablet-recipe-options button:nth-child(even){background:#f5efff}
+.tablet-quantities button{background:#f3e6fa;border-color:#dec8ea}
