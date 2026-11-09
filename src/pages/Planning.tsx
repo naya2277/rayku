@@ -19,6 +19,7 @@ import {
 } from '../store'
 
 import DiaPlanning from '../components/planning/DiaPlanning'
+import { generarMenuSemanal } from '../lib/generarMenuSemanal'
 
 const EMOJIS_DIA = [
   '🌸',
@@ -49,6 +50,8 @@ type Props = {
 export default function Planning({
   onAbrirReceta,
 }: Props) {
+  const [propuestas, setPropuestas] = useState<ReturnType<typeof generarMenuSemanal> | null>(null)
+  const [seleccion, setSeleccion] = useState<Record<string,string>>({})
   const [
     semanaBase,
     setSemanaBase,
@@ -77,6 +80,7 @@ export default function Planning({
     recetas,
     planning,
     inventario,
+    preferenciasAlimentarias,
     guardarHuecoPlanning,
     limpiarHuecoPlanning,
     toggleCocinadoPlanning,
@@ -100,6 +104,20 @@ export default function Planning({
           i
         )
     )
+
+  function sugerirSemana() {
+    const resultado = generarMenuSemanal(dias.map(d => format(d, 'yyyy-MM-dd')), recetas, planning, preferenciasAlimentarias)
+    setPropuestas(resultado)
+    setSeleccion(Object.fromEntries(resultado.propuestas.map(p => [p.fecha + p.tipoComida, p.recetaId])))
+  }
+  function aceptarSemana() {
+    if (!propuestas) return
+    for (const p of propuestas.propuestas) {
+      const id = seleccion[p.fecha + p.tipoComida]
+      if (id) guardarHuecoPlanning({ fecha: p.fecha, tipoComida: p.tipoComida, recetaId: id, recetaIds: [id], comidaLibre: '', nota: '', cocinado: false })
+    }
+    setPropuestas(null)
+  }
 
   const hoy = format(
     new Date(),
@@ -216,6 +234,23 @@ export default function Planning({
         </button>
       </div>
 
+      <section className="card" style={{ padding: 18, marginBottom: 20 }}>
+        <h3>✨ Propuestas de Rayku</h3>
+        <p>Revisa el menú sugerido. No se cambiará nada hasta que lo confirmes.</p>
+        <button className="btn-principal" onClick={sugerirSemana}>✨ Proponer menú semanal</button>
+        {propuestas && <div style={{ display: 'grid', gap: 12, marginTop: 14 }}>
+          {propuestas.propuestas.map(p => <label key={p.fecha + p.tipoComida}>
+            <strong>{p.fecha} · {p.tipoComida}</strong>
+            <select style={{ display: 'block', width: '100%', padding: 10 }} value={seleccion[p.fecha + p.tipoComida] ?? ''} onChange={e => setSeleccion(prev => ({ ...prev, [p.fecha + p.tipoComida]: e.target.value }))}>
+              <option value="">Dejar sin planificar</option>
+              {recetas.map(r => <option key={r.id} value={r.id}>{r.nombre}</option>)}
+            </select>
+          </label>)}
+          {propuestas.sinCubrir.length > 0 && <p>{propuestas.sinCubrir.length} huecos sin recetas compatibles.</p>}
+          <button className="btn-principal" onClick={aceptarSemana}>💜 Confirmar propuestas</button>
+          <button className="btn-secundario" onClick={() => setPropuestas(null)}>Cancelar</button>
+        </div>}
+      </section>
       <div
         style={{
           display: 'grid',
