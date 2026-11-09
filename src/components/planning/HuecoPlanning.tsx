@@ -47,6 +47,9 @@ type Props = {
   guardarHueco: (datos: any) => void
   limpiarHueco: () => void
   updateReceta: (recetaId: string, datos: any) => void
+  onAplazar: (fecha: string, tipo: TipoComida, nuevaFecha: string, nuevoTipo: TipoComida) => boolean
+  inventario: { nombre: string; fechaCaducidad: string | null; fechaConsumoSugerida?: string | null }[]
+  planning: { fecha: string; tipoComida: TipoComida }[]
 }
 
 export default function HuecoPlanning({
@@ -69,12 +72,19 @@ export default function HuecoPlanning({
   limpiarHueco,
   toggleCocinado,
   updateReceta,
+  onAplazar,
+  inventario,
+  planning,
 }: Props) {
   const [
     mostrarSugerenciasRayku,
     setMostrarSugerenciasRayku,
   ] = useState(false)
 
+  const [mostrarAplazar, setMostrarAplazar] = useState(false)
+  const [fechaDestino, setFechaDestino] = useState('')
+  const [tipoDestino, setTipoDestino] = useState<TipoComida>(tipoComida)
+  const [errorAplazar, setErrorAplazar] = useState('')
   const esComida = tipoComida === 'comida'
 
   const recetaPrincipal =
@@ -672,6 +682,23 @@ export default function HuecoPlanning({
         </p>
       )}
 
+      {mostrarAplazar && hayContenido && !hueco?.cocinado && <div className="card" style={{ marginTop: 12, padding: 12, display: 'grid', gap: 10 }}>
+        <strong>📅 Aplazar esta comida</strong>
+        <label>Nuevo día <input type="date" min={fecha} value={fechaDestino} onChange={e => setFechaDestino(e.target.value)} /></label>
+        <label>Momento <select value={tipoDestino} onChange={e => setTipoDestino(e.target.value as TipoComida)}><option value="comida">☀️ Comida</option><option value="cena">🌙 Cena</option></select></label>
+        {planning.some(p => p.fecha === fechaDestino && p.tipoComida === tipoDestino && !(p.fecha === fecha && p.tipoComida === tipoComida)) && <p>⚠️ El destino ya tiene una comida planificada.</p>}
+        {(() => {
+          const ingredientes = recetasSeleccionadas.flatMap(r => [...r.ingredientes, ...r.ingredientesBase]).join(' ').toLocaleLowerCase('es')
+          const caducados = inventario.filter(i => (i.fechaConsumoSugerida || i.fechaCaducidad || '') < fechaDestino && Boolean(i.fechaConsumoSugerida || i.fechaCaducidad) && i.nombre.length > 2 && ingredientes.includes(i.nombre.toLocaleLowerCase('es')))
+          return caducados.length ? <p>⚠️ Revisa caducidades antes de aplazar: {caducados.map(i => i.nombre).join(', ')}.</p> : <p>ℹ️ Comprueba las fechas y el estado de los ingredientes frescos antes de aplazar.</p>
+        })()}
+        {errorAplazar && <p role="alert">{errorAplazar}</p>}
+        <button type="button" className="btn-principal" disabled={!fechaDestino || (fechaDestino === fecha && tipoDestino === tipoComida) || planning.some(p => p.fecha === fechaDestino && p.tipoComida === tipoDestino && !(p.fecha === fecha && p.tipoComida === tipoComida))} onClick={() => {
+          if (onAplazar(fecha, tipoComida, fechaDestino, tipoDestino)) { setMostrarAplazar(false); setFechaDestino(''); setErrorAplazar('') }
+          else setErrorAplazar('No se ha podido mover. Elige otro hueco libre.')
+        }}>💜 Confirmar aplazamiento</button>
+        <button type="button" className="btn-secundario" onClick={() => setMostrarAplazar(false)}>Volver</button>
+      </div>}
       {hayContenido && !estaEditando && (
         <div
           style={{
@@ -689,6 +716,8 @@ export default function HuecoPlanning({
             {hueco?.cocinado ? '↩️ Deshacer cocinado' : '🍳 Hoy cocino'}
           </button>
 
+          {!hueco?.cocinado && <button type="button" className="btn-secundario" onClick={() => setMostrarAplazar(v => !v)}>📅 Aplazar</button>}
+          {!hueco?.cocinado && <button type="button" className="btn-secundario" onClick={() => { if (window.confirm('¿Cancelar esta comida? No se descontarán ingredientes.')) limpiarHueco() }}>❌ Cancelar</button>}
           <button className="btn-secundario" onClick={limpiarHueco}>
             🧹 Limpiar
           </button>
