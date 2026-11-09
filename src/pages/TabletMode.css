@@ -13,3 +13,38 @@
 .tablet-preview-warning{background:#fff5d9;border:1px solid #eed5a4;color:#755b37;border-radius:14px;margin:12px 24px;padding:12px 18px;font-weight:800}.tablet-products button:disabled{opacity:.7;cursor:not-allowed}.tablet-shopping button:disabled{opacity:.45;cursor:not-allowed}
 
 .tablet-meal .tablet-edit-meal{background:#f5e7fa;border:1px solid #dcc4e8;color:#805c8e;text-align:center;font-size:14px;padding:10px;margin-top:5px}.tablet-recipe-options{display:grid;gap:10px}.tablet-recipe-options button{background:#fff6fb;border:1px solid #efd6e5;border-radius:15px;padding:16px;font:inherit;font-weight:800;text-align:left;cursor:pointer;min-height:52px}
+
+
+/* Rayku Soft Luxury — tablet-first premium surface */
+.tablet-mode{background:#faf7f4;color:#403942}
+.tablet-header{background:rgba(255,253,252,.97);border-bottom:1px solid #eae0e5;box-shadow:0 4px 24px #4c32410a;padding:16px 28px}
+.tablet-header strong{font-size:21px;letter-spacing:-.035em;color:#77566c;font-weight:900}
+.tablet-header nav{gap:8px}
+.tablet-header button,.tablet-week-nav button{border:1px solid #e8dce3;background:#fffdfc;border-radius:12px;padding:11px 17px;font-weight:750;color:#735b6d;transition:background .2s,box-shadow .2s}
+.tablet-header button:hover,.tablet-week-nav button:hover{background:#f7edf1;box-shadow:0 3px 10px #704b6114}
+.tablet-header .tablet-active{background:#ad7f98;color:#fff;border-color:#ad7f98}
+.tablet-content{padding:24px 28px}
+.tablet-week-nav{justify-content:space-between;margin-bottom:24px}
+.tablet-week-nav h1{font-weight:900;letter-spacing:-.04em;color:#453944;text-transform:capitalize}
+.tablet-calendar{gap:12px}
+.tablet-day,.tablet-day:nth-child(3n+1),.tablet-day:nth-child(3n+2),.tablet-day:nth-child(3n){background:#fffdfc;border:1px solid #eee4e8;border-radius:19px;padding:14px;box-shadow:0 6px 20px #5d3b5009}
+.tablet-day h2{font-weight:900;letter-spacing:-.025em;color:#6f5267;padding:3px 0 12px;margin-bottom:5px}
+.tablet-meal{border-top:1px solid #f0e8ec;padding:13px 0 8px}
+.tablet-meal small{color:#a17b91;font-size:12px;letter-spacing:.025em}
+.tablet-meal button{background:#faf6f8;border:1px solid #f0e5eb;border-radius:11px;font-weight:750;padding:12px 10px;color:#4b3d48}
+.tablet-meal button:hover{background:#f3e8ef}
+.tablet-meal .tablet-edit-meal{background:transparent;border:1px dashed #d8bdcb;color:#966c85;font-weight:700}
+.tablet-products{gap:12px}
+.tablet-products button{background:#fffdfc;border:1px solid #eee3e9;border-radius:18px;box-shadow:0 5px 20px #4d33420a;transition:transform .2s,box-shadow .2s}
+.tablet-products button:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 10px 24px #4d33421a}
+.tablet-products button span{font-size:44px}
+.tablet-categories button{border:1px solid #e8dce3;border-radius:12px;background:#fffdfc;font-weight:750}
+.tablet-categories .tablet-active{background:#ad7f98;border-color:#ad7f98;color:#fff}
+.tablet-shopping-summary{background:#fffdfc;border:1px solid #eee4e8;border-radius:14px;box-shadow:0 5px 20px #5d3b500c}
+.tablet-shopping>div{background:#fffdfc;border:1px solid #eee4e8;border-radius:12px}
+.tablet-overlay{background:#30203b80;backdrop-filter:blur(5px)}
+.tablet-dialog{background:#fffdfc;border:1px solid #eee4e8;border-radius:22px;box-shadow:0 25px 80px #30203b33}
+.tablet-recipe-options button{background:#faf6f8;border:1px solid #eee3e9;border-radius:12px}
+.tablet-quantities button{background:#f5edf4;border:1px solid #e6d5e3;border-radius:12px}
+@media(min-width:901px) and (orientation:landscape){.tablet-day{padding:12px}.tablet-content{padding-top:18px}.tablet-week-nav{margin-bottom:16px}}
+@media(max-width:600px){.tablet-header{padding:12px}.tablet-content{padding:14px}.tablet-week-nav{gap:8px}.tablet-week-nav h1{font-size:19px}.tablet-day{padding:11px}}
