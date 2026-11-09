@@ -27,6 +27,8 @@ type Props = { onSalir: () => void }
 export default function TabletMode({ onSalir }: Props) {
   const { planning, recetas, inventario, compraManual, checksCompra, agregarItemCompraManual, eliminarItemCompraManual, guardarHuecoPlanning, limpiarHuecoPlanning } = useRaykuStore()
   const vistaPrevia = window.location.hostname.includes('rayku-git-rayku-20')
+  const [edicionPruebas, setEdicionPruebas] = useState(false)
+  const soloLectura = vistaPrevia && !edicionPruebas
   const [panel, setPanel] = useState<'calendario' | 'compra'>('calendario')
   const [semana, setSemana] = useState(new Date())
   const [recetaId, setRecetaId] = useState<string | null>(null)
@@ -51,7 +53,7 @@ export default function TabletMode({ onSalir }: Props) {
 
 
   function elegirReceta(id: string | null) {
-    if (!huecoEditando || vistaPrevia) return
+    if (!huecoEditando || soloLectura) return
     const { fecha, tipo } = huecoEditando
     if (id === null) {
       limpiarHuecoPlanning(fecha, tipo)
@@ -66,7 +68,7 @@ export default function TabletMode({ onSalir }: Props) {
   }
 
   function agregar(cantidad: string) {
-    if (!producto || vistaPrevia) return
+    if (!producto || soloLectura) return
     agregarItemCompraManual({ id: '', nombre: producto, cantidad })
     setConfirmacion(`${producto} · ${cantidad} añadido a la compra`)
     setProducto(null)
@@ -90,7 +92,7 @@ export default function TabletMode({ onSalir }: Props) {
           <button onClick={onSalir}>✕ Salir</button>
         </nav>
       </header>
-      {vistaPrevia && <div className="tablet-preview-warning" role="status">🔒 Vista previa segura: puedes explorar el menú y la compra, pero no modificar datos desde este modo.</div>}
+      {vistaPrevia && <div className="tablet-preview-warning" role="status">{soloLectura ? <>🔒 Edición bloqueada hasta que la actives. <button type="button" onClick={() => setEdicionPruebas(true)}>🧪 Activar edición de prueba</button></> : <>🧪 Edición activada en este navegador. Para subir cambios a la nube, sal del modo tablet y pulsa ☁️ Guardar. No edites a la vez desde otro dispositivo.</>}</div>}
       {panel === 'calendario' ? (
         <main className="tablet-content">
           <div className="tablet-week-nav">
@@ -112,7 +114,7 @@ export default function TabletMode({ onSalir }: Props) {
                     {platos.map(r => <button key={r.id} onClick={() => setRecetaId(r.id)}>{r.nombre}</button>)}
                     {hueco?.comidaLibre && <p>{hueco.comidaLibre}</p>}
                     {!platos.length && !hueco?.comidaLibre && <p>Sin planificar</p>}
-                    <button className="tablet-edit-meal" disabled={vistaPrevia} onClick={() => setHuecoEditando({ fecha, tipo })}>✏️ Cambiar</button>
+                    <button className="tablet-edit-meal" disabled={soloLectura} onClick={() => setHuecoEditando({ fecha, tipo })}>✏️ Cambiar</button>
                   </div>
                 })}
               </section>
@@ -123,7 +125,7 @@ export default function TabletMode({ onSalir }: Props) {
       ) : (
         <main className="tablet-content">
           <h1>🛒 Añadir sin escribir</h1>
-          <p>{vistaPrevia ? 'Catálogo visual de prueba. La edición está desactivada para proteger tus datos.' : 'Toca un producto y elige la cantidad.'}</p>
+          <p>{soloLectura ? 'Activa la edición de prueba para añadir productos.' : 'Toca un producto y elige la cantidad.'}</p>
           <div className="tablet-categories" aria-label="Categorías de productos">
             {CATEGORIAS.map(c => <button key={c} className={categoria === c ? 'tablet-active' : ''} onClick={() => setCategoria(c)}>{c}</button>)}
           </div>
@@ -132,7 +134,7 @@ export default function TabletMode({ onSalir }: Props) {
           </div>
           <div className="tablet-products">
             {productosVisibles.map(([emoji, nombre]) =>
-              <button key={nombre} onClick={() => { if (!vistaPrevia) setProducto(nombre) }} disabled={vistaPrevia}>
+              <button key={nombre} onClick={() => { if (!soloLectura) setProducto(nombre) }} disabled={soloLectura}>
                 <span aria-hidden="true">{emoji}</span>{nombre}
               </button>
             )}
@@ -145,7 +147,7 @@ export default function TabletMode({ onSalir }: Props) {
             {compraManual.length === 0 && <p>No has añadido productos manuales.</p>}
             {compraManual.map(item => <div key={item.id}>
               <span>{item.nombre} {item.cantidad ? '· ' + item.cantidad : ''}</span>
-              <button aria-label={`Quitar ${item.nombre}`} onClick={() => eliminarItemCompraManual(item.id)} disabled={vistaPrevia}>✕</button>
+              <button aria-label={`Quitar ${item.nombre}`} onClick={() => eliminarItemCompraManual(item.id)} disabled={soloLectura}>✕</button>
             </div>)}
           </div>
           {confirmacion && <p role="status">{confirmacion}</p>}
