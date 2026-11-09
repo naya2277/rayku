@@ -63,6 +63,9 @@ export type ItemInventario = {
   categoria: string
   ubicacion: UbicacionInventario
   fechaCaducidad: string | null
+  fechaPreparacion?: string | null
+  fechaConsumoSugerida?: string | null
+  esCocinado?: boolean
   fechaDescongelar?: string | null
   necesitaDescongelar: boolean
   avisarStockBajo?: boolean
