@@ -5,6 +5,8 @@ import './TabletMode.css'
 
 type Producto = { nombre: string; emoji: string; categoria: string }
 type CompraDemo = { id: number; nombre: string; cantidad: string }
+type TipoComida = 'comida' | 'cena'
+type HuecoEditado = { fecha: string; tipo: TipoComida }
 const PRODUCTOS: Producto[] = [
   { nombre: 'Muslitos de pollo', emoji: '🍗', categoria: 'Carnes' },
   { nombre: 'Pechuga de pollo', emoji: '🐔', categoria: 'Carnes' },
@@ -32,10 +34,25 @@ export default function TabletDemo() {
   const [seleccion, setSeleccion] = useState<Producto | null>(null)
   const [receta, setReceta] = useState<typeof RECETAS[number] | null>(null)
   const [compra, setCompra] = useState<CompraDemo[]>([])
+  const [menuEditado, setMenuEditado] = useState<Record<string, number | null>>({})
+  const [huecoEditando, setHuecoEditando] = useState<HuecoEditado | null>(null)
   const [confirmacion, setConfirmacion] = useState('')
   const inicio = startOfWeek(semana, { weekStartsOn: 1 })
   const dias = Array.from({ length: 7 }, (_, i) => addDays(inicio, i))
   const inicioDeslizamiento = useRef<number | null>(null)
+  function reiniciar() {
+    setCompra([])
+    setMenuEditado({})
+    setHuecoEditando(null)
+    setReceta(null)
+    setConfirmacion('')
+  }
+  function elegirPlato(indice: number | null) {
+    if (!huecoEditando) return
+    const clave = `${huecoEditando.fecha}-${huecoEditando.tipo}`
+    setMenuEditado(actual => ({ ...actual, [clave]: indice }))
+    setHuecoEditando(null)
+  }
   function agregar(cantidad: string) {
     if (!seleccion) return
     setCompra(items => [...items, { id: Date.now() + Math.random(), nombre: seleccion.nombre, cantidad }])
@@ -45,7 +62,7 @@ export default function TabletDemo() {
   return <div className="tablet-mode" onTouchStart={e => { inicioDeslizamiento.current = e.touches[0]?.clientX ?? null }}
     onTouchEnd={e => {
       const final = e.changedTouches[0]?.clientX
-      if (inicioDeslizamiento.current === null || final === undefined || seleccion || receta) return
+      if (inicioDeslizamiento.current === null || final === undefined || seleccion || receta || huecoEditando) return
       const distancia = final - inicioDeslizamiento.current
       if (Math.abs(distancia) > 90) setPanel(distancia < 0 ? 'compra' : 'calendario')
       inicioDeslizamiento.current = null
@@ -55,17 +72,24 @@ export default function TabletDemo() {
       <nav>
         <button className={panel === 'calendario' ? 'tablet-active' : ''} onClick={() => setPanel('calendario')}>📅 Menú</button>
         <button className={panel === 'compra' ? 'tablet-active' : ''} onClick={() => setPanel('compra')}>🛒 Compra ({compra.length})</button>
-        <button onClick={() => setCompra([])}>↻ Reiniciar prueba</button>
+        <button onClick={reiniciar}>↻ Reiniciar prueba</button>
       </nav>
     </header>
-    <div className="tablet-preview-warning" role="status">🧪 Entorno de demostración independiente: recetas y productos ficticios. Nada se guarda en Supabase ni modifica tu Rayku habitual. Los cambios se pierden al recargar.</div>
+    <div className="tablet-preview-warning" role="status">🧪 Entorno de demostración independiente: recetas y productos ficticios. Nada se guarda en Supabase ni modifica tu Rayku habitual. Puedes cambiar las comidas, abrir recetas y añadir productos. Los cambios se pierden al recargar.</div>
     {panel === 'calendario' ? <main className="tablet-content">
       <div className="tablet-week-nav"><button onClick={() => setSemana(subWeeks(semana, 1))}>‹</button><h1>{format(inicio, "'Semana del' d 'de' MMMM", { locale: es })}</h1><button onClick={() => setSemana(addWeeks(semana, 1))}>›</button></div>
       <div className="tablet-calendar">{dias.map((dia, i) => <section key={i} className="tablet-day">
         <h2>{format(dia, 'EEEE d', { locale: es })}</h2>
         {(['comida', 'cena'] as const).map((tipo, j) => {
-          const plato = RECETAS[(i + j) % RECETAS.length]
-          return <div className="tablet-meal" key={tipo}><small>{tipo === 'comida' ? '☀️ Comida' : '🌙 Cena'}</small><button onClick={() => setReceta(plato)}>{plato.nombre}</button></div>
+          const fecha = format(dia, 'yyyy-MM-dd')
+          const clave = `${fecha}-${tipo}`
+          const indice = Object.prototype.hasOwnProperty.call(menuEditado, clave) ? menuEditado[clave] : (i + j) % RECETAS.length
+          const plato = indice === null ? null : RECETAS[indice]
+          return <div className="tablet-meal" key={tipo}>
+            <small>{tipo === 'comida' ? '☀️ Comida' : '🌙 Cena'}</small>
+            {plato ? <button onClick={() => setReceta(plato)}>{plato.nombre}</button> : <p>Sin planificar</p>}
+            <button className="tablet-edit-meal" onClick={() => setHuecoEditando({ fecha, tipo })}>✏️ Cambiar</button>
+          </div>
         })}
       </section>)}</div>
       <p className="tablet-hint">Desliza a la izquierda para ver la compra →</p>
@@ -80,6 +104,17 @@ export default function TabletDemo() {
       {confirmacion && <p role="status">{confirmacion}</p>}
       <p className="tablet-hint">← Desliza a la derecha para volver al menú</p>
     </main>}
+    {huecoEditando && <div className="tablet-overlay" role="dialog" aria-modal="true" aria-label="Cambiar comida">
+      <div className="tablet-dialog">
+        <h2>✏️ Cambiar ${huecoEditando.tipo} del ${huecoEditando.fecha}</h2>
+        <p>Selecciona una receta de ejemplo o deja este hueco libre.</p>
+        <div className="tablet-recipe-options">
+          {RECETAS.map((r, indice) => <button key={r.nombre} onClick={() => elegirPlato(indice)}>🍽️ {r.nombre}</button>)}
+          <button onClick={() => elegirPlato(null)}>➖ Sin planificar</button>
+        </div>
+        <button className="btn-secundario" onClick={() => setHuecoEditando(null)}>Cancelar</button>
+      </div>
+    </div>}
     {seleccion && <div className="tablet-overlay" role="dialog" aria-modal="true" aria-label="Elegir cantidad"><div className="tablet-dialog"><h2>¿Cuánto necesitas de {seleccion.nombre}?</h2><div className="tablet-quantities">{CANTIDADES.map(c => <button key={c} onClick={() => agregar(c)}>{c}</button>)}</div><button className="btn-secundario" onClick={() => setSeleccion(null)}>Cancelar</button></div></div>}
     {receta && <div className="tablet-overlay" role="dialog" aria-modal="true" aria-label={receta.nombre}><div className="tablet-dialog"><h2>🍽️ {receta.nombre}</h2><h3>Ingredientes</h3><ul>{receta.ingredientes.map(i => <li key={i}>{i}</li>)}</ul><h3>Preparación</h3><p>{receta.pasos}</p><button className="btn-principal" onClick={() => setReceta(null)}>Cerrar</button></div></div>}
   </div>
