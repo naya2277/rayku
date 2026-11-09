@@ -19,7 +19,7 @@ import {
 } from '../store'
 
 import DiaPlanning from '../components/planning/DiaPlanning'
-import { generarMenuSemanal } from '../lib/generarMenuSemanal'
+import { generarMenuSemanal, recetaPermitida, recetaCompatible } from '../lib/generarMenuSemanal'
 
 const EMOJIS_DIA = [
   '🌸',
@@ -52,6 +52,8 @@ export default function Planning({
 }: Props) {
   const [propuestas, setPropuestas] = useState<ReturnType<typeof generarMenuSemanal> | null>(null)
   const [seleccion, setSeleccion] = useState<Record<string,string>>({})
+  const [nuevoEvitar, setNuevoEvitar] = useState('')
+  const [nuevoFavorito, setNuevoFavorito] = useState('')
   const [
     semanaBase,
     setSemanaBase,
@@ -81,6 +83,10 @@ export default function Planning({
     planning,
     inventario,
     preferenciasAlimentarias,
+    agregarIngredienteProhibido,
+    eliminarIngredienteProhibido,
+    agregarIngredienteFavorito,
+    eliminarIngredienteFavorito,
     guardarHuecoPlanning,
     limpiarHuecoPlanning,
     toggleCocinadoPlanning,
@@ -110,6 +116,7 @@ export default function Planning({
     setPropuestas(resultado)
     setSeleccion(Object.fromEntries(resultado.propuestas.map(p => [p.fecha + p.tipoComida, p.recetaId])))
   }
+  function cambiarSemana(nueva: Date) { setSemanaBase(nueva); setPropuestas(null) }
   function aceptarSemana() {
     if (!propuestas) return
     for (const p of propuestas.propuestas) {
@@ -188,7 +195,7 @@ export default function Planning({
         <button
           className="btn-secundario"
           onClick={() =>
-            setSemanaBase(
+            cambiarSemana(
               subWeeks(
                 semanaBase,
                 1
@@ -222,7 +229,7 @@ export default function Planning({
         <button
           className="btn-secundario"
           onClick={() =>
-            setSemanaBase(
+            cambiarSemana(
               addWeeks(
                 semanaBase,
                 1
@@ -236,6 +243,32 @@ export default function Planning({
 
       <section className="card" style={{ padding: 18, marginBottom: 20 }}>
         <h3>✨ Propuestas de Rayku</h3>
+        <details style={{ marginBottom: 14 }}>
+          <summary style={{ cursor: 'pointer', fontWeight: 700 }}>💜 Preferencias del menú</summary>
+          <p>Los ingredientes que evites se excluirán de las propuestas. Tus favoritos tendrán prioridad.</p>
+          <div style={{ display: 'grid', gap: 12 }}>
+            <div>
+              <strong>🚫 Ingredientes que evito</strong>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, margin: '8px 0' }}>
+                {preferenciasAlimentarias.ingredientesProhibidos.map(i => <button type="button" className="btn-secundario" key={i} onClick={() => { eliminarIngredienteProhibido(i); setPropuestas(null) }}>{i} ✕</button>)}
+              </div>
+              <form onSubmit={e => { e.preventDefault(); agregarIngredienteProhibido(nuevoEvitar); setNuevoEvitar(''); setPropuestas(null) }} style={{ display: 'flex', gap: 8 }}>
+                <input aria-label="Ingrediente que evito" placeholder="Ej.: cebolla" value={nuevoEvitar} onChange={e => setNuevoEvitar(e.target.value)} style={{ flex: 1, minWidth: 0, padding: 10 }} />
+                <button type="submit" className="btn-secundario" disabled={!nuevoEvitar.trim()}>Añadir</button>
+              </form>
+            </div>
+            <div>
+              <strong>💕 Ingredientes favoritos</strong>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, margin: '8px 0' }}>
+                {preferenciasAlimentarias.ingredientesFavoritos.map(i => <button type="button" className="btn-secundario" key={i} onClick={() => { eliminarIngredienteFavorito(i); setPropuestas(null) }}>{i} ✕</button>)}
+              </div>
+              <form onSubmit={e => { e.preventDefault(); agregarIngredienteFavorito(nuevoFavorito); setNuevoFavorito(''); setPropuestas(null) }} style={{ display: 'flex', gap: 8 }}>
+                <input aria-label="Ingrediente favorito" placeholder="Ej.: salmón" value={nuevoFavorito} onChange={e => setNuevoFavorito(e.target.value)} style={{ flex: 1, minWidth: 0, padding: 10 }} />
+                <button type="submit" className="btn-secundario" disabled={!nuevoFavorito.trim()}>Añadir</button>
+              </form>
+            </div>
+          </div>
+        </details>
         <p>Revisa el menú sugerido. No se cambiará nada hasta que lo confirmes.</p>
         <button className="btn-principal" onClick={sugerirSemana}>✨ Proponer menú semanal</button>
         {propuestas && <div style={{ display: 'grid', gap: 12, marginTop: 14 }}>
@@ -243,7 +276,7 @@ export default function Planning({
             <strong>{p.fecha} · {p.tipoComida}</strong>
             <select style={{ display: 'block', width: '100%', padding: 10 }} value={seleccion[p.fecha + p.tipoComida] ?? ''} onChange={e => setSeleccion(prev => ({ ...prev, [p.fecha + p.tipoComida]: e.target.value }))}>
               <option value="">Dejar sin planificar</option>
-              {recetas.map(r => <option key={r.id} value={r.id}>{r.nombre}</option>)}
+              {recetas.filter(r => recetaPermitida(r, preferenciasAlimentarias) && recetaCompatible(r, p.tipoComida)).map(r => <option key={r.id} value={r.id}>{r.nombre}</option>)}
             </select>
           </label>)}
           {propuestas.sinCubrir.length > 0 && <p>{propuestas.sinCubrir.length} huecos sin recetas compatibles.</p>}
