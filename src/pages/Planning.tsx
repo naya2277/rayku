@@ -111,6 +111,17 @@ export default function Planning({
         )
     )
 
+  function aplazarComida(fecha: string, tipo: 'comida' | 'cena', nuevaFecha: string, nuevoTipo: 'comida' | 'cena') {
+    const estado = useRaykuStore.getState()
+    const origen = estado.planning.find(p => p.fecha === fecha && p.tipoComida === tipo)
+    if (!origen || origen.cocinado || !nuevaFecha || nuevaFecha < fecha) return false
+    if (estado.planning.some(p => p.fecha === nuevaFecha && p.tipoComida === nuevoTipo && p.id !== origen.id)) return false
+    if (nuevaFecha === fecha && nuevoTipo === tipo) return false
+    estado.guardarHuecoPlanning({ ...origen, fecha: nuevaFecha, tipoComida: nuevoTipo })
+    estado.limpiarHuecoPlanning(fecha, tipo)
+    return true
+  }
+
   function sugerirSemana() {
     const resultado = generarMenuSemanal(dias.map(d => format(d, 'yyyy-MM-dd')), recetas, planning, preferenciasAlimentarias)
     setPropuestas(resultado)
@@ -353,6 +364,7 @@ export default function Planning({
                   updateReceta={
                     updateReceta
                   }
+                  onAplazar={aplazarComida}
                 />
               </div>
             )
