@@ -377,3 +377,32 @@ input::placeholder, textarea::placeholder {
     padding: 4px 12px;
   }
 }
+
+/* Rayku 2.0 — Soft Luxury. Visual-only theme; preserves all app behavior. */
+:root {
+  --p1:#d9aabb;--p2:#f7edf1;--p3:#fcf7f8;--p4:#ead2dc;--p5:#a86c85;
+  --m1:#b6a0c9;--m2:#f3edf7;--m3:#ded0e9;
+  --crema:#faf7f4;--card:#fffdfc;--txt:#403942;--txt2:#806f7c;
+  --txt3:#ac9ba5;--borde:#eee4e8;--borde2:#e5d7de;
+  --radio:20px;--radio-sm:12px;--radio-lg:26px;
+}
+body {background:var(--crema);color:var(--txt);-webkit-font-smoothing:antialiased}
+.nav-principal {background:rgba(255,253,252,.96);border-bottom:1px solid var(--borde);box-shadow:0 3px 22px rgba(75,48,67,.035)}
+.logo-texto {background:linear-gradient(120deg,#9678ae,#b47790);background-clip:text;-webkit-background-clip:text}
+.nav-links {gap:5px}
+.nav-links button {border-radius:12px;font-weight:700;transition:background .2s,color .2s,transform .2s}
+.nav-links button.activo {background:#ad7f98;color:#fff;box-shadow:0 4px 12px rgba(139,94,121,.16)}
+.nav-links button:hover {transform:translateY(-1px)}
+.contenido-principal {max-width:1080px;padding:28px 24px 44px}
+.card {background:var(--card);border:1px solid var(--borde);border-radius:22px;box-shadow:0 7px 28px rgba(66,42,60,.045)}
+.btn-principal {background:#ad7f98;border-radius:12px;min-height:40px;font-weight:800;box-shadow:0 4px 12px rgba(139,94,121,.13)}
+.btn-principal:hover {background:#956c83;opacity:1}
+.btn-secundario {border:1px solid var(--borde2);border-radius:12px;background:#fffdfc;min-height:38px}
+.btn-secundario:hover {background:#f9f0f4;color:#8c6076}
+input,textarea,select {border:1px solid var(--borde2);border-radius:12px;background:#fffdfc}
+input:focus-visible,textarea:focus-visible,select:focus-visible,button:focus-visible {outline:2px solid #b58ca4;outline-offset:2px}
+.planning-premium-day {border-left:4px solid #d9cbe9!important;background:#fffdfc!important;padding:20px 22px}
+.planning-premium-day h3 {font-weight:900;letter-spacing:-.02em}
+.planning-premium-day > div:first-child {padding-bottom:13px;border-bottom:1px solid var(--borde)}
+.planning-premium-day .pill {border-radius:9px}
+@media(max-width:768px){.contenido-principal{padding:16px 12px 28px}.planning-premium-day{padding:16px}.nav-links button.activo{box-shadow:none}}
