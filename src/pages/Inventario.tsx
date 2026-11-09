@@ -215,6 +215,16 @@ export default function Inventario() {
         )
       })
 
+  const recordatoriosCocinados = inventario
+    .filter(item => item.ubicacion === 'nevera' && item.cantidad > 0 &&
+      item.esCocinado && item.fechaConsumoSugerida)
+    .map(item => ({
+      item,
+      dias: calcularDiasCaducidad(item.fechaConsumoSugerida ?? null),
+    }))
+    .filter(entry => entry.dias !== null && entry.dias <= 1)
+    .sort((a, b) => (a.dias ?? 0) - (b.dias ?? 0))
+
   const productosStockBajo =
     inventario
       .filter((item) => {
@@ -488,6 +498,21 @@ export default function Inventario() {
             })}
           </div>
         </div>
+      )}
+
+      {recordatoriosCocinados.length > 0 && (
+        <section className="card" style={{ marginBottom: 18, background: '#fff8ee' }}>
+          <h2 style={{ fontSize: 18, marginBottom: 8 }}>🍲 Comida cocinada para consumir pronto</h2>
+          {recordatoriosCocinados.map(({ item, dias }) => (
+            <p key={item.id} style={{ marginBottom: 6 }}>
+              {dias !== null && dias < 0 ? '⚠️ Revisa' : '💡 Hoy o mañana conviene comer'}{' '}
+              <strong>{item.nombre}</strong> (fecha orientativa: {item.fechaConsumoSugerida}).
+            </p>
+          ))}
+          <p style={{ fontSize: 12, color: 'var(--txt2)' }}>
+            Son avisos dentro de Rayku, no notificaciones del móvil ni garantías de seguridad alimentaria.
+          </p>
+        </section>
       )}
 
       {productosStockBajo.length > 0 && (
