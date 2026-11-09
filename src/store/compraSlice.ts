@@ -55,14 +55,11 @@ export type CompraSlice = {
     id: string
   ) => void
 
-  toggleCheckCompra: (
-    id: string,
-    itemCompra?: ItemCompraParaInventario
-  ) => void
+  toggleCheckCompra: (id: string, itemCompra?: ItemCompraParaInventario) => void
 
   limpiarChecksCompra: () => void
 
-  finalizarCompra: () => void
+  finalizarCompra: (comprados?: ItemCompraParaInventario[]) => void
 }
 
 function nombresCoinciden(
@@ -221,70 +218,14 @@ export const crearCompraSlice = (
       })
     },
 
-  toggleCheckCompra:
-    (
-      id,
-      itemCompra
-    ) => {
-      const estado = get()
-
-      const estabaComprado =
-        estado.checksCompra.includes(
-          id
-        )
-
-      const nuevosChecks =
-        estabaComprado
-          ? estado.checksCompra.filter(
-              (c) => c !== id
-            )
-          : [
-              ...estado.checksCompra,
-              id,
-            ]
-
-      guardarChecksCompraLocal(
-        nuevosChecks
-      )
-
-      if (
-        !estabaComprado &&
-        itemCompra &&
-        !yaExistePendienteCompra(
-          estado.inventario,
-          itemCompra
-        )
-      ) {
-        const nuevoItem =
-          convertirCompraAPendienteInventario(
-            itemCompra
-          )
-
-        const nuevoInventario =
-          [
-            ...estado.inventario,
-            nuevoItem,
-          ]
-
-        guardarInventarioLocal(
-          nuevoInventario
-        )
-
-        set({
-          checksCompra:
-            nuevosChecks,
-          inventario:
-            nuevoInventario,
-        })
-
-        return
-      }
-
-      set({
-        checksCompra:
-          nuevosChecks,
-      })
-    },
+  toggleCheckCompra: (id) => {
+    const checks = get().checksCompra
+    const nuevosChecks = checks.includes(id)
+      ? checks.filter(check => check !== id)
+      : [...checks, id]
+    guardarChecksCompraLocal(nuevosChecks)
+    set({ checksCompra: nuevosChecks })
+  },
 
   limpiarChecksCompra:
     () => {
@@ -298,7 +239,7 @@ export const crearCompraSlice = (
     },
 
   finalizarCompra:
-    () => {
+    (comprados = []) => {
       const estado = get()
 
       const compraManualPendiente =
@@ -308,6 +249,17 @@ export const crearCompraSlice = (
               `manual-${item.id}`
             )
         )
+
+      // Only items confirmed at checkout enter the kitchen inbox.
+      // Checking an item never changes stock.
+      const nuevosPendientes = comprados
+        .filter(item => !yaExistePendienteCompra(estado.inventario, item))
+        .map(convertirCompraAPendienteInventario)
+      if (nuevosPendientes.length) {
+        const inventario = [...estado.inventario, ...nuevosPendientes]
+        guardarInventarioLocal(inventario)
+        set({ inventario })
+      }
 
       guardarCompraManualLocal(
         compraManualPendiente
