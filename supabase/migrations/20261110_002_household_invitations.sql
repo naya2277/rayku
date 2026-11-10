@@ -1,5 +1,7 @@
 -- Apply after 20261109_001_workspaces.sql. Invitations require explicit acceptance.
 begin;
+create schema if not exists extensions;
+create extension if not exists pgcrypto with schema extensions;
 create table if not exists public.household_invitations (
  id uuid primary key default gen_random_uuid(),
  household_id uuid not null references public.households(id) on delete cascade,
