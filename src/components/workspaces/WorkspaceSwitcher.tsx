@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { listHouseholds, createHousehold, createHouseholdInvitation, acceptHouseholdInvitation, type Household } from '../../lib/workspaces'
 import './WorkspaceSwitcher.css'
+import HogarCompartido from './HogarCompartido'
 
 type Props = { userId: string }
 
@@ -80,6 +81,7 @@ export default function WorkspaceSwitcher({ userId }: Props) {
           {message && <p role="status">{message}</p>}
         </div>
       </details>
+      {selection !== 'personal' && households.some(h=>h.id===selection) && <HogarCompartido key={selection} householdId={selection}/>}
     </section>
   )
 }
