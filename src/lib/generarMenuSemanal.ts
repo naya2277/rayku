@@ -48,10 +48,12 @@ export function generarMenuSemanal(
   }
   const elegibles = recetas.filter(r => r.nombre.trim() && recetaPermitida(r, preferenciasCombinadas) && !incompatibleAparato(r))
   const disponibles = new Map<string, number>()
+  const caducidades = new Map<string, string[]>()
   for (const item of inventario) {
     if (item.ubicacion === 'pendiente' || item.cantidad <= 0) continue
     const clave = obtenerClaveIngredienteCompra(item.nombre) + '|' + item.unidad
     disponibles.set(clave, (disponibles.get(clave) ?? 0) + item.cantidad)
+    if (item.fechaCaducidad) caducidades.set(clave, [...(caducidades.get(clave) ?? []), item.fechaCaducidad])
   }
   const reservas = new Map<string, number>()
   const reservar = (r: Receta, raciones = r.raciones) => {
@@ -105,7 +107,12 @@ export function generarMenuSemanal(
           return (disponibles.get(clave) ?? 0) - (reservas.get(clave) ?? 0) >= (i.cantidad ?? 0)
         }).length
         const ventajaInventario = priorizarInventario && conocidos.length ? 80 * cubiertos / conocidos.length : 0
-        return (usos.get(r.id) ?? 0) * 100 + (repetidaHoy ? 1000 : repetidaCerca ? 250 : 0) - ventajaInventario -
+        const ventajaCaducidad = priorizarInventario ? conocidos.reduce((total,i)=>{
+          const clave = obtenerClaveIngredienteCompra(i.nombre) + '|' + i.unidad
+          const caducaPronto = (caducidades.get(clave) ?? []).some(c => c >= fecha && c <= fechas.at(-1)!)
+          return total + (caducaPronto ? 30 : 0)
+        },0) : 0
+        return (usos.get(r.id) ?? 0) * 100 + (repetidaHoy ? 1000 : repetidaCerca ? 250 : 0) - ventajaInventario - ventajaCaducidad -
           (favorito ? 8 : 0) - (r.favorita ? 4 : 0) +
           (tipoComida === 'cena' && r.tiempo > 45 ? 2 : 0)
       }
