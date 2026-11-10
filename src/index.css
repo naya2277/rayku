@@ -406,3 +406,24 @@ input:focus-visible,textarea:focus-visible,select:focus-visible,button:focus-vis
 .planning-premium-day > div:first-child {padding-bottom:13px;border-bottom:1px solid var(--borde)}
 .planning-premium-day .pill {border-radius:9px}
 @media(max-width:768px){.contenido-principal{padding:16px 12px 28px}.planning-premium-day{padding:16px}.nav-links button.activo{box-shadow:none}}
+
+/* Rayku 2.0 — planning cálido y colorido, en armonía con modo tablet. */
+.planning-premium-day {
+  background: var(--card) !important;
+  border-left-width: 5px !important;
+  box-shadow: 0 9px 28px rgba(93, 65, 83, .06);
+  overflow: hidden;
+}
+.planning-premium-day:nth-child(1) { transition: box-shadow .2s ease; }
+.planning-premium-day:hover { box-shadow: 0 12px 30px rgba(93,65,83,.09); }
+.planning-premium-day > div:first-child {
+  margin: -20px -22px 16px !important;
+  padding: 17px 22px 14px !important;
+  background: linear-gradient(105deg, var(--day-pastel, #f9eaf1), rgba(255,255,255,.62));
+  border-bottom: 1px solid rgba(125,95,115,.08);
+}
+.planning-premium-day > div:first-child h3 { text-transform: capitalize; color: #594559; }
+.planning-premium-day > div:first-child p { color: #806b7a !important; }
+@media(max-width:768px) {
+  .planning-premium-day > div:first-child { margin:-16px -16px 14px !important; padding:15px 16px 12px !important; }
+}
