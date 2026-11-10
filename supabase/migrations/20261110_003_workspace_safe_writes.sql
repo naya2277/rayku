@@ -2,7 +2,7 @@
 begin;
 create or replace function public.rayku_save_workspace_record(
  p_household uuid, p_kind text, p_payload jsonb, p_expected_version bigint
-) returns public.workspace_records language plpgsql security invoker set search_path = ''
+) returns public.workspace_records language plpgsql security definer set search_path = ''
 as $$
 declare v_record public.workspace_records;
 begin
