@@ -19,8 +19,8 @@ import {
 } from '../store'
 
 import DiaPlanning from '../components/planning/DiaPlanning'
-import { cargarPerfilHogar } from '../lib/perfilHogar'
-import { generarMenuSemanal, recetaPermitida, recetaCompatible } from '../lib/generarMenuSemanal'
+import { cargarPerfilHogar, guardarPerfilHogar } from '../lib/perfilHogar'
+import { generarMenuSemanal, recetaPermitida, recetaCompatible, recetaCompatibleHogar } from '../lib/generarMenuSemanal'
 
 const EMOJIS_DIA = [
   '🌸',
@@ -151,10 +151,22 @@ export default function Planning({
   function cambiarSemana(nueva: Date) { setSemanaBase(nueva); setPropuestas(null) }
   function aceptarSemana() {
     if (!propuestas) return
+    const actual = useRaykuStore.getState()
+    const hogar = cargarPerfilHogar()
     for (const p of propuestas.propuestas) {
       const id = seleccion[p.fecha + p.tipoComida]
-      if (id) guardarHuecoPlanning({ fecha: p.fecha, tipoComida: p.tipoComida, recetaId: id, recetaIds: [id], comidaLibre: '', nota: '', cocinado: false })
+      if (!id || actual.planning.some(h => h.fecha === p.fecha && h.tipoComida === p.tipoComida)) continue
+      const receta = actual.recetas.find(r=>r.id===id)
+      if (!receta || !recetaCompatible(receta,p.tipoComida) || !recetaPermitida(receta,actual.preferenciasAlimentarias) || !recetaCompatibleHogar(receta,hogar)) continue
+      actual.guardarHuecoPlanning({ fecha: p.fecha, tipoComida: p.tipoComida, recetaId: id, recetaIds: [id], comidaLibre: '', nota: '', cocinado: false })
     }
+    setPropuestas(null)
+  }
+  function rechazarReceta(id: string) {
+    const hogar = cargarPerfilHogar()
+    const persona = hogar.personas[0]
+    if (!persona) return
+    guardarPerfilHogar({...hogar, personas: hogar.personas.map(p=>p.id===persona.id?{...p,rechazadas:[...new Set([...p.rechazadas,id])]}:p)})
     setPropuestas(null)
   }
 
@@ -309,8 +321,9 @@ export default function Planning({
             <strong>{p.fecha} · {p.tipoComida}</strong>
             <select style={{ display: 'block', width: '100%', padding: 10 }} value={seleccion[p.fecha + p.tipoComida] ?? ''} onChange={e => setSeleccion(prev => ({ ...prev, [p.fecha + p.tipoComida]: e.target.value }))}>
               <option value="">Dejar sin planificar</option>
-              {recetas.filter(r => recetaPermitida(r, preferenciasAlimentarias) && recetaCompatible(r, p.tipoComida)).map(r => <option key={r.id} value={r.id}>{r.nombre}</option>)}
+              {recetas.filter(r => recetaPermitida(r, preferenciasAlimentarias) && recetaCompatible(r, p.tipoComida) && recetaCompatibleHogar(r,cargarPerfilHogar())).map(r => <option key={r.id} value={r.id}>{r.nombre}</option>)}
             </select>
+            {seleccion[p.fecha + p.tipoComida] && <button type="button" className="btn-secundario" onClick={()=>rechazarReceta(seleccion[p.fecha + p.tipoComida])}>👎 No me gusta esta receta (persona principal)</button>}
           </label>)}
           {propuestas.sinCubrir.length > 0 && <p>{propuestas.sinCubrir.length} huecos sin recetas compatibles.</p>}
           <button className="btn-principal" onClick={aceptarSemana}>💜 Confirmar propuestas</button>
