@@ -63,7 +63,7 @@ export function generarMenuSemanal(
   }
   // Lo ya planificado también consume parte del stock disponible.
   for (const item of planning) {
-    if (item.cocinado || item.fecha < limiteInferior || item.fecha > (ultimaFechaSemana ?? '')) continue
+    if (item.cocinado || item.fecha < (fechas[0] ?? '') || item.fecha > (fechas.at(-1) ?? '')) continue
     for (const id of item.recetaIds?.length ? item.recetaIds : item.recetaId ? [item.recetaId] : []) {
       const r = recetas.find(x=>x.id===id)
       if (r) reservar(r, item.racionesOverride || r.raciones)
