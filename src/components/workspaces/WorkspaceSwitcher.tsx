@@ -38,7 +38,7 @@ export default function WorkspaceSwitcher({ userId }: Props) {
   const refresh = async () => { const items=await listHouseholds();setHouseholds(items);setStatus('ready') }
   const create = async () => {try {const h=await createHousehold(newName);await refresh();setSelection(h.id);setNewName('');setMessage('Hogar creado. Todavía no está conectado a los datos del planning.')}catch(e){setMessage(String(e))}}
   const invite = async () => {try {const token=await createHouseholdInvitation(selection,inviteEmail);setInviteToken(token);setMessage('Invitación creada. Comparte el enlace solo con su destinatario.')}catch(e){setMessage(String(e))}}
-  const join = async () => {try {await acceptHouseholdInvitation(joinToken);await refresh();setJoinToken('');setMessage('Invitación aceptada. La sincronización del hogar aún está pendiente.')}catch(e){setMessage(String(e))}}
+  const join = async () => {try {await acceptHouseholdInvitation(joinToken.includes('?invite=') ? new URL(joinToken).searchParams.get('invite') ?? '' : joinToken);await refresh();setJoinToken('');setMessage('Invitación aceptada. La sincronización del hogar aún está pendiente.')}catch(e){setMessage(String(e))}}
   const invitationUrl = inviteToken ? window.location.origin + '/?invite=' + encodeURIComponent(inviteToken) : ''
   return (
     <section className="workspace-switcher" aria-label="Espacios de Rayku">
