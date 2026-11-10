@@ -21,6 +21,7 @@ import {
 } from '../lib/inventario'
 
 import FormularioInventario from '../components/inventario/FormularioInventario'
+import EntradaRapida from '../components/inventario/EntradaRapida'
 import EntradaCocina from '../components/inventario/EntradaCocina'
 import SeccionInventario from '../components/inventario/SeccionInventario'
 import AccionesPendientesInventario from '../components/inventario/AccionesPendientesInventario'
@@ -386,6 +387,8 @@ export default function Inventario() {
           ➕ Añadir producto
         </button>
       </div>
+
+      <EntradaRapida agregar={agregarItemInventario} />
 
       {productosUrgentes.length > 0 && (
         <div
