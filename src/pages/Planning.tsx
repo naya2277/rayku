@@ -19,6 +19,7 @@ import {
 } from '../store'
 
 import DiaPlanning from '../components/planning/DiaPlanning'
+import AsistenteSemanal from '../components/planning/AsistenteSemanal'
 import { cargarPerfilHogar, guardarPerfilHogar } from '../lib/perfilHogar'
 import { generarMenuSemanal, recetaPermitida, recetaCompatible, recetaCompatibleHogar } from '../lib/generarMenuSemanal'
 
@@ -285,6 +286,7 @@ export default function Planning({
         </button>
       </div>
 
+      <AsistenteSemanal planning={planning} recetas={recetas} inventario={inventario} desde={format(dias[0], 'yyyy-MM-dd')} hasta={format(dias[6], 'yyyy-MM-dd')} onAbrirReceta={onAbrirReceta}/>
       <section className="card" style={{ padding: 18, marginBottom: 20 }}>
         <h3>✨ Propuestas de Rayku</h3>
         <details style={{ marginBottom: 14 }}>
