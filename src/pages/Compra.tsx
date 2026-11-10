@@ -22,6 +22,7 @@ import {
 } from '../lib/generarListaCompra'
 
 import FormularioCompraManual from '../components/compra/FormularioCompraManual'
+import { obtenerClaveIngredienteCompra } from '../lib/compra/normalizacionCompra'
 import ResumenCompra from '../components/compra/ResumenCompra'
 import GrupoCompra from '../components/compra/GrupoCompra'
 import ModoSupermercado from '../components/compra/ModoSupermercado'
@@ -183,6 +184,22 @@ export default function Compra() {
       recetas
     )
   }, [planningFiltrado, recetas])
+
+  const usosPorIngrediente = useMemo(() => {
+    const usos = new Map<string, { fecha: string; receta: string }[]>()
+    for (const hueco of [...planningFiltrado].sort((a,b)=>a.fecha.localeCompare(b.fecha))) {
+      const ids = hueco.recetaIds?.length ? hueco.recetaIds : hueco.recetaId ? [hueco.recetaId] : []
+      for (const id of ids) {
+        const receta = recetas.find(r=>r.id===id)
+        if (!receta) continue
+        for (const ingrediente of generarIngredientesCompra([{...hueco,recetaIds:[id],recetaId:id,comidaLibre:''}],[receta])) {
+          const clave = obtenerClaveIngredienteCompra(ingrediente.nombre)
+          usos.set(clave,[...(usos.get(clave)??[]),{fecha:hueco.fecha,receta:receta.nombre}])
+        }
+      }
+    }
+    return usos
+  },[planningFiltrado,recetas])
 
   const itemsManualesComoCompra =
     useMemo<IngredienteCompra[]>(
@@ -518,6 +535,16 @@ console.log('========================')
         />
       )}
 
+      {paraComprar.length > 0 && <details className="card" style={{marginBottom:18}}>
+        <summary style={{cursor:'pointer',fontWeight:800}}>📅 ¿Para qué día necesito cada producto?</summary>
+        <div style={{display:'grid',gap:10,marginTop:12}}>
+          {paraComprar.filter(item=>!item.clave.startsWith('manual-')).map(item=><div key={item.clave} style={{borderBottom:'1px solid var(--borde)',paddingBottom:8}}>
+            <strong>{item.nombre}</strong>{item.cantidadFaltante!==null && item.unidad ? ` · comprar ${item.cantidadFaltante} ${item.unidad}` : ''}
+            <div style={{fontSize:13,color:'var(--txt2)'}}>{(usosPorIngrediente.get(item.clave)??[]).map(u=>`${u.fecha} (${u.receta})`).join(' · ') || 'Sin fecha identificada'}</div>
+          </div>)}
+        </div>
+        <p style={{fontSize:12,marginTop:10}}>Las fechas indican cuándo se usa el ingrediente; la cantidad a comprar es el total pendiente del rango seleccionado.</p>
+      </details>}
       <ResumenCompra
         total={
           paraComprar.length +
