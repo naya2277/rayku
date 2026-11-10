@@ -3,6 +3,13 @@ import { APARATOS, DIETAS, cargarPerfilHogar, guardarPerfilHogar, listaTexto, ty
 
 export default function ConfiguracionHogar({ onTerminar, onInventario }: { onTerminar: () => void; onInventario: () => void }) {
  const [perfil, setPerfil] = useState<PerfilHogar>(cargarPerfilHogar)
+ const [otroAparato, setOtroAparato] = useState('')
+ const agregarAparato = () => {
+  const nombre = otroAparato.trim()
+  if (!nombre) return
+  setPerfil(p => ({...p,aparatos: p.aparatos.some(a => a.toLocaleLowerCase('es') === nombre.toLocaleLowerCase('es')) ? p.aparatos : [...p.aparatos,nombre]}))
+  setOtroAparato('')
+ }
  const editar = (id: string, cambios: Partial<PerfilPersona>) => setPerfil(p=>({...p,personas:p.personas.map(x=>x.id===id?{...x,...cambios}:x)}))
  const guardar = () => { guardarPerfilHogar({...perfil,configurado:true}); onTerminar() }
  return <section className="card" style={{display:'grid',gap:18}}>
@@ -19,6 +26,11 @@ export default function ConfiguracionHogar({ onTerminar, onInventario }: { onTer
   <p>Estas son tus preferencias personales. Otras personas tendrán su propia cuenta y podrán unirse a un calendario doméstico compartido cuando se habiliten las invitaciones.</p>
   <h3>🍳 Aparatos disponibles</h3>
   <div style={{display:'flex',gap:9,flexWrap:'wrap'}}>{APARATOS.map(a=><label key={a} style={{display:'flex',alignItems:'center',gap:5}}><input type="checkbox" style={{width:'auto'}} checked={perfil.aparatos.includes(a)} onChange={e=>setPerfil(p=>({...p,aparatos:e.target.checked?[...p.aparatos,a]:p.aparatos.filter(x=>x!==a)}))}/>{a}</label>)}</div>
+  {perfil.aparatos.filter(a=>!APARATOS.includes(a)).length > 0 && <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>{perfil.aparatos.filter(a=>!APARATOS.includes(a)).map(a=><button type="button" className="btn-secundario" key={a} onClick={()=>setPerfil(p=>({...p,aparatos:p.aparatos.filter(x=>x!==a)}))}>{a} ✕</button>)}</div>}
+  <form onSubmit={e=>{e.preventDefault();agregarAparato()}} style={{display:'flex',gap:8,flexWrap:'wrap'}}>
+    <input aria-label="Otro aparato de cocina" style={{flex:1,minWidth:180}} placeholder="¿Falta alguno? Escríbelo aquí" value={otroAparato} onChange={e=>setOtroAparato(e.target.value)}/>
+    <button type="submit" className="btn-secundario" disabled={!otroAparato.trim()}>+ Añadir aparato</button>
+  </form>
   <label style={{display:'flex',gap:8,alignItems:'center'}}><input type="checkbox" style={{width:'auto'}} checked={perfil.priorizarInventario} onChange={e=>setPerfil(p=>({...p,priorizarInventario:e.target.checked}))}/>Priorizar ingredientes que ya tengo</label>
   <button className="btn-principal" onClick={guardar}>💜 Guardar configuración</button>
   <button className="btn-secundario" onClick={()=>{guardarPerfilHogar({...perfil,configurado:true});onInventario()}}>📦 Guardar e introducir mi despensa</button>
