@@ -44,7 +44,7 @@ export default function HogarCompartido({householdId}:{householdId:string}){
   <button type="button" className="btn-secundario" disabled={ocupado} onClick={()=>{setCargando(true);cargar().catch(e=>setMensaje(String(e))).finally(()=>setCargando(false))}}>🔄 Actualizar desde el otro móvil</button>
   {cargando?<p>Cargando datos del hogar…</p>:<>
    <h4>🛒 Lista compartida</h4>
-   <form onSubmit={e=>{e.preventDefault();if(!texto.trim())return;void guardar({...datos,compra:[...datos.compra,{id:nuevoId(),texto:texto.trim(),hecho:false}]}).then(()=>setTexto(''))}} style={{display:'flex',gap:8}}>
+   <form onSubmit={e=>{e.preventDefault();if(!texto.trim())return;void guardar({...datos,compra:[...datos.compra,{id:nuevoId(),texto:texto.trim(),hecho:false}]})}} style={{display:'flex',gap:8}}>
     <input aria-label="Añadir producto al hogar" placeholder="Producto y cantidad" value={texto} onChange={e=>setTexto(e.target.value)}/>
     <button className="btn-secundario" type="submit" disabled={ocupado||!texto.trim()}>Añadir</button>
    </form>
@@ -54,7 +54,7 @@ export default function HogarCompartido({householdId}:{householdId:string}){
     <button className="btn-secundario" type="button" disabled={ocupado} onClick={()=>void guardar({...datos,compra:datos.compra.filter(x=>x.id!==item.id)})}>Eliminar</button>
    </div>)}
    <h4>📅 Calendario conjunto</h4>
-   <form onSubmit={e=>{e.preventDefault();if(!fecha||!nota.trim())return;void guardar({...datos,calendario:[...datos.calendario,{id:nuevoId(),fecha,comida,nota:nota.trim()}]}).then(()=>setNota(''))}} style={{display:'flex',flexWrap:'wrap',gap:8}}>
+   <form onSubmit={e=>{e.preventDefault();if(!fecha||!nota.trim())return;void guardar({...datos,calendario:[...datos.calendario,{id:nuevoId(),fecha,comida,nota:nota.trim()}]})}} style={{display:'flex',flexWrap:'wrap',gap:8}}>
     <input aria-label="Fecha compartida" type="date" value={fecha} onChange={e=>setFecha(e.target.value)} required/>
     <select aria-label="Momento del día" value={comida} onChange={e=>setComida(e.target.value)}><option value="comida">Comida</option><option value="cena">Cena</option></select>
     <input aria-label="Nota del calendario" placeholder="¿Qué comemos?" value={nota} onChange={e=>setNota(e.target.value)} required/>
