@@ -333,7 +333,7 @@ export default function Inicio({
             }}
           >
             <img
-              src="/rayku-buenosdias.png"
+              src="https://raw.githubusercontent.com/naya2277/rayku/main/public/rayku-buenosdias.png.png"
               alt="Rayku dando los buenos días"
               style={{
                 width: '100%',
