@@ -12,8 +12,8 @@ export default function ConfiguracionHogar({ onTerminar, onInventario }: { onTer
    <label>Nombre<input value={persona.nombre} onChange={e=>editar(persona.id,{nombre:e.target.value})}/></label>
    <strong>Alimentación</strong>
    <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>{DIETAS.map(d=><label key={d} style={{display:'flex',gap:5,alignItems:'center'}}><input style={{width:'auto'}} type="checkbox" checked={persona.dietas.includes(d)} onChange={e=>editar(persona.id,{dietas:e.target.checked?[...persona.dietas,d]:persona.dietas.filter(x=>x!==d)})}/>{d}</label>)}</div>
-   <label>Ingredientes prohibidos o que no come<input placeholder="Ej.: cebolla, pimiento, pepino" value={persona.prohibidos.join(', ')} onChange={e=>editar(persona.id,{prohibidos:listaTexto(e.target.value)})}/></label>
-   <label>Ingredientes favoritos<input placeholder="Ej.: salmón, queso" value={persona.favoritos.join(', ')} onChange={e=>editar(persona.id,{favoritos:listaTexto(e.target.value)})}/></label>
+   <label>Ingredientes prohibidos o que no come<input placeholder="Ej.: cebolla, pimiento, pepino" defaultValue={persona.prohibidos.join(', ')} onBlur={e=>editar(persona.id,{prohibidos:listaTexto(e.target.value)})}/></label>
+   <label>Ingredientes favoritos<input placeholder="Ej.: salmón, queso" defaultValue={persona.favoritos.join(', ')} onBlur={e=>editar(persona.id,{favoritos:listaTexto(e.target.value)})}/></label>
    <button className="btn-secundario" onClick={()=>setPerfil(p=>({...p,personas:p.personas.filter(x=>x.id!==persona.id)}))} disabled={perfil.personas.length===1}>Eliminar persona</button>
   </div>)}
   <button className="btn-secundario" onClick={()=>setPerfil(p=>({...p,personas:[...p.personas,{id:crypto.randomUUID(),nombre:'',dietas:[],prohibidos:[],favoritos:[],rechazadas:[]}]}))}>+ Añadir persona</button>
