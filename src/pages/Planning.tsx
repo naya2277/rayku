@@ -323,7 +323,7 @@ export default function Planning({
               <option value="">Dejar sin planificar</option>
               {recetas.filter(r => recetaPermitida(r, preferenciasAlimentarias) && recetaCompatible(r, p.tipoComida) && recetaCompatibleHogar(r,cargarPerfilHogar())).map(r => <option key={r.id} value={r.id}>{r.nombre}</option>)}
             </select>
-            {seleccion[p.fecha + p.tipoComida] && <button type="button" className="btn-secundario" onClick={()=>rechazarReceta(seleccion[p.fecha + p.tipoComida])}>👎 No me gusta esta receta (persona principal)</button>}
+            {seleccion[p.fecha + p.tipoComida] && <button type="button" className="btn-secundario" onClick={()=>rechazarReceta(seleccion[p.fecha + p.tipoComida])}>👎 No me gusta esta receta</button>}
           </label>)}
           {propuestas.sinCubrir.length > 0 && <p>{propuestas.sinCubrir.length} huecos sin recetas compatibles.</p>}
           <button className="btn-principal" onClick={aceptarSemana}>💜 Confirmar propuestas</button>
