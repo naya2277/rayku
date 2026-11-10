@@ -49,4 +49,6 @@ revoke all on function public.rayku_create_household_invitation(uuid,text) from 
 revoke all on function public.rayku_accept_household_invitation(text) from public;
 grant execute on function public.rayku_create_household_invitation(uuid,text) to authenticated;
 grant execute on function public.rayku_accept_household_invitation(text) to authenticated;
+-- No owner may add another account without its explicit acceptance.
+drop function if exists public.rayku_invite_household_member(uuid,uuid);
 commit;
