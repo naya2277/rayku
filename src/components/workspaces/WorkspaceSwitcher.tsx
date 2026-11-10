@@ -6,8 +6,8 @@ import HogarCompartido from './HogarCompartido'
 type Props = { userId: string }
 
 /**
- * Read-only workspace preview. Existing pages still use the legacy store.
- * Never imply that selecting a household switches the data source yet.
+ * The shared board is live once migrations are applied; legacy pages remain personal.
+ * Selecting a household does not switch the legacy planning or shopping data.
  */
 export default function WorkspaceSwitcher({ userId }: Props) {
   const [newName,setNewName] = useState('')
@@ -37,9 +37,9 @@ export default function WorkspaceSwitcher({ userId }: Props) {
   }, [userId])
 
   const refresh = async () => { const items=await listHouseholds();setHouseholds(items);setStatus('ready') }
-  const create = async () => {try {const h=await createHousehold(newName);await refresh();setSelection(h.id);setNewName('');setMessage('Hogar creado. Todavía no está conectado a los datos del planning.')}catch(e){setMessage(String(e))}}
+  const create = async () => {try {const h=await createHousehold(newName);await refresh();setSelection(h.id);setNewName('');setMessage('Hogar creado. Ya puedes usar el tablero compartido; el planning personal sigue separado.')}catch(e){setMessage(String(e))}}
   const invite = async () => {try {const token=await createHouseholdInvitation(selection,inviteEmail);setInviteToken(token);setMessage('Invitación creada. Comparte el enlace solo con su destinatario.')}catch(e){setMessage(String(e))}}
-  const join = async () => {try {await acceptHouseholdInvitation(joinToken.includes('?invite=') ? new URL(joinToken).searchParams.get('invite') ?? '' : joinToken);await refresh();setJoinToken('');setMessage('Invitación aceptada. La sincronización del hogar aún está pendiente.')}catch(e){setMessage(String(e))}}
+  const join = async () => {try {await acceptHouseholdInvitation(joinToken.includes('?invite=') ? new URL(joinToken).searchParams.get('invite') ?? '' : joinToken);await refresh();setJoinToken('');setMessage('Invitación aceptada. Selecciona el hogar para abrir el tablero compartido.')}catch(e){setMessage(String(e))}}
   const invitationUrl = inviteToken ? window.location.origin + '/?invite=' + encodeURIComponent(inviteToken) : ''
   return (
     <section className="workspace-switcher" aria-label="Espacios de Rayku">
@@ -63,8 +63,8 @@ export default function WorkspaceSwitcher({ userId }: Props) {
           : status === 'unavailable'
             ? 'Espacios compartidos pendientes de activar en Supabase.'
             : selection === 'personal'
-              ? 'Vista previa: tus pantallas aún usan los datos actuales.'
-              : 'Vista previa: el hogar está seleccionado, pero sus datos todavía no están conectados.'}
+              ? 'Tus recetas, planning y compra inteligente siguen siendo personales.'
+              : 'El tablero del hogar se comparte; el planning y la compra inteligente siguen siendo personales.'}
       </p>
       <details>
         <summary>🏡 Crear hogar o invitar a alguien</summary>
