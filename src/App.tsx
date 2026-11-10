@@ -16,6 +16,8 @@ import {
 } from './store'
 
 import Inicio from './pages/Inicio'
+import ConfiguracionHogar from './pages/ConfiguracionHogar'
+import { cargarPerfilHogar } from './lib/perfilHogar'
 import Planning from './pages/Planning'
 import CalendarioPlanning from './pages/CalendarioPlanning'
 import Recetas from './pages/Recetas'
@@ -32,6 +34,7 @@ import { guardarCompraManualLocal, guardarChecksCompraLocal } from './store/stor
 
 type Pagina =
   | 'inicio'
+  | 'configuracion'
   | 'chef'
   | 'planning'
   | 'calendario'
@@ -44,6 +47,7 @@ const PAGINA_KEY =
 
 const PAGINAS_VALIDAS: Pagina[] = [
   'inicio',
+  'configuracion',
   'chef',
   'planning',
   'calendario',
@@ -72,6 +76,7 @@ function obtenerPaginaInicial(): Pagina {
 
 function MainApp() {
   const [modoTablet, setModoTablet] = useState(false)
+  const [perfilConfigurado, setPerfilConfigurado] = useState(() => cargarPerfilHogar().configurado)
 
   const [session, setSession] =
     useState<Session | null>(null)
@@ -220,6 +225,10 @@ function MainApp() {
     return <Auth />
   }
 
+  if (!perfilConfigurado || paginaActual === 'configuracion') {
+    return <div className="app"><main className="contenido-principal"><ConfiguracionHogar onTerminar={() => { setPerfilConfigurado(true); setPaginaActual('planning') }} onInventario={() => { setPerfilConfigurado(true); setPaginaActual('inventario') }} /></main></div>
+  }
+
   if (modoTablet) {
     return <TabletMode onSalir={() => setModoTablet(false)} />
   }
@@ -354,6 +363,7 @@ function MainApp() {
             📦 Inventario
           </button>
 
+          <button type="button" className="btn-secundario" onClick={() => setPaginaActual('configuracion')}>⚙️ Hogar</button>
           <button type="button" className="btn-secundario" onClick={() => setModoTablet(true)}>
             📱 Modo tablet
           </button>
