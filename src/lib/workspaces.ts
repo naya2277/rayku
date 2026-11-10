@@ -62,18 +62,6 @@ export async function createHousehold(name: string): Promise<Household> {
   return data as Household
 }
 
-export async function addHouseholdMember(
-  householdId: string,
-  userId: string
-): Promise<void> {
-  await currentUserId()
-  const { error } = await supabase.rpc('rayku_invite_household_member', {
-    p_household: householdId,
-    p_user: userId,
-  })
-  if (error) throw error
-}
-
 export async function getWorkspaceRecord<T>(
   workspace: Workspace,
   kind: WorkspaceKind
