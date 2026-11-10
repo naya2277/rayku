@@ -1,7 +1,7 @@
 export type PerfilPersona = { id: string; nombre: string; dietas: string[]; prohibidos: string[]; favoritos: string[]; rechazadas: string[] }
 export type PerfilHogar = { configurado: boolean; personas: PerfilPersona[]; aparatos: string[]; priorizarInventario: boolean }
 export const PERFIL_KEY = 'rayku-perfil-hogar-v1'
-export const APARATOS = ['Freidora de aire','Horno','Microondas','Vitrocerámica','Gas','Inducción','Olla lenta','Robot de cocina','Tostadora','Batidora','Olla a presión']
+export const APARATOS = ['Freidora de aire','Horno','Microondas','Vitrocerámica','Gas','Inducción','Olla lenta','Robot de cocina','Tostadora','Batidora','Olla a presión','Olla Cucut','Procesador de alimentos','Olla de hierro fundido / cocotte','Olla tradicional','Crockpot','Ninja Combi','Picadora','Vaporera','Arrocera','Plancha eléctrica','Sandwichera','Grill eléctrico','Amasadora','Licuadora']
 export const DIETAS = ['Sin dieta específica','Keto','Baja en carbohidratos','Mediterránea','Vegetariana','Vegana','Sin gluten','Sin lactosa']
 export const perfilInicial: PerfilHogar = { configurado: false, personas: [{id:'persona-1',nombre:'Persona 1',dietas:[],prohibidos:[],favoritos:[],rechazadas:[]}],aparatos:[],priorizarInventario:true }
 export function cargarPerfilHogar(): PerfilHogar {
