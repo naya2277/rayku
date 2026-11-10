@@ -33,12 +33,20 @@ export function generarMenuSemanal(
   const elegibles = recetas.filter(r => r.nombre.trim() && recetaPermitida(r, preferencias))
   const propuestas: Hueco[] = []
   const sinCubrir: string[] = []
+  // Solo las comidas próximas a la semana influyen en la variedad.
+  // El historial remoto y las comidas futuras no deben penalizar recetas indefinidamente.
+  const primeraFecha = [...fechas].sort()[0]
+  const ultimaFechaSemana = [...fechas].sort().at(-1)
+  const desde = primeraFecha ? new Date(primeraFecha + 'T12:00:00') : null
+  desde?.setDate(desde.getDate() - 7)
+  const limiteInferior = desde ? [desde.getFullYear(), String(desde.getMonth() + 1).padStart(2, '0'), String(desde.getDate()).padStart(2, '0')].join('-') : ''
   const usos = new Map<string, number>()
-  const ultimaFecha = new Map<string, string>()
+  const fechasPorReceta = new Map<string, string[]>()
   for (const item of planning) {
+    if (item.fecha < limiteInferior || item.fecha > (ultimaFechaSemana ?? '')) continue
     for (const id of item.recetaIds?.length ? item.recetaIds : item.recetaId ? [item.recetaId] : []) {
       usos.set(id, (usos.get(id) ?? 0) + 1)
-      if ((ultimaFecha.get(id) ?? '') < item.fecha) ultimaFecha.set(id, item.fecha)
+      fechasPorReceta.set(id, [...(fechasPorReceta.get(id) ?? []), item.fecha])
     }
   }
   for (const fecha of fechas) {
@@ -48,8 +56,11 @@ export function generarMenuSemanal(
       const puntuacion = (r: Receta) => {
         const favoritos = preferencias.ingredientesFavoritos.filter(Boolean)
         const favorito = favoritos.some(f => [r.nombre, ...r.ingredientes].some(i => normalizarIngrediente(i).includes(normalizarIngrediente(f))))
-        const repetidaHoy = ultimaFecha.get(r.id) === fecha
-        return (usos.get(r.id) ?? 0) * 100 + (repetidaHoy ? 1000 : 0) -
+        const fechasUsadas = fechasPorReceta.get(r.id) ?? []
+        const repetidaHoy = fechasUsadas.includes(fecha)
+        const fechaActual = new Date(fecha + 'T12:00:00').getTime()
+        const repetidaCerca = fechasUsadas.some(f => Math.abs(new Date(f + 'T12:00:00').getTime() - fechaActual) <= 2 * 86400000)
+        return (usos.get(r.id) ?? 0) * 100 + (repetidaHoy ? 1000 : repetidaCerca ? 250 : 0) -
           (favorito ? 8 : 0) - (r.favorita ? 4 : 0) +
           (tipoComida === 'cena' && r.tiempo > 45 ? 2 : 0)
       }
@@ -61,7 +72,7 @@ export function generarMenuSemanal(
       }
       propuestas.push({ fecha, tipoComida, recetaId: elegida.id, recetaNombre: elegida.nombre })
       usos.set(elegida.id, (usos.get(elegida.id) ?? 0) + 1)
-      ultimaFecha.set(elegida.id, fecha)
+      fechasPorReceta.set(elegida.id, [...(fechasPorReceta.get(elegida.id) ?? []), fecha])
     }
   }
   return { propuestas, sinCubrir }
