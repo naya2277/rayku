@@ -100,3 +100,18 @@ export async function getWorkspaceRecord<T>(
   if (error) throw error
   return data as WorkspaceRecord<T> | null
 }
+
+export async function createHouseholdInvitation(householdId: string, email: string): Promise<string> {
+  await currentUserId()
+  const { data, error } = await supabase.rpc('rayku_create_household_invitation', {p_household:householdId,p_email:email.trim()})
+  if (error) throw error
+  if (typeof data !== 'string') throw new Error('No se ha generado la invitación.')
+  return data
+}
+
+export async function acceptHouseholdInvitation(token: string): Promise<string> {
+  await currentUserId()
+  const { data, error } = await supabase.rpc('rayku_accept_household_invitation', {p_token:token.trim()})
+  if (error) throw error
+  return String(data)
+}
