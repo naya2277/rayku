@@ -27,6 +27,17 @@ export function recetaCompatible(receta: Receta, tipo: TipoComida) {
   })
 }
 
+export function recetaCompatibleHogar(receta: Receta, hogar?: PerfilHogar) {
+  if (!hogar) return true
+  const prohibidos = hogar.personas.flatMap(p => p.prohibidos)
+  if (!recetaPermitida(receta, {ingredientesProhibidos: prohibidos, ingredientesFavoritos: []})) return false
+  const aparatos = hogar.aparatos
+  const pasos = normalizarIngrediente(receta.pasos)
+  if (aparatos.length && /\bhorno\b/.test(pasos) && !aparatos.includes('Horno') && !/freidora de aire|air ?fryer/.test(pasos)) return false
+  if (aparatos.length && /freidora de aire|air ?fryer/.test(pasos) && !aparatos.includes('Freidora de aire') && !/\bhorno\b/.test(pasos)) return false
+  return true
+}
+
 export function generarMenuSemanal(
   fechas: string[],
   recetas: Receta[],
@@ -38,15 +49,7 @@ export function generarMenuSemanal(
 ): Resultado {
   const prohibidosHogar = hogar?.personas.flatMap(p => p.prohibidos) ?? []
   const preferenciasCombinadas = { ...preferencias, ingredientesProhibidos: [...preferencias.ingredientesProhibidos, ...prohibidosHogar], ingredientesFavoritos: [...preferencias.ingredientesFavoritos, ...(hogar?.personas.flatMap(p=>p.favoritos) ?? [])] }
-  const aparatos = hogar?.aparatos ?? []
-  const incompatibleAparato = (r: Receta) => {
-    const pasos = normalizarIngrediente(r.pasos)
-    if (!aparatos.length) return false
-    if (/\bhorno\b/.test(pasos) && !aparatos.includes('Horno') && !/freidora de aire|air ?fryer/.test(pasos)) return true
-    if (/freidora de aire|air ?fryer/.test(pasos) && !aparatos.includes('Freidora de aire') && !/\bhorno\b/.test(pasos)) return true
-    return false
-  }
-  const elegibles = recetas.filter(r => r.nombre.trim() && recetaPermitida(r, preferenciasCombinadas) && !incompatibleAparato(r))
+  const elegibles = recetas.filter(r => r.nombre.trim() && recetaPermitida(r, preferenciasCombinadas) && recetaCompatibleHogar(r, hogar))
   const disponibles = new Map<string, number>()
   const caducidades = new Map<string, string[]>()
   for (const item of inventario) {
@@ -106,13 +109,15 @@ export function generarMenuSemanal(
           const clave = obtenerClaveIngredienteCompra(i.nombre) + '|' + i.unidad
           return (disponibles.get(clave) ?? 0) - (reservas.get(clave) ?? 0) >= (i.cantidad ?? 0)
         }).length
+        const rechazadas = hogar?.personas.flatMap(p=>p.rechazadas) ?? []
+        const penalizacionRechazo = rechazadas.includes(r.id) ? 400 : 0
         const ventajaInventario = priorizarInventario && conocidos.length ? 80 * cubiertos / conocidos.length : 0
         const ventajaCaducidad = priorizarInventario ? conocidos.reduce((total,i)=>{
           const clave = obtenerClaveIngredienteCompra(i.nombre) + '|' + i.unidad
           const caducaPronto = (caducidades.get(clave) ?? []).some(c => c >= fecha && c <= fechas.at(-1)!)
           return total + (caducaPronto ? 30 : 0)
         },0) : 0
-        return (usos.get(r.id) ?? 0) * 100 + (repetidaHoy ? 1000 : repetidaCerca ? 250 : 0) - ventajaInventario - ventajaCaducidad -
+        return penalizacionRechazo + (usos.get(r.id) ?? 0) * 100 + (repetidaHoy ? 1000 : repetidaCerca ? 250 : 0) - ventajaInventario - ventajaCaducidad -
           (favorito ? 8 : 0) - (r.favorita ? 4 : 0) +
           (tipoComida === 'cena' && r.tiempo > 45 ? 2 : 0)
       }
