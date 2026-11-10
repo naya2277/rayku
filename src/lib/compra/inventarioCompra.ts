@@ -154,53 +154,6 @@ export function cantidadesInventario(
     .join(' + ')
 }
 
-function calcularDisponible(
-  ingrediente: IngredienteCompra,
-  inventario: ItemInventarioListaCompra[]
-) {
-  if (
-    ingrediente.cantidad === null ||
-    !ingrediente.unidad
-  ) {
-    return null
-  }
-
-  return inventario.reduce(
-    (total, item) => {
-      if (!tieneStockDisponible(item)) {
-        return total
-      }
-
-      const coincide =
-        coincidenIngredientesCompra(
-          ingrediente,
-          item.nombre
-        )
-
-      if (!coincide) {
-        return total
-      }
-
-      if (
-        normalizarUnidadCompra(
-          item.unidad
-        ) !==
-        normalizarUnidadCompra(
-          ingrediente.unidad
-        )
-      ) {
-        return total
-      }
-
-      return (
-        total +
-        Number(item.cantidad || 0)
-      )
-    },
-    0
-  )
-}
-
 export function separarIngredientesPorInventario(
   ingredientes: IngredienteCompra[],
   inventario: ItemInventarioListaCompra[]
