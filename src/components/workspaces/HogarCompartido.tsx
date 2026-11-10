@@ -16,10 +16,12 @@ export default function HogarCompartido({householdId}:{householdId:string}){
  const [comida,setComida]=useState('comida')
  const [nota,setNota]=useState('')
  const [ocupado,setOcupado]=useState(false)
+ const [revision,setRevision]=useState(0)
  const cargar=useCallback(async()=>{
   const record=await getWorkspaceRecord<Datos>({scope:'household',householdId},'shopping_list')
   setDatos({compra:Array.isArray(record?.payload?.compra)?record.payload.compra:[],calendario:Array.isArray(record?.payload?.calendario)?record.payload.calendario:[]})
   setVersion(record?.version??0)
+  setRevision(v=>v+1)
  },[householdId])
  useEffect(()=>{
   let activo=true
@@ -27,12 +29,19 @@ export default function HogarCompartido({householdId}:{householdId:string}){
   cargar().catch(e=>{if(activo)setMensaje('No se pudo cargar el hogar: '+String(e))}).finally(()=>{if(activo)setCargando(false)})
   return ()=>{activo=false}
  },[cargar])
+ // Revalidar al volver a la aplicación; no sobrescribir ediciones pendientes.
+ useEffect(()=>{
+  const onVisible=()=>{if(document.visibilityState==='visible' && !ocupado) void cargar().catch(e=>setMensaje(String(e)))}
+  document.addEventListener('visibilitychange',onVisible)
+  return ()=>document.removeEventListener('visibilitychange',onVisible)
+ },[cargar,ocupado])
  const guardar=async(next:Datos)=>{
   if(ocupado)return
   setOcupado(true);setMensaje('')
   try{
    const saved=await saveSharedRecord(householdId,'shopping_list',next,version)
    setDatos(next);setVersion(saved.version)
+   setRevision(v=>v+1)
    setMensaje('Cambios guardados en el hogar.')
   }catch(e){
    setMensaje('No se han guardado los cambios. Puede haber cambios de otro móvil. Recarga antes de repetir: '+String(e))
@@ -41,6 +50,7 @@ export default function HogarCompartido({householdId}:{householdId:string}){
  return <section className="card" style={{padding:18,display:'grid',gap:12}}>
   <h3>🏡 Tablero compartido</h3>
   <p>Este tablero es independiente de tus recetas y preferencias. Los cambios se guardan en el hogar y se pueden consultar desde la otra cuenta.</p>
+  <small>Versión actualizada: {revision > 0 ? 'sí' : 'pendiente'}. Para ver cambios recientes pulsa actualizar o vuelve a abrir la aplicación.</small>
   <button type="button" className="btn-secundario" disabled={ocupado} onClick={()=>{setCargando(true);cargar().catch(e=>setMensaje(String(e))).finally(()=>setCargando(false))}}>🔄 Actualizar desde el otro móvil</button>
   {cargando?<p>Cargando datos del hogar…</p>:<>
    <h4>🛒 Lista compartida</h4>
