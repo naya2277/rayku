@@ -1,4 +1,7 @@
-import type { ItemPlanning, Receta, PreferenciasAlimentarias, TipoComida } from '../store/types'
+import type { ItemPlanning, Receta, PreferenciasAlimentarias, TipoComida, ItemInventario } from '../store/types'
+import type { PerfilHogar } from './perfilHogar'
+import { calcularIngredientesEscalados } from './recetas/calcularIngredientesEscalados'
+import { obtenerClaveIngredienteCompra } from './compra/normalizacionCompra'
 
 type Hueco = { fecha: string; tipoComida: TipoComida; recetaId: string; recetaNombre: string }
 type Resultado = { propuestas: Hueco[]; sinCubrir: string[] }
@@ -29,8 +32,43 @@ export function generarMenuSemanal(
   recetas: Receta[],
   planning: ItemPlanning[],
   preferencias: PreferenciasAlimentarias,
+  inventario: ItemInventario[] = [],
+  hogar?: PerfilHogar,
+  priorizarInventario = false,
 ): Resultado {
-  const elegibles = recetas.filter(r => r.nombre.trim() && recetaPermitida(r, preferencias))
+  const prohibidosHogar = hogar?.personas.flatMap(p => p.prohibidos) ?? []
+  const preferenciasCombinadas = { ...preferencias, ingredientesProhibidos: [...preferencias.ingredientesProhibidos, ...prohibidosHogar], ingredientesFavoritos: [...preferencias.ingredientesFavoritos, ...(hogar?.personas.flatMap(p=>p.favoritos) ?? [])] }
+  const aparatos = hogar?.aparatos ?? []
+  const incompatibleAparato = (r: Receta) => {
+    const pasos = normalizarIngrediente(r.pasos)
+    if (!aparatos.length) return false
+    if (/\bhorno\b/.test(pasos) && !aparatos.includes('Horno') && !/freidora de aire|air ?fryer/.test(pasos)) return true
+    if (/freidora de aire|air ?fryer/.test(pasos) && !aparatos.includes('Freidora de aire') && !/\bhorno\b/.test(pasos)) return true
+    return false
+  }
+  const elegibles = recetas.filter(r => r.nombre.trim() && recetaPermitida(r, preferenciasCombinadas) && !incompatibleAparato(r))
+  const disponibles = new Map<string, number>()
+  for (const item of inventario) {
+    if (item.ubicacion === 'pendiente' || item.cantidad <= 0) continue
+    const clave = obtenerClaveIngredienteCompra(item.nombre) + '|' + item.unidad
+    disponibles.set(clave, (disponibles.get(clave) ?? 0) + item.cantidad)
+  }
+  const reservas = new Map<string, number>()
+  const reservar = (r: Receta, raciones = r.raciones) => {
+    for (const ingrediente of calcularIngredientesEscalados(r, raciones)) {
+      if (ingrediente.cantidad === null || !ingrediente.unidad) continue
+      const clave = obtenerClaveIngredienteCompra(ingrediente.nombre) + '|' + ingrediente.unidad
+      reservas.set(clave, (reservas.get(clave) ?? 0) + ingrediente.cantidad)
+    }
+  }
+  // Lo ya planificado también consume parte del stock disponible.
+  for (const item of planning) {
+    if (item.cocinado || item.fecha < limiteInferior || item.fecha > (ultimaFechaSemana ?? '')) continue
+    for (const id of item.recetaIds?.length ? item.recetaIds : item.recetaId ? [item.recetaId] : []) {
+      const r = recetas.find(x=>x.id===id)
+      if (r) reservar(r, item.racionesOverride || r.raciones)
+    }
+  }
   const propuestas: Hueco[] = []
   const sinCubrir: string[] = []
   // Solo las comidas próximas a la semana influyen en la variedad.
@@ -54,13 +92,20 @@ export function generarMenuSemanal(
       if (planning.some(p => p.fecha === fecha && p.tipoComida === tipoComida)) continue
       const compatibles = elegibles.filter(r => recetaCompatible(r, tipoComida))
       const puntuacion = (r: Receta) => {
-        const favoritos = preferencias.ingredientesFavoritos.filter(Boolean)
+        const favoritos = preferenciasCombinadas.ingredientesFavoritos.filter(Boolean)
         const favorito = favoritos.some(f => [r.nombre, ...r.ingredientes].some(i => normalizarIngrediente(i).includes(normalizarIngrediente(f))))
         const fechasUsadas = fechasPorReceta.get(r.id) ?? []
         const repetidaHoy = fechasUsadas.includes(fecha)
         const fechaActual = new Date(fecha + 'T12:00:00').getTime()
         const repetidaCerca = fechasUsadas.some(f => Math.abs(new Date(f + 'T12:00:00').getTime() - fechaActual) <= 2 * 86400000)
-        return (usos.get(r.id) ?? 0) * 100 + (repetidaHoy ? 1000 : repetidaCerca ? 250 : 0) -
+        const ingredientes = calcularIngredientesEscalados(r)
+        const conocidos = ingredientes.filter(i => i.cantidad !== null && i.unidad)
+        const cubiertos = conocidos.filter(i => {
+          const clave = obtenerClaveIngredienteCompra(i.nombre) + '|' + i.unidad
+          return (disponibles.get(clave) ?? 0) - (reservas.get(clave) ?? 0) >= (i.cantidad ?? 0)
+        }).length
+        const ventajaInventario = priorizarInventario && conocidos.length ? 80 * cubiertos / conocidos.length : 0
+        return (usos.get(r.id) ?? 0) * 100 + (repetidaHoy ? 1000 : repetidaCerca ? 250 : 0) - ventajaInventario -
           (favorito ? 8 : 0) - (r.favorita ? 4 : 0) +
           (tipoComida === 'cena' && r.tiempo > 45 ? 2 : 0)
       }
@@ -71,6 +116,7 @@ export function generarMenuSemanal(
         continue
       }
       propuestas.push({ fecha, tipoComida, recetaId: elegida.id, recetaNombre: elegida.nombre })
+      reservar(elegida)
       usos.set(elegida.id, (usos.get(elegida.id) ?? 0) + 1)
       fechasPorReceta.set(elegida.id, [...(fechasPorReceta.get(elegida.id) ?? []), fecha])
     }
