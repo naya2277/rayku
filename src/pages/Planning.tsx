@@ -19,6 +19,7 @@ import {
 } from '../store'
 
 import DiaPlanning from '../components/planning/DiaPlanning'
+import { cargarPerfilHogar } from '../lib/perfilHogar'
 import { generarMenuSemanal, recetaPermitida, recetaCompatible } from '../lib/generarMenuSemanal'
 
 const EMOJIS_DIA = [
@@ -50,6 +51,7 @@ type Props = {
 export default function Planning({
   onAbrirReceta,
 }: Props) {
+  const [priorizarInventario, setPriorizarInventario] = useState(() => cargarPerfilHogar().priorizarInventario)
   const [propuestas, setPropuestas] = useState<ReturnType<typeof generarMenuSemanal> | null>(null)
   const [seleccion, setSeleccion] = useState<Record<string,string>>({})
   const [nuevoEvitar, setNuevoEvitar] = useState('')
@@ -142,7 +144,7 @@ export default function Planning({
   }
 
   function sugerirSemana() {
-    const resultado = generarMenuSemanal(dias.map(d => format(d, 'yyyy-MM-dd')), recetas, planning, preferenciasAlimentarias)
+    const resultado = generarMenuSemanal(dias.map(d => format(d, 'yyyy-MM-dd')), recetas, planning, preferenciasAlimentarias, inventario, cargarPerfilHogar(), priorizarInventario)
     setPropuestas(resultado)
     setSeleccion(Object.fromEntries(resultado.propuestas.map(p => [p.fecha + p.tipoComida, p.recetaId])))
   }
@@ -300,6 +302,7 @@ export default function Planning({
           </div>
         </details>
         <p>Revisa el menú sugerido. No se cambiará nada hasta que lo confirmes.</p>
+        <label style={{display:'flex',alignItems:'center',gap:8,marginBottom:12}}><input type="checkbox" style={{width:'auto'}} checked={priorizarInventario} onChange={e=>{setPriorizarInventario(e.target.checked);setPropuestas(null)}}/> 🧺 Priorizar lo que ya tengo en casa</label>
         <button className="btn-principal" onClick={sugerirSemana}>✨ Proponer menú semanal</button>
         {propuestas && <div style={{ display: 'grid', gap: 12, marginTop: 14 }}>
           {propuestas.propuestas.map(p => <label key={p.fecha + p.tipoComida}>
