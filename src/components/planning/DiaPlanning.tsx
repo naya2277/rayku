@@ -193,7 +193,7 @@ export default function DiaPlanning({
   }
 
   return (
-    <div className="card planning-premium-day" style={{ backgroundColor: colorDia, borderLeftColor: colorDia }}>
+    <div className="card planning-premium-day" style={{ borderLeftColor: colorDia, ["--day-pastel" as string]: colorDia }}>
       <div
         style={{
           display: 'flex',
