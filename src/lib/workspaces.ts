@@ -103,3 +103,12 @@ export async function acceptHouseholdInvitation(token: string): Promise<string> 
   if (error) throw error
   return String(data)
 }
+
+export async function saveSharedRecord<T>(householdId:string,kind:'planning'|'shopping_list'|'inventory',payload:T,expectedVersion:number):Promise<WorkspaceRecord<T>>{
+ await currentUserId()
+ const {data,error}=await supabase.rpc('rayku_save_workspace_record',{
+  p_household:householdId,p_kind:kind,p_payload:payload,p_expected_version:expectedVersion
+ })
+ if(error)throw error
+ return data as WorkspaceRecord<T>
+}
