@@ -26,6 +26,7 @@ import Compra from './pages/Compra'
 import Auth from './pages/Auth'
 import ChefRayku from './pages/ChefRayku'
 import WorkspaceSwitcher from './components/workspaces/WorkspaceSwitcher'
+import { useUnifiedWorkspace } from './lib/useUnifiedWorkspace'
 import TabletMode from './pages/TabletMode'
 import TabletDemo from './pages/TabletDemo'
 import { descargarCompra, subirCompra } from './lib/sync'
@@ -85,6 +86,7 @@ function MainApp() {
     mensajeNube,
     setMensajeNube,
   ] = useState('')
+  const workspace = useUnifiedWorkspace(session?.user.id ?? '')
 
   const {
     sincronizarRecetasDesdeSupabase,
@@ -196,6 +198,15 @@ function MainApp() {
       setMensajeNube(
         '☁️ Guardando...'
       )
+      if (workspace.selection !== 'personal') {
+        try {
+          await workspace.saveNow()
+          setMensajeNube('✅ Hogar guardado en la nube')
+        } catch (error) {
+          setMensajeNube('⚠️ Error al guardar hogar: ' + (error instanceof Error ? error.message : String(error)))
+        }
+        return
+      }
 
       await guardarRecetasEnSupabase(
         session.user.id
@@ -390,7 +401,8 @@ function MainApp() {
         </div>
       </nav>
 
-      <WorkspaceSwitcher userId={session.user.id} />
+      <WorkspaceSwitcher userId={session.user.id} selection={workspace.selection} onSelect={workspace.select} busy={workspace.busy} />
+      {workspace.message && <p role="status" style={{textAlign:'center',margin:12}}>{workspace.message}</p>}
 
       {mensajeNube && (
         <div
@@ -411,7 +423,8 @@ function MainApp() {
         </div>
       )}
 
-      <main className="contenido-principal">
+      <main className="contenido-principal" aria-busy={workspace.busy}>
+        {workspace.busy ? <p role="status">Cambiando de espacio y protegiendo tus datos…</p> : <>
         {paginaActual ===
           'inicio' && (
           <Inicio
@@ -470,6 +483,7 @@ function MainApp() {
           'inventario' && (
           <Inventario />
         )}
+        </>}
       </main>
     </div>
   )
