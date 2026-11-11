@@ -487,6 +487,7 @@ function MainApp() {
         {paginaActual ===
   'chef' && (
   <ChefRayku
+    householdId={workspace.selection !== 'personal' ? workspace.selection : undefined}
     onAbrirReceta={
       abrirReceta
     }
