@@ -390,7 +390,7 @@ export default function Inventario() {
         </button>
       </div>
 
-      <BatchCooking recetas={recetas} agregar={agregarItemInventario}/>
+      <BatchCooking recetas={recetas} inventario={inventario} agregar={agregarItemInventario}/>
       <EntradaRapida agregar={agregarItemInventario} />
 
       {productosUrgentes.length > 0 && (
