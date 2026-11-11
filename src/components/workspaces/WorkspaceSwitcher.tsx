@@ -111,14 +111,14 @@ export default function WorkspaceSwitcher({ userId, selection, onSelect, busy = 
   const invitationUrl = inviteToken ? window.location.origin + '/?invite=' + encodeURIComponent(inviteToken) : ''
   return (
     <section className="workspace-switcher" aria-label="Espacios de Rayku">
-      <label htmlFor="rayku-workspace">💜 Mi espacio</label>
+      <label htmlFor="rayku-workspace">🏡 Hogar activo</label>
       <select
         id="rayku-workspace"
         value={selection}
         onChange={event => { void onSelect(event.target.value).catch(error => setMessage(describirError(error))) }}
         disabled={status !== 'ready' || busy}
       >
-        <option value="personal">👤 Mi espacio</option>
+        <option value="personal">👤 Datos anteriores (solo para migración)</option>
         {households.map(household => (
           <option key={household.id} value={household.id}>
             🏡 {household.name}
@@ -131,7 +131,7 @@ export default function WorkspaceSwitcher({ userId, selection, onSelect, busy = 
           : status === 'unavailable'
             ? 'Espacios compartidos pendientes de activar en Supabase.'
             : selection === 'personal'
-              ? 'Tus recetas, planning, inventario y compra son privados.'
+              ? 'Estás viendo los datos anteriores a la unificación. Selecciona tu hogar para utilizar Rayku.'
               : 'Recetas, planning, inventario y compra corresponden al hogar compartido.'}
       </p>
       <details>
