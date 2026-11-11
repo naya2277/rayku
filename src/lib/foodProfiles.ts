@@ -42,8 +42,15 @@ export async function readFoodProfiles(householdId: string): Promise<FoodProfile
 export async function saveFoodProfile(profile: Omit<FoodProfile,'user_id'>): Promise<void> {
   const {data:{user},error:authError}=await supabase.auth.getUser()
   if(authError || !user) throw authError ?? new Error('Inicia sesión')
-  const {error}=await supabase.from('rayku_food_profiles').upsert({...profile,user_id:user.id,updated_at:new Date().toISOString()},{onConflict:'user_id'})
-  if(error) throw error
+  const {data: saved,error}=await supabase
+    .from('rayku_food_profiles')
+    .upsert({...profile,user_id:user.id,updated_at:new Date().toISOString()},{onConflict:'user_id'})
+    .select(fields)
+    .single()
+  if(error) throw new Error('No se pudo guardar el perfil en Supabase: '+error.message)
+  if(!saved || saved.user_id!==user.id) throw new Error('Supabase no ha confirmado el guardado de tu perfil. No se ha marcado como guardado.')
+  const {data: verified,error:verificationError}=await supabase.from('rayku_food_profiles').select('user_id').eq('user_id',user.id).maybeSingle()
+  if(verificationError || !verified) throw new Error('No se pudo verificar el perfil después de guardarlo. Revisa la conexión e inténtalo de nuevo.')
   cache.clear()
   window.dispatchEvent(new Event('rayku-food-profiles-updated'))
 }
