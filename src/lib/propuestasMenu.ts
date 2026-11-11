@@ -11,7 +11,7 @@ import { generarMenuSemanal, recetaPermitida, recetaCompatible, recetaCompatible
 export function generarPropuestasHogar(
  fechas:string[], recetas:Receta[], planning:ItemPlanning[], inventario:ItemInventario[],
  perfiles:FoodProfile[], preferencias:PreferenciasAlimentarias, hogar:PerfilHogar,
- minutosMaximos:number, priorizarInventario:boolean,
+ minutosMaximos:number, priorizarInventario:boolean, limitesPorFecha:Record<string,number>={},
 ) {
  const restricciones = perfiles.flatMap(p=>[...p.allergies,...p.intolerances,...p.dislikes])
  const favoritos = perfiles.flatMap(p=>p.favorites)
@@ -20,14 +20,24 @@ export function generarPropuestasHogar(
   ingredientesFavoritos:[...new Set([...preferencias.ingredientesFavoritos,...favoritos].map(x=>x.trim()).filter(Boolean))],
  }
  const elegibles=recetas.filter(r=>
-  (!r.tiempo || r.tiempo<=minutosMaximos) &&
-  recetaPermitida(r,combinadas) &&
-  recetaCompatibleHogar(r,hogar))
- return {
-  ...generarMenuSemanal(fechas,elegibles,planning,combinadas,inventario,hogar,priorizarInventario),
-  elegibles,
-  restricciones:combinadas,
+  recetaPermitida(r,combinadas) && recetaCompatibleHogar(r,hogar))
+ const propuestas:ReturnType<typeof generarMenuSemanal>['propuestas']=[]
+ const sinCubrir:string[]=[]
+ // Score each day against the current calendar plus earlier draft choices.
+ // Calling the generator one day at a time lets families define busy days.
+ for(const fecha of [...fechas].sort()){
+  const limite=limitesPorFecha[fecha]??minutosMaximos
+  const disponibles=elegibles.filter(r=>!r.tiempo || r.tiempo<=limite)
+  const resultado=generarMenuSemanal([fecha],disponibles,
+    [...planning,...propuestas.map(p=>({
+      id:'borrador-'+p.fecha+'-'+p.tipoComida,fecha:p.fecha,tipoComida:p.tipoComida,
+      recetaId:p.recetaId,recetaIds:[p.recetaId],comidaLibre:'',nota:'',cocinado:false,
+    }))],combinadas,inventario,hogar,priorizarInventario)
+  propuestas.push(...resultado.propuestas)
+  sinCubrir.push(...resultado.sinCubrir)
  }
+ return {propuestas,sinCubrir,elegibles,restricciones:combinadas}
+
 }
 
 export function validarPropuestaHogar(
