@@ -27,7 +27,7 @@ export function generarPropuestasHogar(
  // Calling the generator one day at a time lets families define busy days.
  for(const fecha of [...fechas].sort()){
   const limite=limitesPorFecha[fecha]??minutosMaximos
-  const disponibles=elegibles.filter(r=>!r.tiempo || r.tiempo<=limite)
+  const disponibles=elegibles.filter(r=>r.tiempo>0 && r.tiempo<=limite)
   const resultado=generarMenuSemanal([fecha],disponibles,
     [...planning,...propuestas.map(p=>({
       id:'borrador-'+p.fecha+'-'+p.tipoComida,fecha:p.fecha,tipoComida:p.tipoComida,
@@ -44,7 +44,7 @@ export function validarPropuestaHogar(
  receta:Receta, tipo:'comida'|'cena', restricciones:PreferenciasAlimentarias,
  hogar:PerfilHogar, minutosMaximos:number,
 ):boolean {
- return (!receta.tiempo || receta.tiempo<=minutosMaximos) &&
+ return (receta.tiempo>0 && receta.tiempo<=minutosMaximos) &&
   recetaPermitida(receta,restricciones) &&
   recetaCompatibleHogar(receta,hogar) &&
   recetaCompatible(receta,tipo)
