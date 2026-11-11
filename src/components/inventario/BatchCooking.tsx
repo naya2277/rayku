@@ -25,15 +25,15 @@ export default function BatchCooking({recetas,inventario,agregar}:Props){
   setMensaje('✅ '+raciones+' raciones guardadas como un lote independiente.')
   setRecetaId('');setCaducidad('');setDescongelar('')
  }
- return <details className="card" style={{marginBottom:18}}>
+ return <>{avisos.length>0&&<section className="card" style={{marginBottom:12,background:'#fff8ed'}} role="status">
+    <h3>❄️ Próximos lotes para descongelar</h3>
+    {avisos.map(i=><p key={i.id}>{i.fechaDescongelar&&i.fechaDescongelar<hoy?'⚠️ Fecha pasada: ':''}{i.nombre} · {i.cantidad} {i.unidad} · {i.fechaDescongelar}</p>)}
+    <p style={{fontSize:12}}>Avisos dentro de Rayku; no son notificaciones automáticas del móvil.</p>
+  </section>}
+ <details className="card" style={{marginBottom:18}}>
   <summary style={{cursor:'pointer',fontWeight:850}}>🧊 Batch cooking · Guardar raciones preparadas</summary>
   <div style={{display:'grid',gap:12,marginTop:14}}>
    <p>Registra una preparación ya cocinada y dónde la guardas. Conservamos cada lote con su propia fecha.</p>
-   {avisos.length>0&&<div role="status" style={{padding:12,background:'#fff8ed',borderRadius:12}}>
-    <strong>❄️ Próximos lotes para descongelar</strong>
-    {avisos.map(i=><p key={i.id}>{i.fechaDescongelar&&i.fechaDescongelar<hoy?'⚠️ Fecha pasada: ':''}{i.nombre} · {i.cantidad} {i.unidad} · {i.fechaDescongelar}</p>)}
-    <p style={{fontSize:12}}>Avisos dentro de Rayku; no son notificaciones automáticas del móvil.</p>
-   </div>}
    <label>Receta preparada<select value={recetaId} onChange={e=>setRecetaId(e.target.value)}>
      <option value="">Seleccionar receta</option>{recetas.map(r=><option key={r.id} value={r.id}>{r.nombre}</option>)}
     </select></label>
@@ -50,5 +50,5 @@ export default function BatchCooking({recetas,inventario,agregar}:Props){
    <button type="button" className="btn-principal" disabled={!receta||!(raciones>0)} onClick={guardar}>📦 Registrar raciones</button>
    {mensaje&&<p role="status">{mensaje}</p>}
   </div>
- </details>
+ </details></>
 }
