@@ -92,9 +92,6 @@ export async function saveWorkspaceKind<K extends WorkspaceKind>(
     }
     return 0
   }
-  if (kind === 'recipes') {
-    throw new Error('Las recetas compartidas requieren habilitar su escritura segura en Supabase.')
-  }
   const saved = await saveSharedRecord(workspace.householdId, kind, payload, expectedVersion)
   return saved.version
 }
