@@ -297,7 +297,7 @@ function MainApp() {
     return <div className="app"><main className="contenido-principal"><section className="card" role="status"><h2>🏡 Preparando tu hogar…</h2><p>Estamos cargando tus recetas, planning, compra e inventario. Espera antes de hacer cambios.</p></section></main></div>
   }
 
-  if (!perfilConfigurado || paginaActual === 'configuracion') {
+  if ((!perfilConfigurado && workspace.selection === 'personal') || paginaActual === 'configuracion') {
     return <div className="app"><main className="contenido-principal">
       {perfilConfigurado && <button type="button" className="btn-secundario" onClick={() => setPaginaActual(paginaAnteriorConfiguracion)}>← Volver sin guardar</button>}
       <WorkspaceSwitcher userId={session.user.id} selection={workspace.selection} onSelect={workspace.select} busy={workspace.busy} />
