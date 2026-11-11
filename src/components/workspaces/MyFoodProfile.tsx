@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react'
-import { supabase } from '../../lib/supabase'
 import { readFoodProfiles, saveFoodProfile, type FoodProfile } from '../../lib/foodProfiles'
 import { listaTexto } from '../../lib/perfilHogar'
 const blank = {display_name:'',allergies:[],intolerances:[],dislikes:[],favorites:[],diets:[]} satisfies Omit<FoodProfile,'user_id'>
