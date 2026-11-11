@@ -101,9 +101,7 @@ export default function WorkspaceSwitcher({ userId, selection, onSelect, busy = 
         return
       }
       await saveSharedRecord(selection, 'recipes', [...existing, ...missing], record?.version ?? 0)
-      await onSelect('personal')
-      await onSelect(selection)
-      setMessage('Importadas ' + missing.length + ' recetas al hogar. Las originales siguen a salvo.')
+      setMessage('Importadas ' + missing.length + ' recetas al hogar. Las originales siguen a salvo. Vuelve a abrir Rayku para verlas en la biblioteca compartida.')
     } catch (error) {
       setMessage('No se pudieron importar las recetas: ' + describirError(error))
     } finally {
