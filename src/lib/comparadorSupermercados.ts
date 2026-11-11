@@ -1,5 +1,29 @@
-import { costeIngrediente } from './compra/costeIngrediente'
-import { obtenerClaveIngredienteCompra } from './compra/normalizacionCompra'
+// Pure comparison module: usable by the browser and Node tests without external state.
+function claveProducto(nombre:string){
+ const sinonimos:Record<string,string>={zanahorias:'zanahoria',peras:'pera',patatas:'patata',
+  tomates:'tomate',huevos:'huevo',manzanas:'manzana',cebollas:'cebolla',garbanzos:'garbanzo'}
+ return nombre.toLocaleLowerCase('es').normalize('NFD').replace(/[\\u0300-\\u036f]/g,'')
+  .replace(/\\([^)]*\\)/g,'').replace(/[^a-z0-9 ]/g,' ').trim().split(/\\s+/)
+  .filter(w=>w&&!['de','del','la','el','los','las','un','una','para','tipo'].includes(w))
+  .map(w=>sinonimos[w]??w).join(' ')
+}
+function costeIngrediente(cantidad:number,unidad:string,precio:number,cantidadEnvase:number,unidadEnvase:string):number|null{
+ if(!Number.isFinite(cantidad)||cantidad<0||!Number.isFinite(precio)||precio<0||
+  !Number.isFinite(cantidadEnvase)||cantidadEnvase<=0)return null
+ const info=(u:string):{tipo:string;factor:number}|null=>{
+  const n=u.toLowerCase().trim().replace(/\\.$/,'')
+  if(['g','gramo','gramos'].includes(n))return {tipo:'peso',factor:1}
+  if(['kg','kilo','kilos'].includes(n))return {tipo:'peso',factor:1000}
+  if(['ml','mililitro','mililitros'].includes(n))return {tipo:'volumen',factor:1}
+  if(['l','litro','litros'].includes(n))return {tipo:'volumen',factor:1000}
+  if(['u','ud','uds','unidad','unidades'].includes(n))return {tipo:'unidad',factor:1}
+  if(['paquete','lata','bote'].includes(n))return {tipo:n,factor:1}
+  return null
+ }
+ const a=info(unidad),b=info(unidadEnvase)
+ if(!a||!b||a.tipo!==b.tipo)return null
+ return cantidad*a.factor/(cantidadEnvase*b.factor)*precio
+}
 
 export const TIENDAS=['Consum','Mercadona','ALDI','Lidl','Carrefour','Dia','Otro'] as const
 export type Tienda=typeof TIENDAS[number]
@@ -32,7 +56,7 @@ export function compararSupermercados(
 ):Comparacion {
  const tiendas=[...new Set(tiendasPermitidas)]
  const candidatos=necesidades.map(n=>{
-  const clave=obtenerClaveIngredienteCompra(n.nombre)
+  const clave=claveProducto(n.nombre)
   const opciones:ComparacionItem[]=[]
   for(const tienda of tiendas){
    const preciosLocales=precios.filter(p=>p.store===tienda&&p.product_key===clave)
