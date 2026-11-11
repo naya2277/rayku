@@ -2,7 +2,8 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { useRaykuStore } from '../store'
 import { setSharedWorkspaceStorage } from '../store/storage'
 import { loadWorkspaceData, saveWorkspaceKind, type WorkspaceData } from './workspaceData'
-import type { Workspace, WorkspaceKind } from './workspaces'
+import { getWorkspaceRecord, type Workspace, type WorkspaceKind } from './workspaces'
+import { mergeSharedWorkspace } from './mergeSharedWorkspace'
 import { normalizarCompraManual, normalizarInventario, normalizarPlanning, normalizarReceta } from '../store/normalizers'
 
 const kinds: WorkspaceKind[] = ['recipes', 'planning', 'inventory', 'shopping_list']
@@ -85,10 +86,51 @@ export function useUnifiedWorkspace(userId: string) {
         error.current = null
         setMessage('☁️ Cambios del hogar guardados')
       } catch (e) {
-        error.current = e instanceof Error ? e.message : JSON.stringify(e)
-        setMessage('⚠️ No se ha guardado el hogar: ' + error.current + '. No cambies de espacio hasta resolverlo.')
+        let failure: unknown = e
+        const original = e instanceof Error ? e.message : String(e)
+        if (original.includes('Version conflict')) {
+          try {
+            const remote = await getWorkspaceRecord<WorkspaceData[typeof kind]>(workspace, kind)
+            if (!remote) throw new Error('No se ha podido recuperar el registro compartido.')
+            const base = JSON.parse(baseline.current[kind]) as WorkspaceData[typeof kind]
+            const merged = mergeSharedWorkspace(kind, base, value, remote.payload)
+            if (signatures(readStore())[kind] !== next[kind]) {
+              throw new Error('Han aparecido cambios nuevos en este dispositivo. Se conservan localmente; espera a que termine el guardado.')
+            }
+            const newVersion = await saveWorkspaceKind(workspace, kind, merged, remote.version)
+            if (signatures(readStore())[kind] !== next[kind]) {
+              // The version is intentionally left stale to prevent the next save
+              // from overwriting a remote edit without another conflict check.
+              throw new Error('Hay cambios nuevos mientras se combinaban datos. Se conservaron localmente, pero necesitan revisión.')
+            }
+            hydrated.current = false
+            try {
+              switch (kind) {
+                case 'recipes': useRaykuStore.setState({recetas: (merged as WorkspaceData['recipes']).map(normalizarReceta)}); break
+                case 'planning': useRaykuStore.setState({planning: (merged as WorkspaceData['planning']).map(normalizarPlanning)}); break
+                case 'inventory': useRaykuStore.setState({inventario: (merged as WorkspaceData['inventory']).map(normalizarInventario)}); break
+                case 'shopping_list': {
+                  const shopping = merged as WorkspaceData['shopping_list']
+                  useRaykuStore.setState({compraManual: shopping.compraManual.map(normalizarCompraManual),checksCompra:shopping.checksCompra})
+                  break
+                }
+              }
+              baseline.current[kind] = signatures(readStore())[kind]
+              versions.current[kind] = newVersion
+            } finally {
+              hydrated.current = true
+            }
+            error.current = null
+            setMessage('✅ Se combinaron los cambios de ambos dispositivos sin sustituir sus ediciones.')
+            continue
+          } catch (resolutionError) {
+            failure = resolutionError
+          }
+        }
+        error.current = failure instanceof Error ? failure.message : JSON.stringify(failure)
+        setMessage('⚠️ No se ha guardado el hogar: ' + error.current + '. Tus cambios siguen visibles en este dispositivo. No recargues ni cambies de espacio hasta resolverlo.')
         saving.current = false
-        throw e
+        throw failure
       }
     }
     saving.current = false
