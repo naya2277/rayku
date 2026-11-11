@@ -38,9 +38,9 @@ const ACCIONES: {
   },
   {
     tipo: 'menu_dieta',
-    titulo: '🥑 Menú según mi dieta',
+    titulo: '🥑 Crear menú nuevo según mi dieta',
     descripcion:
-      'Menú keto o bajo en carbohidratos adaptado a ti.',
+      'Tres recetas originales para comida, cena y alternativa según tu dieta.',
   },
 ]
 
