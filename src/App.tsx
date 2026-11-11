@@ -275,6 +275,20 @@ function MainApp() {
       }, 2500)
     }
 
+  const salir = async () => {
+    if (workspace.selection !== 'personal') {
+      try {
+        setMensajeNube('☁️ Guardando los últimos cambios antes de salir…')
+        await workspace.saveNow()
+      } catch (error) {
+        setMensajeNube('⚠️ No se ha cerrado la sesión: hay cambios sin guardar. ' + (error instanceof Error ? error.message : String(error)))
+        return
+      }
+    }
+    const { error } = await supabase.auth.signOut()
+    if (error) setMensajeNube('⚠️ No se pudo cerrar sesión: ' + error.message)
+  }
+
   if (!session) {
     return <Auth />
   }
@@ -443,9 +457,7 @@ function MainApp() {
           <button
             type="button"
             className="btn-secundario"
-            onClick={() =>
-              supabase.auth.signOut()
-            }
+            onClick={() => { void salir() }}
           >
             🚪 Salir
           </button>
