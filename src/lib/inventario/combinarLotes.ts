@@ -18,6 +18,7 @@ export function combinarEntradaInventario(
   (item.fechaCaducidad??null)===(nuevo.fechaCaducidad??null) &&
   Boolean(item.esCocinado)===Boolean(nuevo.esCocinado) &&
   (item.fechaPreparacion??null)===(nuevo.fechaPreparacion??null) &&
+  (item.fechaDescongelar??null)===(nuevo.fechaDescongelar??null) &&
   Boolean(item.necesitaDescongelar)===Boolean(nuevo.necesitaDescongelar)
  )
  if(index<0) return [...inventario,nuevo]
