@@ -22,6 +22,7 @@ import {
 } from '../lib/generarListaCompra'
 
 import FormularioCompraManual from '../components/compra/FormularioCompraManual'
+import { planificarCompraPorConservacion } from '../lib/compra/planificarCompraPorConservacion'
 import { obtenerClaveIngredienteCompra } from '../lib/compra/normalizacionCompra'
 import ResumenCompra from '../components/compra/ResumenCompra'
 import GrupoCompra from '../components/compra/GrupoCompra'
@@ -178,12 +179,12 @@ export default function Compra() {
       )
     }, [planning, rangoCompra])
 
-  const ingredientes = useMemo(() => {
-    return generarIngredientesCompra(
-      planningFiltrado,
-      recetas
-    )
-  }, [planningFiltrado, recetas])
+  const comprasPorFecha = useMemo(() =>
+    planificarCompraPorConservacion(planningFiltrado,recetas,new Date()),
+    [planningFiltrado,recetas]
+  )
+  const ingredientes = comprasPorFecha.ahora
+  const comprasPosteriores = comprasPorFecha.despues
 
   const usosPorIngrediente = useMemo(() => {
     const usos = new Map<string, { fecha: string; receta: string }[]>()
@@ -298,24 +299,6 @@ export default function Compra() {
     paraComprar.length -
     paraComprarVisibles.length
 
-    console.log('======== COMPRA ========')
-
-console.table(
-  paraComprar.map((item) => ({
-    clave: item.clave,
-    nombre: item.nombre,
-    cantidad: item.cantidad,
-    disponible: item.cantidadDisponible,
-    faltante: item.cantidadFaltante,
-  }))
-)
-
-console.log('Inventario', inventario)
-
-console.log('Checks', checksCompra)
-
-console.log('========================')
-
   const agrupadosComprar =
     useMemo(() => {
       return agruparIngredientesCompra(
@@ -354,7 +337,7 @@ console.log('========================')
               color: '#9e7d90',
             }}
           >
-            Lista inteligente {rangoCompra.texto} + extras manuales 💕
+            Lista inteligente {rangoCompra.texto} + extras manuales 💕 Los frescos se programan según su día de uso.
           </p>
         </div>
 
@@ -526,6 +509,29 @@ console.log('========================')
           </div>
         )}
       </div>
+
+      {comprasPosteriores.length > 0 && (
+        <section className="card" style={{marginBottom:18,borderColor:'#e8c8d8'}}>
+          <h2 style={{fontSize:18,marginBottom:8}}>📅 Comprar más cerca del día de uso</h2>
+          <p style={{fontSize:13,marginBottom:12}}>
+            Estos frescos no se incluyen en la compra de hoy porque podrían estropearse antes de cocinarlos.
+            Vuelven automáticamente a la lista cuando se acerca su fecha de compra.
+          </p>
+          <div style={{display:'grid',gap:8}}>
+            {comprasPosteriores.map(item=><div key={item.clave} style={{padding:'10px 12px',borderRadius:12,background:'#fff9fc',border:'1px solid #eddbe7'}}>
+              <strong>{item.nombre}</strong>
+              <div style={{fontSize:13}}>🛍️ Comprar a partir del <strong>{item.comprarDesde}</strong> · Para cocinar el {item.fechasUso.join(', ')}</div>
+              {item.cantidad !== null && item.unidad && <div style={{fontSize:12}}>Cantidad orientativa: {item.cantidad} {item.unidad}</div>}
+            </div>)}
+          </div>
+          <p style={{fontSize:12,marginTop:10}}>La conservación usada es orientativa para productos frescos refrigerados. Comprueba siempre la caducidad real del envase y las condiciones de almacenamiento; congelar cambia la planificación.</p>
+        </section>
+      )}
+      {comprasPosteriores.some(item=>ingredientes.some(actual=>actual.clave===item.clave)) && (
+        <p className="card" role="status" style={{marginBottom:16}}>
+          💡 Algunos alimentos aparecen tanto en la compra actual como en la posterior: se necesitan en días separados y conviene comprarlos en dos tandas.
+        </p>
+      )}
 
       {!modoSupermercado && (
         <FormularioCompraManual
