@@ -3,6 +3,7 @@ import { listHouseholds, createHousehold, createHouseholdInvitation, acceptHouse
 import { useRaykuStore } from '../../store'
 import { getWorkspaceRecord, saveSharedRecord } from '../../lib/workspaces'
 import type { Receta } from '../../store/types'
+import { descargarRecetas } from '../../lib/sync'
 import './WorkspaceSwitcher.css'
 
 function describirError(error: unknown): string {
@@ -78,6 +79,37 @@ export default function WorkspaceSwitcher({ userId, selection, onSelect, busy = 
       setCopying(false)
     }
   }
+  const copyAllRecipes = async () => {
+    if (selection === 'personal' || copying) return
+    setCopying(true)
+    setMessage('')
+    try {
+      // Read the original personal cloud collection, never the currently selected household store.
+      const personal = await descargarRecetas(userId)
+      const source = Array.isArray(personal) ? personal : []
+      if (!source.length) {
+        setMessage('No hay recetas personales guardadas en la nube para importar.')
+        return
+      }
+      const workspace = { scope: 'household' as const, householdId: selection }
+      const record = await getWorkspaceRecord<Receta[]>(workspace, 'recipes')
+      const existing = Array.isArray(record?.payload) ? record.payload : []
+      const ids = new Set(existing.map(recipe => recipe.id))
+      const missing = source.filter(recipe => !ids.has(recipe.id))
+      if (!missing.length) {
+        setMessage('Todas tus recetas personales ya están en este hogar.')
+        return
+      }
+      await saveSharedRecord(selection, 'recipes', [...existing, ...missing], record?.version ?? 0)
+      await onSelect('personal')
+      await onSelect(selection)
+      setMessage('Importadas ' + missing.length + ' recetas al hogar. Las originales siguen a salvo.')
+    } catch (error) {
+      setMessage('No se pudieron importar las recetas: ' + describirError(error))
+    } finally {
+      setCopying(false)
+    }
+  }
   const invitationUrl = inviteToken ? window.location.origin + '/?invite=' + encodeURIComponent(inviteToken) : ''
   return (
     <section className="workspace-switcher" aria-label="Espacios de Rayku">
@@ -119,6 +151,14 @@ export default function WorkspaceSwitcher({ userId, selection, onSelect, busy = 
           {message && <p role="status">{message}</p>}
         </div>
       </details>
+      {selection !== 'personal' && (
+        <div style={{marginTop:12,display:'grid',gap:8}}>
+          <button type="button" className="btn-secundario" disabled={copying || busy} onClick={copyAllRecipes}>
+            {copying ? 'Importando recetas…' : '📚 Importar todas mis recetas personales al hogar'}
+          </button>
+          <p>Importa todas las recetas de tu cuenta de una vez, sin duplicados y sin borrar las originales.</p>
+        </div>
+      )}
       {selection === 'personal' && households.length > 0 && (
         <details>
           <summary>📖 Compartir una receta personal con este hogar</summary>
