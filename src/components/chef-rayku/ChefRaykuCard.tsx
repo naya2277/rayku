@@ -1,6 +1,7 @@
 import { readFoodProfiles } from '../../lib/foodProfiles'
 import { supabase } from '../../lib/supabase'
 import { cargarPerfilHogar } from '../../lib/perfilHogar'
+import { revisarRespuestaChefRayku } from '../../lib/chef-rayku/revisarRespuesta'
 import {
   useState,
 } from 'react'
@@ -275,7 +276,10 @@ export default function ChefRaykuCard({householdId}:{householdId?:string}) {
           }
         )
 
-      setRespuesta(texto)
+      const dietas=mine?.diets?.length ? mine.diets : (legacy?.dietas ?? [])
+      const validacion = revisarRespuestaChefRayku(texto,tipo,prohibidos,dietas,recetas.map(r=>r.nombre))
+      setRespuesta(validacion.respuesta)
+      if(validacion.descartadas>0) setError('Chef Rayku ha descartado '+validacion.descartadas+' propuesta(s) por incompatibilidades, repeticiones o datos incompletos. Revisa siempre los ingredientes y etiquetas.')
     } catch (err) {
       console.error(err)
 
