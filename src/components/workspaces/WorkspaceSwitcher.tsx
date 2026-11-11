@@ -4,7 +4,6 @@ import { useRaykuStore } from '../../store'
 import { getWorkspaceRecord, saveSharedRecord } from '../../lib/workspaces'
 import type { Receta } from '../../store/types'
 import './WorkspaceSwitcher.css'
-import HogarCompartido from './HogarCompartido'
 
 function describirError(error: unknown): string {
   if (error instanceof Error) return error.message
@@ -17,13 +16,13 @@ function describirError(error: unknown): string {
   return 'Error desconocido. Revisa los permisos del hogar.'
 }
 
-type Props = { userId: string }
+type Props = { userId: string; selection: string; onSelect: (id: string) => Promise<void>; busy?: boolean }
 
 /**
  * The shared board is live once migrations are applied; legacy pages remain personal.
  * Selecting a household does not switch the legacy planning or shopping data.
  */
-export default function WorkspaceSwitcher({ userId }: Props) {
+export default function WorkspaceSwitcher({ userId, selection, onSelect, busy = false }: Props) {
   const [newName,setNewName] = useState('')
   const [copying,setCopying] = useState(false)
   const [recipeToCopy,setRecipeToCopy] = useState('')
@@ -33,12 +32,10 @@ export default function WorkspaceSwitcher({ userId }: Props) {
   const [joinToken,setJoinToken] = useState(() => new URLSearchParams(window.location.search).get('invite') ?? '')
   const [message,setMessage] = useState('')
   const [households, setHouseholds] = useState<Household[]>([])
-  const [selection, setSelection] = useState('personal')
   const [status, setStatus] = useState<'loading' | 'ready' | 'unavailable'>('loading')
 
   useEffect(() => {
     let active = true
-    setSelection('personal')
     setHouseholds([])
     setStatus('loading')
     listHouseholds()
@@ -54,9 +51,9 @@ export default function WorkspaceSwitcher({ userId }: Props) {
   }, [userId])
 
   const refresh = async () => { const items=await listHouseholds();setHouseholds(items);setStatus('ready') }
-  const create = async () => {try {const h=await createHousehold(newName);await refresh();setSelection(h.id);setNewName('');setMessage('Hogar creado. Ya puedes usar el tablero compartido; el planning personal sigue separado.')}catch(e){setMessage(describirError(e))}}
+  const create = async () => {try {const h=await createHousehold(newName);await refresh();await onSelect(h.id);setNewName('');setMessage('Hogar creado. Ya puedes utilizar sus recetas, planning, inventario y compra.')}catch(e){setMessage(describirError(e))}}
   const invite = async () => {try {const token=await createHouseholdInvitation(selection,inviteEmail);setInviteToken(token);setMessage('Invitación creada. Comparte el enlace solo con su destinatario.')}catch(e){setMessage(describirError(e))}}
-  const join = async () => {try {await acceptHouseholdInvitation(joinToken.includes('?invite=') ? new URL(joinToken).searchParams.get('invite') ?? '' : joinToken);await refresh();setJoinToken('');setMessage('Invitación aceptada. Selecciona el hogar para abrir el tablero compartido.')}catch(e){setMessage(describirError(e))}}
+  const join = async () => {try {await acceptHouseholdInvitation(joinToken.includes('?invite=') ? new URL(joinToken).searchParams.get('invite') ?? '' : joinToken);await refresh();setJoinToken('');setMessage('Invitación aceptada. Selecciona el hogar para trabajar en conjunto.')}catch(e){setMessage(describirError(e))}}
   const copyRecipe = async () => {
     if (selection === 'personal' || copying || !recipeToCopy) return
     const recipe = recipes.find(item => item.id === recipeToCopy)
@@ -87,8 +84,8 @@ export default function WorkspaceSwitcher({ userId }: Props) {
       <select
         id="rayku-workspace"
         value={selection}
-        onChange={event => setSelection(event.target.value)}
-        disabled={status !== 'ready'}
+        onChange={event => { void onSelect(event.target.value).catch(error => setMessage(describirError(error))) }}
+        disabled={status !== 'ready' || busy}
       >
         <option value="personal">👤 Mi espacio</option>
         {households.map(household => (
@@ -103,8 +100,8 @@ export default function WorkspaceSwitcher({ userId }: Props) {
           : status === 'unavailable'
             ? 'Espacios compartidos pendientes de activar en Supabase.'
             : selection === 'personal'
-              ? 'Tus recetas, planning y compra inteligente siguen siendo personales.'
-              : 'El tablero del hogar se comparte; el planning y la compra inteligente siguen siendo personales.'}
+              ? 'Tus recetas, planning, inventario y compra son privados.'
+              : 'Recetas, planning, inventario y compra corresponden al hogar compartido.'}
       </p>
       <details>
         <summary>🏡 Crear hogar o invitar a alguien</summary>
@@ -136,7 +133,7 @@ export default function WorkspaceSwitcher({ userId }: Props) {
           <p>Se crea una copia compartida sin mover ni modificar tu receta personal.</p>
         </details>
       )}
-      {selection !== 'personal' && households.some(h=>h.id===selection) && <HogarCompartido key={selection} householdId={selection}/>}
+
 
     </section>
   )
