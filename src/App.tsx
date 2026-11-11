@@ -316,7 +316,15 @@ function MainApp() {
     return <div className="app"><main className="contenido-principal">
       {perfilConfigurado && <button type="button" className="btn-secundario" onClick={() => setPaginaActual(paginaAnteriorConfiguracion)}>← Volver sin guardar</button>}
       <WorkspaceSwitcher userId={session.user.id} selection={workspace.selection} onSelect={workspace.select} busy={workspace.busy} />
-      <ConfiguracionHogar sharedHousehold={workspace.selection !== 'personal'} onTerminar={() => { setPerfilConfigurado(true); setPaginaActual(paginaAnteriorConfiguracion) }} onInventario={() => { setPerfilConfigurado(true); setPaginaActual('inventario') }} />
+      {workspace.selection === 'personal' && !perfilConfigurado ? (
+        <details style={{maxWidth:900,margin:'12px auto',padding:14,border:'1px solid #eddbe7',borderRadius:14}}>
+          <summary>Configuración antigua para utilizar Rayku sin un hogar compartido</summary>
+          <p>Si tienes una invitación, no necesitas configurar «Persona 1». Abre el enlace o pégalo en «Unirme al hogar» arriba.</p>
+          <ConfiguracionHogar onTerminar={() => { setPerfilConfigurado(true); setPaginaActual('inicio') }} onInventario={() => { setPerfilConfigurado(true); setPaginaActual('inventario') }} />
+        </details>
+      ) : (
+        <ConfiguracionHogar sharedHousehold={workspace.selection !== 'personal'} onTerminar={() => { setPerfilConfigurado(true); setPaginaActual(paginaAnteriorConfiguracion) }} onInventario={() => { setPerfilConfigurado(true); setPaginaActual('inventario') }} />
+      )}
     </main></div>
   }
 
