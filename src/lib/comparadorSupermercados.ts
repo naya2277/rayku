@@ -1,0 +1,77 @@
+import { costeIngrediente } from './compra/costeIngrediente'
+import { obtenerClaveIngredienteCompra } from './compra/normalizacionCompra'
+
+export const TIENDAS=['Consum','Mercadona','ALDI','Lidl','Carrefour','Dia','Otro'] as const
+export type Tienda=typeof TIENDAS[number]
+export type ObjetivoCompra='ahorro'|'equilibrio'|'comodidad'
+export type PrecioTienda={store:Tienda;product_key:string;price:number;quantity:number;unit:string;observed_at?:string}
+export type OfertaSupermercado={
+ source:'ALDI'|'Lidl';product_key:string;product_name:string;price:number;
+ quantity:number;unit:string;valid_from:string;valid_until:string;
+ requires_loyalty:boolean;source_url:string;fetched_at?:string
+}
+export type Necesidad={nombre:string;cantidad:number|null;unidad:string|null}
+export type ComparacionItem={producto:string;cantidad:number;unidad:string;
+ tienda:Tienda;coste:number;oferta:boolean;requires_loyalty:boolean}
+export type Comparacion={
+ coste:number;costeAjustado:number;tiendas:Tienda[];items:ComparacionItem[];
+ sinPrecio:string[];totalConPrecio:number
+}
+export function ofertaVigente(o:OfertaSupermercado,fecha:string,permitirFidelizacion:boolean):boolean{
+ return fecha>=o.valid_from && fecha<=o.valid_until &&
+  (!o.requires_loyalty||permitirFidelizacion) && o.price>=0&&o.quantity>0
+}
+function costeParaNecesidad(n:Necesidad,precio:{price:number;quantity:number;unit:string}):number|null{
+ if(n.cantidad===null || !n.unidad)return null
+ return costeIngrediente(n.cantidad,n.unidad,precio.price,precio.quantity,precio.unit)
+}
+export function compararSupermercados(
+ necesidades:Necesidad[],precios:PrecioTienda[],ofertas:OfertaSupermercado[],
+ tiendasPermitidas:Tienda[],objetivo:ObjetivoCompra,fecha:string,
+ permitirFidelizacion:boolean,costeParadaExtra=4
+):Comparacion {
+ const tiendas=[...new Set(tiendasPermitidas)]
+ const candidatos=necesidades.map(n=>{
+  const clave=obtenerClaveIngredienteCompra(n.nombre)
+  const opciones:ComparacionItem[]=[]
+  for(const tienda of tiendas){
+   const preciosLocales=precios.filter(p=>p.store===tienda&&p.product_key===clave)
+   const promociones=ofertas.filter(o=>o.source===tienda&&o.product_key===clave&&ofertaVigente(o,fecha,permitirFidelizacion))
+   for(const p of preciosLocales){
+    const c=costeParaNecesidad(n,p)
+    if(c!==null)opciones.push({producto:n.nombre,cantidad:n.cantidad!,unidad:n.unidad!,
+      tienda,coste:c,oferta:false,requires_loyalty:false})
+   }
+   for(const o of promociones){
+    const c=costeParaNecesidad(n,o)
+    if(c!==null)opciones.push({producto:n.nombre,cantidad:n.cantidad!,unidad:n.unidad!,
+      tienda,coste:c,oferta:true,requires_loyalty:o.requires_loyalty})
+   }
+  }
+  return {n,opciones}
+ })
+ const sinPrecio=candidatos.filter(x=>!x.opciones.length).map(x=>x.n.nombre)
+ const conPrecio=candidatos.filter(x=>x.opciones.length)
+ if(!conPrecio.length)return {coste:0,costeAjustado:0,tiendas:[],items:[],sinPrecio,totalConPrecio:0}
+ const penalizacion=objetivo==='ahorro'?0:objetivo==='comodidad'?Math.max(15,costeParadaExtra*3):costeParadaExtra
+ let mejor:Comparacion|null=null
+ for(let mask=1;mask<(1<<tiendas.length);mask++){
+  const activas=tiendas.filter((_,i)=>Boolean(mask&(1<<i)))
+  const items:ComparacionItem[]=[]
+  for(const candidato of conPrecio){
+   const mejorProducto=candidato.opciones.filter(x=>activas.includes(x.tienda))
+    .sort((a,b)=>a.coste-b.coste)[0]
+   if(!mejorProducto)break
+   items.push(mejorProducto)
+  }
+  if(items.length!==conPrecio.length)continue
+  const usadas=[...new Set(items.map(i=>i.tienda))]
+  const coste=items.reduce((t,i)=>t+i.coste,0)
+  const costeAjustado=coste+Math.max(0,usadas.length-1)*penalizacion
+  if(!mejor || costeAjustado<mejor.costeAjustado-0.0001 ||
+    (Math.abs(costeAjustado-mejor.costeAjustado)<0.0001&&usadas.length<mejor.tiendas.length))
+   mejor={coste:Math.round(coste*100)/100,costeAjustado:Math.round(costeAjustado*100)/100,
+    tiendas:usadas,items,sinPrecio,totalConPrecio:conPrecio.length}
+ }
+ return mejor??{coste:0,costeAjustado:0,tiendas:[],items:[],sinPrecio,totalConPrecio:0}
+}
