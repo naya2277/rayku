@@ -19,6 +19,7 @@ export default function Supermercados({householdId}:Props){
  const [precio,setPrecio]=useState('')
  const [cantidad,setCantidad]=useState('1')
  const [unidad,setUnidad]=useState('kg')
+ const [modoVenta,setModoVenta]=useState<'envase'|'granel'>('envase')
  const [loyalty,setLoyalty]=useState(false)
  const [mensaje,setMensaje]=useState('')
  const [guardando,setGuardando]=useState(false)
@@ -55,7 +56,7 @@ export default function Supermercados({householdId}:Props){
  const guardarPrecio=async(e:React.FormEvent)=>{
   e.preventDefault();setGuardando(true);setMensaje('')
   try{
-   await datos.guardarPrecio(tienda,producto,Number(precio),Number(cantidad),unidad)
+   await datos.guardarPrecio(tienda,producto,Number(precio),Number(cantidad),unidad,modoVenta)
    setMensaje('✅ Precio guardado para el hogar.');setProducto('');setPrecio('')
   }catch(e){setMensaje('⚠️ No se pudo guardar: '+(e instanceof Error?e.message:String(e)))}
   finally{setGuardando(false)}
@@ -107,7 +108,8 @@ export default function Supermercados({householdId}:Props){
    <h2>💶 Comparación de vuestra compra</h2>
    <p>Compra necesaria entre {hoy} y {fin}: {necesidades.length} ingredientes. {compra.despues.length} frescos programados para comprarse más adelante.</p>
    {comparacion.totalConPrecio>0?<div style={{display:'grid',gap:10}}>
-    <strong>Coste calculable: {comparacion.coste.toFixed(2)} €</strong>
+    <strong>Importe estimado de compra para artículos comparables: {comparacion.coste.toFixed(2)} €</strong>
+    <p style={{fontSize:12}}>Para productos vendidos por envases cerrados se calcula el número de envases completos. En productos identificados como a granel, el precio es proporcional a la cantidad. Los precios reales pueden variar según el peso y disponibilidad.</p>
     <p>Propuesta: {comparacion.tiendas.join(' + ')} ({comparacion.tiendas.length} {comparacion.tiendas.length===1?'establecimiento':'establecimientos'}).</p>
     {comparacion.items.map((i,index)=><div key={index} style={{display:'flex',justifyContent:'space-between',gap:12,padding:'10px 0',borderBottom:'1px solid #eee'}}>
      <span>{i.producto} · {i.cantidad} {i.unidad} <small>({i.tienda}{i.oferta?' · Oferta':''}{i.requires_loyalty?' · Fidelización':''})</small></span>
@@ -162,12 +164,17 @@ export default function Supermercados({householdId}:Props){
     <label>Unidad<select value={unidad} onChange={e=>setUnidad(e.target.value)}>
       {['kg','g','l','ml','u','paquete','lata','bote'].map(u=><option key={u} value={u}>{u}</option>)}
     </select></label>
+    <label>Forma de venta<select value={modoVenta} onChange={e=>setModoVenta(e.target.value as 'envase'|'granel')}>
+      <option value="envase">Envase cerrado (se compra entero)</option>
+      <option value="granel">A granel (pago por peso o volumen)</option>
+    </select></label>
+    <p style={{fontSize:12,gridColumn:'1 / -1'}}>Introduce el precio por la cantidad indicada. Para un kilo de manzanas a granel, por ejemplo, pon 1 kg y el precio por kilo; para una bandeja de carne, pon el peso y precio de la bandeja.</p>
     <button type="submit" className="btn-principal" disabled={guardando||!householdId}>{guardando?'Guardando…':'Guardar precio'}</button>
    </form>
    {datos.precios.length>0&&<details>
     <summary>Ver precios guardados ({datos.precios.length})</summary>
     <div style={{display:'grid',gap:8,marginTop:12}}>
-      {datos.precios.map(p=><div key={p.store+p.product_key}>{p.store} · {p.product_key} · {p.price.toFixed(2)} € / {p.quantity} {p.unit}</div>)}
+      {datos.precios.map(p=><div key={p.store+p.product_key}>{p.store} · {p.product_key} · {p.price.toFixed(2)} € / {p.quantity} {p.unit} · {p.sale_mode==='granel'?'A granel':'Envase cerrado'}</div>)}
     </div>
    </details>}
    {!householdId&&<p>Selecciona Domus Infinita para guardar precios compartidos.</p>}
