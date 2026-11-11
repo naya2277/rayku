@@ -50,16 +50,19 @@ export async function listHouseholds(): Promise<Household[]> {
 }
 
 export async function createHousehold(name: string): Promise<Household> {
-  const userId = await currentUserId()
+  await currentUserId()
   const trimmed = name.trim()
   if (!trimmed) throw new Error('El hogar necesita un nombre.')
-  const { data, error } = await supabase
-    .from('households')
-    .insert({ name: trimmed, created_by: userId })
-    .select('id,name,created_by,created_at')
-    .single()
+  const { data: id, error } = await supabase.rpc('rayku_create_household', { p_name: trimmed })
   if (error) throw error
-  return data as Household
+  if (typeof id !== 'string') throw new Error('No se ha recibido el identificador del hogar.')
+  const { data: household, error: readError } = await supabase
+    .from('households')
+    .select('id,name,created_by,created_at')
+    .eq('id', id)
+    .single()
+  if (readError) throw readError
+  return household as Household
 }
 
 export async function getWorkspaceRecord<T>(
