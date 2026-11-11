@@ -201,7 +201,7 @@ export default function WorkspaceSwitcher({ userId, selection, onSelect, busy = 
           {message && <p role="status">{message}</p>}
         </div>
       </details>
-      {selection !== 'personal' && <MyFoodProfile householdId={selection} userId={userId}/>}
+      {selection !== 'personal' && <MyFoodProfile householdId={selection} userId={userId} isOwner={households.some(h=>h.id===selection && h.created_by===userId)}/>}
       {selection !== 'personal' && (
         <details style={{marginTop:12}}><summary>📦 Importar datos antiguos al hogar (opcional)</summary><div style={{marginTop:8,display:'grid',gap:8}}>
           <button type="button" className="btn-principal" disabled={migrating || busy} onClick={migrateAll}>
