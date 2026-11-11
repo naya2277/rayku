@@ -35,3 +35,11 @@ test('rechaza contenido sin recetas estructuradas',()=>{
   assert.throws(()=>revisarRespuestaChefRayku('{mal json','ideas_recetas',[],[],[]))
   assert.throws(()=>revisarRespuestaChefRayku(answer([idea('Pasta',['macarrones'])]),'ideas_recetas',[],['Keto'],[]))
 })
+
+test('conserva sustitutos keto de harina y pasta',()=>{
+  const x=revisarRespuestaChefRayku(answer([
+    idea('Tostada keto',['40 g pan de almendra','huevo']),
+    idea('Fideos de konjac',['100 g pasta de konjac','pollo'])
+  ]),'ideas_recetas',[],['Keto'],[])
+  assert.equal(x.validas,2)
+})
