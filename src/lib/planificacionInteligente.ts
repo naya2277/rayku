@@ -2,6 +2,7 @@ import type { ItemPlanning, Receta, ItemInventario } from '../store/types'
 import { generarIngredientesCompra } from './compra/generarIngredientesCompra'
 import { separarIngredientesPorInventario } from './compra/inventarioCompra'
 import { obtenerClaveIngredienteCompra } from './compra/normalizacionCompra'
+import { costeIngrediente } from './compra/costeIngrediente'
 
 export type PrecioUnitario = { precio: number; cantidad: number; unidad: string }
 export type Precios = Record<string, PrecioUnitario>
@@ -17,12 +18,14 @@ export function calcularPresupuesto(planning: ItemPlanning[], recetas: Receta[],
   let sinPrecio = 0
   for(const item of compra) {
     const precio = precios[obtenerClaveIngredienteCompra(item.nombre)]
-    if (!precio || !Number.isFinite(precio.precio) || precio.precio<0 || precio.cantidad<=0 ||
-        precio.unidad !== item.unidad || item.cantidadFaltante===null) {
+    const coste = precio ? costeIngrediente(
+      item.cantidadFaltante,item.unidad,precio.precio,precio.cantidad,precio.unidad
+    ) : null
+    if(coste === null) {
       sinPrecio++
       continue
     }
-    estimado += item.cantidadFaltante / precio.cantidad * precio.precio
+    estimado += coste
   }
   return {estimado:Math.round(estimado*100)/100,sinPrecio,total:compra.length}
 }
