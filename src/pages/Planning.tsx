@@ -47,12 +47,14 @@ const COLORES_DIA = [
 ]
 
 type Props = {
+  householdId?: string
   onAbrirReceta: (
     recetaId: string
   ) => void
 }
 
 export default function Planning({
+  householdId,
   onAbrirReceta,
 }: Props) {
   const [priorizarInventario, setPriorizarInventario] = useState(() => cargarPerfilHogar().priorizarInventario)
@@ -424,7 +426,7 @@ export default function Planning({
                   }
                   onAplazar={aplazarComida}
                 />
-                {planning.filter(item=>item.fecha===fecha).map(item=><section className="card" key={item.id} style={{marginTop:8,padding:12}}><strong>{item.tipoComida === 'comida' ? '🍽️ Comida' : '🌙 Cena'}</strong><AdvertenciasPersonales item={item}/><SustituirPlato item={item}/><PlatosPersonales item={item}/></section>)}
+                {planning.filter(item=>item.fecha===fecha).map(item=><section className="card" key={item.id} style={{marginTop:8,padding:12}}><strong>{item.tipoComida === 'comida' ? '🍽️ Comida' : '🌙 Cena'}</strong><AdvertenciasPersonales item={item} householdId={householdId}/><SustituirPlato item={item}/><PlatosPersonales item={item}/></section>)}
               </div>
             )
           }
