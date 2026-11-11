@@ -59,6 +59,8 @@ const PAGINAS_VALIDAS: Pagina[] = [
 ]
 
 function obtenerPaginaInicial(): Pagina {
+  // Opening an invite link should show the join form even on an existing device.
+  if (new URLSearchParams(window.location.search).has('invite')) return 'configuracion'
   const guardada =
     sessionStorage.getItem(
       PAGINA_KEY
