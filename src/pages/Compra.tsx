@@ -24,6 +24,7 @@ import {
 import FormularioCompraManual from '../components/compra/FormularioCompraManual'
 import { planificarCompraPorConservacion } from '../lib/compra/planificarCompraPorConservacion'
 import { obtenerClaveIngredienteCompra } from '../lib/compra/normalizacionCompra'
+import { compraManualParaInventario } from '../lib/compra/manualCheckout'
 import ResumenCompra from '../components/compra/ResumenCompra'
 import GrupoCompra from '../components/compra/GrupoCompra'
 import ModoSupermercado from '../components/compra/ModoSupermercado'
@@ -294,10 +295,11 @@ export default function Compra() {
       .filter(item => checksCompra.includes(item.clave))
       .map(item => {
         const manual = compraManual.find(m => item.clave === `manual-${m.id}`)
+        if (manual) return compraManualParaInventario(manual)
         return {
-          nombre: manual?.nombre ?? item.nombre,
-          cantidad: manual ? null : (item.cantidadFaltante ?? item.cantidad),
-          unidad: manual ? null : item.unidad,
+          nombre: item.nombre,
+          cantidad: item.cantidadFaltante ?? item.cantidad,
+          unidad: item.unidad,
         }
       })
     finalizarCompra(comprados)
