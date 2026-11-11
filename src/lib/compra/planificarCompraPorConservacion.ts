@@ -1,6 +1,7 @@
 import { addDays, compareAsc, format, isAfter, parseISO, startOfDay, subDays } from 'date-fns'
 import { generarIngredientesCompra } from './generarIngredientesCompra'
-import { obtenerClaveIngredienteCompra, unidadesCompraCompatibles } from './normalizacionCompra'
+import { unidadesCompraCompatibles } from './normalizacionCompra'
+import { conservacionOrientativaDias } from './conservacionCompra'
 import type { IngredienteCompra, HuecoPlanningListaCompra, RecetaListaCompra } from './types'
 
 export type HuecoCompraFechado = HuecoPlanningListaCompra & { fecha: string; cocinado?: boolean }
@@ -12,23 +13,6 @@ export type CompraProgramada = IngredienteCompra & {
 }
 type Resultado = { ahora: CompraProgramada[]; despues: CompraProgramada[] }
 
-/**
- * Duraciones deliberadamente conservadoras para producto fresco sin abrir,
- * refrigerado correctamente. Son orientación para planificar la compra,
- * NUNCA una fecha de caducidad ni una garantía sanitaria.
- * La fecha del envase tiene prioridad.
- */
-export function conservacionOrientativaDias(nombre: string): number | null {
- const n=obtenerClaveIngredienteCompra(nombre)
- if (/ensalada|lechuga|canonigo|rucula|brotes|espinaca|fresa|frambuesa|mora|champinon|seta/.test(n)) return 2
- if (/pescado|salmon|bacalao|merluza|atun fresco|lubina|trucha|gamba|langostino|sepia|calamar|mejillon|marisco/.test(n)) return 1
- if (/pollo|pavo|carne picada|ternera|cerdo|cordero|solomillo|lomo|costilla|secreto|magro|entrecot|chuleta|alita/.test(n)) return 2
- if (/brocoli|esparrago|judia verde|berenjena|calabacin|coliflor/.test(n)) return 4
- if (/tomate|pepino|pimiento|zanahoria|manzana|pera|limon|naranja/.test(n)) return 6
- if (/yogur|queso fresco|nata fresca|leche fresca/.test(n)) return 4
- // Conservas, congelados, especias, pasta, etc. depend on their packaging.
- return null
-}
 
 function agregar(mapa: Map<string,CompraProgramada>, item: IngredienteCompra, fecha: string, desde: string, dias: number|null) {
  const anterior=mapa.get(item.clave)
