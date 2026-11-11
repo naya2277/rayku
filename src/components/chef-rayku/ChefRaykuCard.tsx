@@ -266,8 +266,8 @@ export default function ChefRaykuCard({householdId}:{householdId?:string}) {
       if(householdId && !esPropietario && !mine) {
         throw new Error('Configura primero tu perfil alimentario en Hogar para que Rayku no utilice las preferencias de otra persona.')
       }
-      const legacy = esPropietario ? cargarPerfilHogar().personas[0] : undefined
-      const historicas = esPropietario ? preferenciasAlimentarias : {ingredientesProhibidos:[],ingredientesFavoritos:[]}
+      const legacy = esPropietario && !mine ? cargarPerfilHogar().personas[0] : undefined
+      const historicas = esPropietario && !mine ? preferenciasAlimentarias : {ingredientesProhibidos:[],ingredientesFavoritos:[]}
       const prohibidos = [...new Set([...historicas.ingredientesProhibidos,...(legacy?.prohibidos??[]),...(legacy?.rechazadas??[]),...(mine?.allergies??[]),...(mine?.intolerances??[]),...(mine?.dislikes??[])])]
       const favoritos = [...new Set([...historicas.ingredientesFavoritos,...(legacy?.favoritos??[]),...(mine?.favorites??[])])]
       setProhibidosActuales(prohibidos)
