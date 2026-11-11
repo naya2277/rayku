@@ -151,7 +151,6 @@ export default function ChefRayku({
             flexWrap: 'wrap',
           }}
         >
-          <ChefRaykuCard householdId={householdId}/>
           
           <div
             style={{
@@ -223,6 +222,7 @@ export default function ChefRayku({
         </div>
       </div>
 
+      <ChefRaykuCard householdId={householdId}/>
       <BuscadorIngrediente onAbrirReceta={onAbrirReceta}/>
       <div
         style={{
