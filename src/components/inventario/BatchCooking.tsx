@@ -2,8 +2,8 @@ import {useState} from 'react'
 import {format} from 'date-fns'
 import type {ItemInventario,Receta} from '../../store/types'
 import {crearLoteCocinado,validarPreparacionLote} from '../../lib/batchCooking'
-type Props={recetas:Receta[];agregar:(item:ItemInventario)=>void}
-export default function BatchCooking({recetas,agregar}:Props){
+type Props={recetas:Receta[];inventario:ItemInventario[];agregar:(item:ItemInventario)=>void}
+export default function BatchCooking({recetas,inventario,agregar}:Props){
  const [recetaId,setRecetaId]=useState('')
  const [raciones,setRaciones]=useState(2)
  const [ubicacion,setUbicacion]=useState<'nevera'|'congelador'>('congelador')
@@ -12,6 +12,10 @@ export default function BatchCooking({recetas,agregar}:Props){
  const [descongelar,setDescongelar]=useState('')
  const [mensaje,setMensaje]=useState('')
  const receta=recetas.find(r=>r.id===recetaId)
+ const hoy=format(new Date(),'yyyy-MM-dd')
+ const limite=format(new Date(Date.now()+2*86400000),'yyyy-MM-dd')
+ const avisos=inventario.filter(i=>i.ubicacion==='congelador'&&i.cantidad>0&&i.fechaDescongelar&&i.fechaDescongelar<=limite)
+  .sort((a,b)=>(a.fechaDescongelar??'').localeCompare(b.fechaDescongelar??''))
  const guardar=()=>{
   const lote={recetaNombre:receta?.nombre??'',raciones,ubicacion,fechaPreparacion:fecha,
    fechaCaducidad:caducidad||null,fechaDescongelar:ubicacion==='congelador'?descongelar||null:null}
@@ -25,6 +29,11 @@ export default function BatchCooking({recetas,agregar}:Props){
   <summary style={{cursor:'pointer',fontWeight:850}}>🧊 Batch cooking · Guardar raciones preparadas</summary>
   <div style={{display:'grid',gap:12,marginTop:14}}>
    <p>Registra una preparación ya cocinada y dónde la guardas. Conservamos cada lote con su propia fecha.</p>
+   {avisos.length>0&&<div role="status" style={{padding:12,background:'#fff8ed',borderRadius:12}}>
+    <strong>❄️ Próximos lotes para descongelar</strong>
+    {avisos.map(i=><p key={i.id}>{i.fechaDescongelar&&i.fechaDescongelar<hoy?'⚠️ Fecha pasada: ':''}{i.nombre} · {i.cantidad} {i.unidad} · {i.fechaDescongelar}</p>)}
+    <p style={{fontSize:12}}>Avisos dentro de Rayku; no son notificaciones automáticas del móvil.</p>
+   </div>}
    <label>Receta preparada<select value={recetaId} onChange={e=>setRecetaId(e.target.value)}>
      <option value="">Seleccionar receta</option>{recetas.map(r=><option key={r.id} value={r.id}>{r.nombre}</option>)}
     </select></label>
