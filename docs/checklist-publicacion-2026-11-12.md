@@ -10,7 +10,14 @@
 - Comparador: costes de envase completo por defecto, granel proporcional solo cuando se declara; UI y guardado en hogar implementados, con tests Node añadidos.
 - Ofertas: ALDI tiene 5 filas vigentes verificadas en la BD. **Lidl todavía no tiene filas verificadas**; no prometer cobertura ni inventar valores. La UI presenta el estado de ambas fuentes, incluso si una está vacía.
 - En Vercel se identificó el equipo correcto `team_yD8zqodAozmdMXXgNutdzNga` (slug `planningdecomidas`) y el proyecto `prj_cOaYx5ZCS5jPtFVK8qBFT8iAXYlm`. Deployments READY previos son previews de commits antiguos.
-- La tarea programada «Publicar Rayku 2.0» está actualizada para las 19:00 Europe/Madrid el 12-11-2026; NO publicará a producción y no debe repetir intentos si falla por cuota.
+- La tarea programada «Publicar Rayku 2.0» está actualizada para las 17:15 Europe/Madrid el 12-11-2026; NO publicará a producción y no debe repetir intentos si falla por cuota.
+
+## Correcciones adicionales del 11-11-2026
+- Compra manual: `src/lib/compra/manualCheckout.ts` conserva cantidades claras (2 litros, 500 g, 12 uds) al finalizar la compra y conserva notas libres visibles; pruebas Node `tests/compra-manual-checkout.test.mjs`.
+- PWA: se eliminó el `public/sw.js` vacío y el registro manual desde `main.tsx`; VitePWA gestiona el registro y CI comprueba `dist/sw.js` y `dist/manifest.webmanifest`.
+- Sobras cocinadas: fecha de caducidad futura ya no anula el filtro prudente de antigüedad de preparación para nevera; se añadieron pruebas con sobras antiguas, sin fecha y congeladas.
+- Seguridad: RLS habilitada en las tablas de hogar, precios, preferencias y ofertas. Las políticas de precios/preferencias restringen lectura y escritura a miembros del hogar y al usuario autenticado. Es comprobación estática, NO sustituye la prueba con cuentas reales.
+- Vercel devolvió cuota `api-deployments-free-per-day` al intentar publicar la preview; evitar reintentos continuos.
 
 ## Verificaciones técnicas pendientes
 - [ ] Confirmar que el último SHA del momento de publicar coincide con una CI completa verde, no basta `1a80959c` si hay commits nuevos.
