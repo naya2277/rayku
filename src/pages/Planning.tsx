@@ -24,7 +24,9 @@ import SustituirPlato from '../components/planning/SustituirPlato'
 import AdvertenciasPersonales from '../components/planning/AdvertenciasPersonales'
 import AsistenteSemanal from '../components/planning/AsistenteSemanal'
 import { cargarPerfilHogar, guardarPerfilHogar } from '../lib/perfilHogar'
-import { generarMenuSemanal, recetaPermitida, recetaCompatible, recetaCompatibleHogar } from '../lib/generarMenuSemanal'
+import { generarPropuestasHogar, validarPropuestaHogar } from '../lib/propuestasMenu'
+import { readFoodProfiles, type FoodProfile } from '../lib/foodProfiles'
+import { calcularPresupuesto, type Precios } from '../lib/planificacionInteligente'
 
 const EMOJIS_DIA = [
   '🌸',
@@ -58,8 +60,12 @@ export default function Planning({
   onAbrirReceta,
 }: Props) {
   const [priorizarInventario, setPriorizarInventario] = useState(() => cargarPerfilHogar().priorizarInventario)
-  const [propuestas, setPropuestas] = useState<ReturnType<typeof generarMenuSemanal> | null>(null)
+  const [propuestas, setPropuestas] = useState<ReturnType<typeof generarPropuestasHogar> | null>(null)
   const [seleccion, setSeleccion] = useState<Record<string,string>>({})
+  const [perfilesHogar,setPerfilesHogar] = useState<FoodProfile[]>([])
+  const [estadoPerfiles,setEstadoPerfiles] = useState<'loading'|'ready'|'error'>('loading')
+  const [minutosMaximos,setMinutosMaximos] = useState(45)
+  const [presupuestoMaximo,setPresupuestoMaximo] = useState(90)
   const [nuevoEvitar, setNuevoEvitar] = useState('')
   const [avisoGeneracion, setAvisoGeneracion] = useState('')
   const [nuevoFavorito, setNuevoFavorito] = useState('')
@@ -120,6 +126,40 @@ export default function Planning({
         )
     )
 
+  useEffect(()=>{
+    if(!householdId) {setPerfilesHogar([]);setEstadoPerfiles('ready');return}
+    let active=true
+    const cargar=async()=>{
+      setEstadoPerfiles('loading')
+      try{
+        const perfiles=await readFoodProfiles(householdId)
+        if(!active)return
+        setPerfilesHogar(perfiles)
+        setEstadoPerfiles('ready')
+        setPropuestas(null)
+      }catch(error){
+        console.warn('No se pudieron cargar perfiles alimentarios',error)
+        if(active)setEstadoPerfiles('error')
+      }
+    }
+    void cargar()
+    window.addEventListener('rayku-food-profiles-updated',cargar)
+    return()=>{active=false;window.removeEventListener('rayku-food-profiles-updated',cargar)}
+  },[householdId])
+
+  const presupuestoPropuesto = (() => {
+    if(!propuestas)return null
+    let precios:Precios={}
+    try{precios=JSON.parse(localStorage.getItem('rayku-precios-local-v1')??'{}') as Precios}catch{precios={}}
+    const borrador = propuestas.propuestas.map(p=>{
+      const id=seleccion[p.fecha+'|'+p.tipoComida]
+      return id? {id:'preview-'+p.fecha+p.tipoComida,fecha:p.fecha,tipoComida:p.tipoComida,recetaId:id,recetaIds:[id],comidaLibre:'',nota:'',cocinado:false} : null
+    }).filter((p):p is ItemPlanning=>p!==null)
+    return calcularPresupuesto([...planning,...borrador],recetas,inventario,
+      format(dias[0],'yyyy-MM-dd'),format(dias[6],'yyyy-MM-dd'),precios)
+  })()
+
+
   function aplazarComida(
     fecha: string, tipo: 'comida' | 'cena',
     nuevaFecha: string, nuevoTipo: 'comida' | 'cena',
@@ -150,40 +190,65 @@ export default function Planning({
     return true
   }
 
-  function sugerirSemana() {
-    const resultado = generarMenuSemanal(dias.map(d => format(d, 'yyyy-MM-dd')), recetas, planning, preferenciasAlimentarias, inventario, cargarPerfilHogar(), priorizarInventario)
-    const actual = useRaykuStore.getState()
-    let creadas = 0
-    for (const propuesta of resultado.propuestas) {
-      if (actual.planning.some(item => item.fecha === propuesta.fecha && item.tipoComida === propuesta.tipoComida)) continue
-      const receta = actual.recetas.find(item => item.id === propuesta.recetaId)
-      if (!receta || !recetaCompatible(receta, propuesta.tipoComida) ||
-          !recetaPermitida(receta, actual.preferenciasAlimentarias) ||
-          !recetaCompatibleHogar(receta, cargarPerfilHogar())) continue
-      actual.guardarHuecoPlanning({
-        fecha: propuesta.fecha, tipoComida: propuesta.tipoComida,
-        recetaId: receta.id, recetaIds: [receta.id], comidaLibre: '',
-        nota: '', cocinado: false,
-      })
-      creadas++
+  async function sugerirSemana() {
+    setAvisoGeneracion('')
+    let perfiles=perfilesHogar
+    if(householdId) {
+      try {
+        perfiles=await readFoodProfiles(householdId)
+        if(perfiles.length<2){
+          setAvisoGeneracion('Para proponer un menú compartido deben estar disponibles los perfiles alimentarios de los dos miembros.')
+          return
+        }
+        setPerfilesHogar(perfiles)
+        setEstadoPerfiles('ready')
+      } catch {
+        setAvisoGeneracion('No se pueden comprobar las restricciones del hogar. No se ha generado ni guardado ningún menú.')
+        return
+      }
     }
-    setPropuestas(null)
-    setSeleccion({})
-    setAvisoGeneracion(creadas ? 'Se han guardado ' + creadas + ' comidas y cenas en el calendario. Puedes editarlas debajo.' : 'No hay huecos nuevos compatibles. Revisa las preferencias o los días ya planificados.')
+    const resultado=generarPropuestasHogar(dias.map(d=>format(d,'yyyy-MM-dd')),
+      recetas,planning,inventario,perfiles,preferenciasAlimentarias,
+      cargarPerfilHogar(),minutosMaximos,priorizarInventario)
+    setPropuestas(resultado)
+    setSeleccion(Object.fromEntries(resultado.propuestas.map(p=>[p.fecha+'|'+p.tipoComida,p.recetaId])))
+    setAvisoGeneracion(resultado.propuestas.length
+      ? 'Estas son propuestas. Nada se guardará en el calendario hasta que las confirmes.'
+      : 'No hay recetas compatibles para los huecos libres. Puedes ajustar el tiempo máximo o las recetas disponibles.')
   }
   function cambiarSemana(nueva: Date) { setSemanaBase(nueva); setPropuestas(null) }
   function aceptarSemana() {
-    if (!propuestas) return
-    const actual = useRaykuStore.getState()
-    const hogar = cargarPerfilHogar()
-    for (const p of propuestas.propuestas) {
-      const id = seleccion[p.fecha + p.tipoComida]
-      if (!id || actual.planning.some(h => h.fecha === p.fecha && h.tipoComida === p.tipoComida)) continue
-      const receta = actual.recetas.find(r=>r.id===id)
-      if (!receta || !recetaCompatible(receta,p.tipoComida) || !recetaPermitida(receta,actual.preferenciasAlimentarias) || !recetaCompatibleHogar(receta,hogar)) continue
-      actual.guardarHuecoPlanning({ fecha: p.fecha, tipoComida: p.tipoComida, recetaId: id, recetaIds: [id], comidaLibre: '', nota: '', cocinado: false })
+    if(!propuestas)return
+    if(householdId && estadoPerfiles!=='ready') {
+      setAvisoGeneracion('No se puede confirmar sin comprobar los perfiles alimentarios del hogar.')
+      return
+    }
+    const presupuestoIncompleto=(presupuestoPropuesto?.sinPrecio??0)>0
+    const supera=(presupuestoPropuesto?.estimado??0)>presupuestoMaximo
+    if(supera || presupuestoIncompleto){
+      const aviso=supera
+        ? 'La estimación supera el presupuesto indicado.'
+        : 'No se puede garantizar el presupuesto porque faltan precios de referencia.'
+      if(!window.confirm(aviso+' ¿Quieres confirmar igualmente las recetas seleccionadas?'))return
+    }
+    const actual=useRaykuStore.getState()
+    const hogar=cargarPerfilHogar()
+    let aceptadas=0
+    for(const p of propuestas.propuestas){
+      const id=seleccion[p.fecha+'|'+p.tipoComida]
+      if(!id || actual.planning.some(h=>h.fecha===p.fecha && h.tipoComida===p.tipoComida))continue
+      const receta=actual.recetas.find(r=>r.id===id)
+      if(!receta || !validarPropuestaHogar(receta,p.tipoComida,propuestas.restricciones,hogar,minutosMaximos))continue
+      actual.guardarHuecoPlanning({
+        fecha:p.fecha,tipoComida:p.tipoComida,recetaId:id,recetaIds:[id],
+        comidaLibre:'',nota:'',cocinado:false
+      })
+      aceptadas++
     }
     setPropuestas(null)
+    setAvisoGeneracion(aceptadas
+      ? 'Has confirmado '+aceptadas+' platos. Ahora aparecen en el calendario compartido.'
+      : 'No se añadió ningún plato: los huecos estaban ocupados o ya no eran compatibles.')
   }
   function rechazarReceta(id: string) {
     const hogar = cargarPerfilHogar()
@@ -311,7 +376,7 @@ export default function Planning({
       <AsistenteSemanal planning={planning} recetas={recetas} inventario={inventario} desde={format(dias[0], 'yyyy-MM-dd')} hasta={format(dias[6], 'yyyy-MM-dd')} onAbrirReceta={onAbrirReceta}/>
       <section className="card" style={{ padding: 18, marginBottom: 20 }}>
         <h3>✨ Propuestas de Rayku</h3>
-        <details style={{ marginBottom: 14 }}>
+        <details style={{ marginBottom: 14, display: householdId ? 'none' : undefined }}>
           <summary style={{ cursor: 'pointer', fontWeight: 700 }}>💜 Preferencias del menú</summary>
           <p>Los ingredientes que evites se excluirán de las propuestas. Tus favoritos tendrán prioridad.</p>
           <div style={{ display: 'grid', gap: 12 }}>
@@ -337,19 +402,43 @@ export default function Planning({
             </div>
           </div>
         </details>
-        <p>Chef Rayku rellena y guarda los huecos libres de la semana automáticamente. Después puedes cambiar cualquier plato.</p>
+        <p>Rayku propone comidas para los huecos libres. Revisa o cambia cada propuesta antes de confirmarla; nunca modifica el calendario por sí solo.</p>
         <label style={{display:'flex',alignItems:'center',gap:8,marginBottom:12}}><input type="checkbox" style={{width:'auto'}} checked={priorizarInventario} onChange={e=>{setPriorizarInventario(e.target.checked);setPropuestas(null)}}/> 🧺 Priorizar lo que ya tengo en casa</label>
-        <button className="btn-principal" onClick={sugerirSemana}>✨ Planificar y guardar mi semana</button>
+        <div style={{display:'flex',gap:12,flexWrap:'wrap',marginBottom:12}}>
+          <label>⏱️ Tiempo máximo por receta
+            <select value={minutosMaximos} onChange={e=>{setMinutosMaximos(Number(e.target.value));setPropuestas(null)}}>
+              {[15,20,30,45,60,90,120,240].map(n=><option key={n} value={n}>{n} min</option>)}
+            </select>
+          </label>
+          <label>💶 Presupuesto máximo semanal (€)
+            <input type="number" min="1" step="1" value={presupuestoMaximo}
+              onChange={e=>setPresupuestoMaximo(Math.max(1,Number(e.target.value)||1))}/>
+          </label>
+        </div>
+        {householdId && <p style={{fontSize:13}}>
+          {estadoPerfiles==='loading'?'Comprobando preferencias de ambos miembros…':
+            estadoPerfiles==='error'?'No se pudieron cargar los perfiles del hogar.':
+            'Perfiles alimentarios disponibles: '+perfilesHogar.length+'. Las restricciones conocidas de ambos se aplican a las propuestas.'}
+        </p>}
+        <button className="btn-principal" disabled={Boolean(householdId) && estadoPerfiles!=='ready'}
+          onClick={()=>{void sugerirSemana()}}>✨ Proponer menú sin guardar</button>
         {avisoGeneracion && <p role="status">{avisoGeneracion}</p>}
         {propuestas && <div style={{ display: 'grid', gap: 12, marginTop: 14 }}>
-          {propuestas.propuestas.map(p => <label key={p.fecha + p.tipoComida}>
+          {propuestas.propuestas.map(p => <label key={p.fecha + '|' + p.tipoComida}>
             <strong>{p.fecha} · {p.tipoComida}</strong>
-            <select style={{ display: 'block', width: '100%', padding: 10 }} value={seleccion[p.fecha + p.tipoComida] ?? ''} onChange={e => setSeleccion(prev => ({ ...prev, [p.fecha + p.tipoComida]: e.target.value }))}>
+            <select style={{ display: 'block', width: '100%', padding: 10 }} value={seleccion[p.fecha + '|' + p.tipoComida] ?? ''} onChange={e => setSeleccion(prev => ({ ...prev, [p.fecha + '|' + p.tipoComida]: e.target.value }))}>
               <option value="">Dejar sin planificar</option>
-              {recetas.filter(r => recetaPermitida(r, preferenciasAlimentarias) && recetaCompatible(r, p.tipoComida) && recetaCompatibleHogar(r,cargarPerfilHogar())).map(r => <option key={r.id} value={r.id}>{r.nombre}</option>)}
+              {propuestas.elegibles.filter(r => validarPropuestaHogar(r,p.tipoComida,propuestas.restricciones,cargarPerfilHogar(),minutosMaximos)).map(r => <option key={r.id} value={r.id}>{r.nombre}</option>)}
             </select>
             {seleccion[p.fecha + p.tipoComida] && <button type="button" className="btn-secundario" onClick={()=>rechazarReceta(seleccion[p.fecha + p.tipoComida])}>👎 No me gusta esta receta</button>}
           </label>)}
+          {presupuestoPropuesto && <p style={{padding:12,border:'1px solid var(--borde)',borderRadius:12}}>
+            💶 Compra estimada con los precios introducidos: <strong>{presupuestoPropuesto.estimado.toFixed(2)} €</strong>
+            {' '}de {presupuestoMaximo.toFixed(2)} € de presupuesto semanal.
+            {presupuestoPropuesto.sinPrecio>0 && <span> ⚠️ Faltan precios de {presupuestoPropuesto.sinPrecio} productos; el coste real puede ser mayor.</span>}
+            {presupuestoPropuesto.estimado>presupuestoMaximo && <span> ⚠️ Se supera el presupuesto.</span>}
+          </p>}
+          <p style={{fontSize:12}}>Las coincidencias por ingredientes no garantizan seguridad frente a alergias. Revisa ingredientes, etiquetas y posibles trazas antes de preparar cada plato.</p>
           {propuestas.sinCubrir.length > 0 && <p>{propuestas.sinCubrir.length} huecos sin recetas compatibles.</p>}
           <button className="btn-principal" onClick={aceptarSemana}>💜 Confirmar propuestas</button>
           <button className="btn-secundario" onClick={() => setPropuestas(null)}>Cancelar</button>
