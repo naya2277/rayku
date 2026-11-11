@@ -13,6 +13,9 @@ Deno.serve(async (req) => {
     if(error||!user) return new Response('Unauthorized',{status:401,headers:cors})
     const {prompt}=await req.json()
     if(typeof prompt!=='string'||!prompt.trim()||prompt.length>24000) return new Response('Invalid prompt',{status:400,headers:cors})
+    const {data:allowed,error:quotaError}=await client.rpc('rayku_ai_rate_limit',{p_max:15})
+    if(quotaError) return new Response('Quota check failed',{status:503,headers:cors})
+    if(!allowed) return new Response('Daily Chef Rayku limit reached',{status:429,headers:cors})
     const apiKey=Deno.env.get('GEMINI_API_KEY')
     if(!apiKey) return new Response('Gemini not configured',{status:503,headers:cors})
     const result=await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent',{
