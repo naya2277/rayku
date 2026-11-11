@@ -160,6 +160,7 @@ export const normalizarPlanning = (
     racionesOverride:
       item.racionesOverride ??
       null,
+    platosPorPersona: item.platosPorPersona && typeof item.platosPorPersona === 'object' && !Array.isArray(item.platosPorPersona) ? item.platosPorPersona : {},
     cocinado:
       item.cocinado ?? false,
   }
