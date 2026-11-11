@@ -3,6 +3,17 @@ import { listHouseholds, createHousehold, createHouseholdInvitation, acceptHouse
 import './WorkspaceSwitcher.css'
 import HogarCompartido from './HogarCompartido'
 
+function describirError(error: unknown): string {
+  if (error instanceof Error) return error.message
+  if (typeof error === 'string') return error
+  if (error && typeof error === 'object') {
+    const e = error as { message?: string; details?: string; hint?: string; code?: string }
+    const partes = [e.message, e.details, e.hint, e.code && 'Código: ' + e.code].filter(Boolean)
+    if (partes.length) return partes.join(' · ')
+  }
+  return 'Error desconocido. Revisa los permisos del hogar.'
+}
+
 type Props = { userId: string }
 
 /**
@@ -30,16 +41,16 @@ export default function WorkspaceSwitcher({ userId }: Props) {
         setHouseholds(items)
         setStatus('ready')
       })
-      .catch(() => {
-        if (active) setStatus('unavailable')
+      .catch(error => {
+        if (active) { setStatus('unavailable'); setMessage(describirError(error)) }
       })
     return () => { active = false }
   }, [userId])
 
   const refresh = async () => { const items=await listHouseholds();setHouseholds(items);setStatus('ready') }
-  const create = async () => {try {const h=await createHousehold(newName);await refresh();setSelection(h.id);setNewName('');setMessage('Hogar creado. Ya puedes usar el tablero compartido; el planning personal sigue separado.')}catch(e){setMessage(String(e))}}
-  const invite = async () => {try {const token=await createHouseholdInvitation(selection,inviteEmail);setInviteToken(token);setMessage('Invitación creada. Comparte el enlace solo con su destinatario.')}catch(e){setMessage(String(e))}}
-  const join = async () => {try {await acceptHouseholdInvitation(joinToken.includes('?invite=') ? new URL(joinToken).searchParams.get('invite') ?? '' : joinToken);await refresh();setJoinToken('');setMessage('Invitación aceptada. Selecciona el hogar para abrir el tablero compartido.')}catch(e){setMessage(String(e))}}
+  const create = async () => {try {const h=await createHousehold(newName);await refresh();setSelection(h.id);setNewName('');setMessage('Hogar creado. Ya puedes usar el tablero compartido; el planning personal sigue separado.')}catch(e){setMessage(describirError(e))}}
+  const invite = async () => {try {const token=await createHouseholdInvitation(selection,inviteEmail);setInviteToken(token);setMessage('Invitación creada. Comparte el enlace solo con su destinatario.')}catch(e){setMessage(describirError(e))}}
+  const join = async () => {try {await acceptHouseholdInvitation(joinToken.includes('?invite=') ? new URL(joinToken).searchParams.get('invite') ?? '' : joinToken);await refresh();setJoinToken('');setMessage('Invitación aceptada. Selecciona el hogar para abrir el tablero compartido.')}catch(e){setMessage(describirError(e))}}
   const invitationUrl = inviteToken ? window.location.origin + '/?invite=' + encodeURIComponent(inviteToken) : ''
   return (
     <section className="workspace-switcher" aria-label="Espacios de Rayku">
