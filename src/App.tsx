@@ -23,6 +23,7 @@ import CalendarioPlanning from './pages/CalendarioPlanning'
 import Recetas from './pages/Recetas'
 import Inventario from './pages/Inventario'
 import Compra from './pages/Compra'
+import Supermercados from './pages/Supermercados'
 import Auth from './pages/Auth'
 import ChefRayku from './pages/ChefRayku'
 import WorkspaceSwitcher from './components/workspaces/WorkspaceSwitcher'
@@ -43,6 +44,7 @@ type Pagina =
   | 'recetas'
   | 'inventario'
   | 'compra'
+  | 'supermercados'
 
 const PAGINA_KEY =
   'rayku-pagina-actual'
@@ -56,6 +58,7 @@ const PAGINAS_VALIDAS: Pagina[] = [
   'recetas',
   'inventario',
   'compra',
+  'supermercados',
 ]
 
 function obtenerPaginaInicial(): Pagina {
@@ -447,6 +450,12 @@ function MainApp() {
 
           <button
             type="button"
+            className={paginaActual === 'supermercados' ? 'activo' : ''}
+            onClick={() => setPaginaActual('supermercados')}
+          >💶 Supermercados</button>
+
+          <button
+            type="button"
             className={
               paginaActual ===
               'inventario'
@@ -567,6 +576,9 @@ function MainApp() {
           <Compra />
         )}
 
+        {paginaActual === 'supermercados' && (
+          <Supermercados householdId={workspace.selection !== 'personal' ? workspace.selection : undefined}/>
+        )}
         {paginaActual ===
           'inventario' && (
           <Inventario />
