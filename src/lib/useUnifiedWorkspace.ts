@@ -35,6 +35,30 @@ export function useUnifiedWorkspace(userId: string) {
   const error = useRef<string | null>(null)
   const saving = useRef(false)
 
+  // A logout/account switch must never retain another user's selected household.
+  // Pause local persistence while clearing the in-memory workspace.
+  useEffect(() => {
+    if (pending.current) {
+      clearTimeout(pending.current)
+      pending.current = null
+    }
+    setSharedWorkspaceStorage(true)
+    hydrated.current = false
+    active.current = { scope: 'personal', userId }
+    personalCache.current = null
+    versions.current = { recipes: 0, planning: 0, inventory: 0, shopping_list: 0 }
+    error.current = null
+    setSelection('personal')
+    setMessage('')
+    useRaykuStore.setState({
+      recetas: [], planning: [], inventario: [],
+      compraManual: [], checksCompra: [], historialCocinado: [],
+    })
+    baseline.current = signatures(readStore())
+    hydrated.current = true
+    setSharedWorkspaceStorage(false)
+  }, [userId])
+
   const persist = useCallback(async () => {
     if (active.current.scope !== 'household' || !hydrated.current) return
     saving.current = true
