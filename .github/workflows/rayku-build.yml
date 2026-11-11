@@ -17,3 +17,7 @@ jobs:
       - run: npm ci
       - run: node --experimental-strip-types --test tests/*.test.mjs
       - run: npm run build
+      - name: Comprobar PWA generada
+        run: |
+          test -s dist/sw.js
+          test -s dist/manifest.webmanifest
