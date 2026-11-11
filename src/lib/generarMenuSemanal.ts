@@ -46,6 +46,7 @@ export function generarMenuSemanal(
   inventario: ItemInventario[] = [],
   hogar?: PerfilHogar,
   priorizarInventario = false,
+  limitesPorFecha?: Record<string,number>,
 ): Resultado {
   const prohibidosHogar: string[] = []
   const preferenciasCombinadas = { ...preferencias, ingredientesProhibidos: [...preferencias.ingredientesProhibidos, ...prohibidosHogar], ingredientesFavoritos: [...preferencias.ingredientesFavoritos, ...(hogar?.personas.flatMap(p=>p.favoritos) ?? [])] }
@@ -95,7 +96,7 @@ export function generarMenuSemanal(
   for (const fecha of fechas) {
     for (const tipoComida of ['comida', 'cena'] as const) {
       if (planning.some(p => p.fecha === fecha && p.tipoComida === tipoComida)) continue
-      const compatibles = elegibles.filter(r => recetaCompatible(r, tipoComida))
+      const compatibles = elegibles.filter(r => recetaCompatible(r, tipoComida) && (!limitesPorFecha || (r.tiempo>0 && r.tiempo<=(limitesPorFecha[fecha]??Infinity))))
       const puntuacion = (r: Receta) => {
         const favoritos = preferenciasCombinadas.ingredientesFavoritos.filter(Boolean)
         const favorito = favoritos.some(f => [r.nombre, ...r.ingredientes].some(i => normalizarIngrediente(i).includes(normalizarIngrediente(f))))
