@@ -125,6 +125,49 @@ export function useUnifiedWorkspace(userId: string) {
     }
   }, [selection, busy, userId, persist])
 
+  // Refresh shared data on other devices only when this device has no unsaved edits.
+  // Never overwrite local changes with an incoming remote snapshot.
+  useEffect(() => {
+    if (selection === 'personal' || busy) return
+    let cancelled = false
+    let checking = false
+    const refresh = async () => {
+      if (checking || pending.current || active.current.scope !== 'household' ||
+          active.current.householdId !== selection ||
+          kinds.some(kind => signatures(readStore())[kind] !== baseline.current[kind])) return
+      checking = true
+      try {
+        await queue.current
+        const snapshot = await loadWorkspaceData({scope:'household',householdId:selection})
+        if (cancelled || pending.current || active.current.scope !== 'household' ||
+            active.current.householdId !== selection ||
+            kinds.some(kind => signatures(readStore())[kind] !== baseline.current[kind])) return
+        const changed = kinds.some(kind => snapshot.versions[kind] > versions.current[kind])
+        if (!changed) return
+        hydrated.current = false
+        versions.current = snapshot.versions
+        useRaykuStore.setState({
+          recetas: snapshot.data.recipes.map(normalizarReceta),
+          planning: snapshot.data.planning.map(normalizarPlanning),
+          inventario: snapshot.data.inventory.map(normalizarInventario),
+          compraManual: snapshot.data.shopping_list.compraManual.map(normalizarCompraManual),
+          checksCompra: snapshot.data.shopping_list.checksCompra,
+        })
+        baseline.current = signatures(readStore())
+        setMessage('🔄 Cambios del hogar actualizados desde la nube')
+      } catch (e) {
+        setMessage('⚠️ No se pudo actualizar el hogar: ' + (e instanceof Error ? e.message : String(e)))
+      } finally {
+        hydrated.current = true
+        checking = false
+      }
+    }
+    const timer = window.setInterval(() => { void refresh() }, 12000)
+    const visible = () => { if (document.visibilityState === 'visible') void refresh() }
+    document.addEventListener('visibilitychange',visible)
+    return () => { cancelled = true; window.clearInterval(timer); document.removeEventListener('visibilitychange',visible) }
+  }, [selection,busy])
+
   const saveNow = useCallback(async () => {
     if (active.current.scope !== 'household') return false
     if (pending.current) { clearTimeout(pending.current); pending.current = null }
