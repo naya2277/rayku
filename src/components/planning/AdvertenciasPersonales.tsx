@@ -2,11 +2,10 @@ import { useEffect, useState } from 'react'
 import { cargarPerfilHogar, type PerfilHogar } from '../../lib/perfilHogar'
 import { normalizarIngrediente } from '../../lib/generarMenuSemanal'
 import { useRaykuStore } from '../../store'
-import { listHouseholds } from '../../lib/workspaces'
 import { readFoodProfiles, type FoodProfile } from '../../lib/foodProfiles'
 import type { ItemPlanning } from '../../store/types'
 
-export default function AdvertenciasPersonales({item}: {item: ItemPlanning}) {
+export default function AdvertenciasPersonales({item,householdId}: {item: ItemPlanning; householdId?: string}) {
   const [perfil,setPerfil] = useState<PerfilHogar>(cargarPerfilHogar)
   const recetas = useRaykuStore(s=>s.recetas)
   const [members,setMembers]=useState<FoodProfile[]>([])
@@ -19,16 +18,15 @@ export default function AdvertenciasPersonales({item}: {item: ItemPlanning}) {
     let active=true
     const load=async()=>{
       try {
-        const homes=await listHouseholds()
-        if(!homes.length)return
-        const people=await readFoodProfiles(homes[0].id)
+        if(!householdId)return
+        const people=await readFoodProfiles(householdId)
         if(active)setMembers(people)
       } catch(e){console.warn('No se han podido consultar las restricciones del hogar',e)}
     }
     void load()
     window.addEventListener('rayku-food-profiles-updated',load)
     return()=>{active=false;window.removeEventListener('rayku-food-profiles-updated',load)}
-  },[])
+  },[householdId])
   const ids = [...new Set([...(item.recetaIds??[]),...(item.recetaId?[item.recetaId]:[]),...Object.values(item.platosPorPersona??{}).flatMap(p=>p.recetaId?[p.recetaId]:[])])]
   const textos = [
     item.comidaLibre,
