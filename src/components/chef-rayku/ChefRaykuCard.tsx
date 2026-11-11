@@ -1,5 +1,6 @@
 import { readFoodProfiles } from '../../lib/foodProfiles'
 import { supabase } from '../../lib/supabase'
+import { listHouseholds } from '../../lib/workspaces'
 import { cargarPerfilHogar } from '../../lib/perfilHogar'
 import { revisarRespuestaChefRayku } from '../../lib/chef-rayku/revisarRespuesta'
 import {
@@ -256,12 +257,19 @@ export default function ChefRaykuCard({householdId}:{householdId?:string}) {
     setGuardadas([])
 
     try {
-      const {data:{user}} = await supabase.auth.getUser()
+      const {data:{user},error:authError} = await supabase.auth.getUser()
+      if(authError || !user) throw new Error('Inicia sesión antes de utilizar Chef Rayku.')
       const profiles = householdId ? await readFoodProfiles(householdId) : []
-      const mine = profiles.find(p=>p.user_id===user?.id)
-      const legacy = cargarPerfilHogar().personas[0]
-      const prohibidos = [...new Set([...preferenciasAlimentarias.ingredientesProhibidos,...(legacy?.prohibidos??[]),...(legacy?.rechazadas??[]),...(mine?.allergies??[]),...(mine?.intolerances??[]),...(mine?.dislikes??[])])]
-      const favoritos = [...new Set([...preferenciasAlimentarias.ingredientesFavoritos,...(legacy?.favoritos??[]),...(mine?.favorites??[])])]
+      const mine = profiles.find(p=>p.user_id===user.id)
+      const hogares = householdId ? await listHouseholds() : []
+      const esPropietario = !householdId || hogares.some(h=>h.id===householdId && h.created_by===user.id)
+      if(householdId && !esPropietario && !mine) {
+        throw new Error('Configura primero tu perfil alimentario en Hogar para que Rayku no utilice las preferencias de otra persona.')
+      }
+      const legacy = esPropietario ? cargarPerfilHogar().personas[0] : undefined
+      const historicas = esPropietario ? preferenciasAlimentarias : {ingredientesProhibidos:[],ingredientesFavoritos:[]}
+      const prohibidos = [...new Set([...historicas.ingredientesProhibidos,...(legacy?.prohibidos??[]),...(legacy?.rechazadas??[]),...(mine?.allergies??[]),...(mine?.intolerances??[]),...(mine?.dislikes??[])])]
+      const favoritos = [...new Set([...historicas.ingredientesFavoritos,...(legacy?.favoritos??[]),...(mine?.favorites??[])])]
       setProhibidosActuales(prohibidos)
       const texto =
         await consultarChefRayku(
@@ -271,7 +279,7 @@ export default function ChefRaykuCard({householdId}:{householdId?:string}) {
             inventario,
             planning,
             historialCocinado,
-            preferenciasAlimentarias:{...preferenciasAlimentarias,ingredientesProhibidos:prohibidos,ingredientesFavoritos:favoritos},
+            preferenciasAlimentarias:{...historicas,ingredientesProhibidos:prohibidos,ingredientesFavoritos:favoritos},
             dietasSolicitante:mine?.diets?.length ? mine.diets : (legacy?.dietas ?? []),
           }
         )
