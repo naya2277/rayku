@@ -1,5 +1,8 @@
 import { useEffect, useState } from 'react'
 import { listHouseholds, createHousehold, createHouseholdInvitation, acceptHouseholdInvitation, type Household } from '../../lib/workspaces'
+import { useRaykuStore } from '../../store'
+import { getWorkspaceRecord, saveSharedRecord } from '../../lib/workspaces'
+import type { Receta } from '../../store/types'
 import './WorkspaceSwitcher.css'
 import HogarCompartido from './HogarCompartido'
 
@@ -22,6 +25,9 @@ type Props = { userId: string }
  */
 export default function WorkspaceSwitcher({ userId }: Props) {
   const [newName,setNewName] = useState('')
+  const [copying,setCopying] = useState(false)
+  const [recipeToCopy,setRecipeToCopy] = useState('')
+  const recipes = useRaykuStore(state => state.recetas)
   const [inviteEmail,setInviteEmail] = useState('')
   const [inviteToken,setInviteToken] = useState('')
   const [joinToken,setJoinToken] = useState(() => new URLSearchParams(window.location.search).get('invite') ?? '')
@@ -51,6 +57,29 @@ export default function WorkspaceSwitcher({ userId }: Props) {
   const create = async () => {try {const h=await createHousehold(newName);await refresh();setSelection(h.id);setNewName('');setMessage('Hogar creado. Ya puedes usar el tablero compartido; el planning personal sigue separado.')}catch(e){setMessage(describirError(e))}}
   const invite = async () => {try {const token=await createHouseholdInvitation(selection,inviteEmail);setInviteToken(token);setMessage('Invitación creada. Comparte el enlace solo con su destinatario.')}catch(e){setMessage(describirError(e))}}
   const join = async () => {try {await acceptHouseholdInvitation(joinToken.includes('?invite=') ? new URL(joinToken).searchParams.get('invite') ?? '' : joinToken);await refresh();setJoinToken('');setMessage('Invitación aceptada. Selecciona el hogar para abrir el tablero compartido.')}catch(e){setMessage(describirError(e))}}
+  const copyRecipe = async () => {
+    if (selection === 'personal' || copying || !recipeToCopy) return
+    const recipe = recipes.find(item => item.id === recipeToCopy)
+    if (!recipe) return
+    setCopying(true)
+    setMessage('')
+    try {
+      const workspace = { scope: 'household' as const, householdId: selection }
+      const record = await getWorkspaceRecord<Receta[]>(workspace, 'recipes')
+      const existing = Array.isArray(record?.payload) ? record.payload : []
+      if (existing.some(item => item.id === recipe.id)) {
+        setMessage('La receta ya existe en Domus Infinita. No se ha duplicado.')
+        return
+      }
+      await saveSharedRecord(selection, 'recipes', [...existing, recipe], record?.version ?? 0)
+      setRecipeToCopy('')
+      setMessage('Receta copiada al hogar. La original sigue siendo privada y no se ha modificado.')
+    } catch (error) {
+      setMessage('No se ha copiado la receta: ' + describirError(error))
+    } finally {
+      setCopying(false)
+    }
+  }
   const invitationUrl = inviteToken ? window.location.origin + '/?invite=' + encodeURIComponent(inviteToken) : ''
   return (
     <section className="workspace-switcher" aria-label="Espacios de Rayku">
@@ -92,7 +121,23 @@ export default function WorkspaceSwitcher({ userId }: Props) {
           {message && <p role="status">{message}</p>}
         </div>
       </details>
+      {selection !== 'personal' && households.some(h=>h.id===selection) && (
+        <details>
+          <summary>📖 Compartir una receta personal con este hogar</summary>
+          <div style={{display:'flex',gap:8,marginTop:12,flexWrap:'wrap'}}>
+            <select aria-label="Receta personal para copiar" value={recipeToCopy} onChange={event=>setRecipeToCopy(event.target.value)}>
+              <option value="">Elige una receta</option>
+              {recipes.map(recipe=><option key={recipe.id} value={recipe.id}>{recipe.nombre}</option>)}
+            </select>
+            <button type="button" className="btn-secundario" disabled={!recipeToCopy || copying} onClick={copyRecipe}>
+              {copying ? 'Copiando…' : 'Copiar receta al hogar'}
+            </button>
+          </div>
+          <p>Se crea una copia compartida sin mover ni modificar tu receta personal.</p>
+        </details>
+      )}
       {selection !== 'personal' && households.some(h=>h.id===selection) && <HogarCompartido key={selection} householdId={selection}/>}
+
     </section>
   )
 }
