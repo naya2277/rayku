@@ -49,11 +49,20 @@ export function preparacionesAnticipadas(planning:ItemPlanning[],recetas:Receta[
   return tareas.sort((a,b)=>a.fecha.localeCompare(b.fecha))
 }
 
-export function sugerirSobras(inventario:ItemInventario[],recetas:Receta[]) {
-  const sobras=inventario.filter(i=>i.esCocinado && i.cantidad>0 && i.ubicacion!=='pendiente')
+export function sugerirSobras(inventario:ItemInventario[],recetas:Receta[],hoy=new Date().toISOString().slice(0,10)) {
+  const sobras=inventario.filter(i=>i.esCocinado && i.cantidad>0 && i.ubicacion!=='pendiente' &&
+    (!i.fechaCaducidad || i.fechaCaducidad>=hoy))
   return sobras.map(item=>{
-    const clave=obtenerClaveIngredienteCompra(item.nombre)
-    const candidatas=recetas.filter(r=>r.ingredientes.some(ing=>obtenerClaveIngredienteCompra(ing).includes(clave) || clave.includes(obtenerClaveIngredienteCompra(ing)) && obtenerClaveIngredienteCompra(ing).length>=4)).slice(0,3)
+    const nombre=item.nombre.replace(/^Preparación:\s*/i,'')
+    const clave=obtenerClaveIngredienteCompra(nombre)
+    const candidatas=recetas.filter(r=>{
+      const nombreReceta=obtenerClaveIngredienteCompra(r.nombre)
+      if(nombreReceta===clave)return true
+      return clave.length>=4 && r.ingredientes.some(ing=>{
+        const ingrediente=obtenerClaveIngredienteCompra(ing)
+        return ingrediente.length>=4 && (ingrediente===clave || ingrediente.includes(clave) || clave.includes(ingrediente))
+      })
+    }).slice(0,3)
     return {item,recetas:candidatas}
-  })
+  }).sort((a,b)=>(a.item.fechaCaducidad??'9999').localeCompare(b.item.fechaCaducidad??'9999'))
 }
