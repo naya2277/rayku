@@ -103,12 +103,12 @@ REGLAS ESPECÍFICAS:
 - NO uses recetas guardadas de Rayku como ideas principales.
 - NO bases las recetas en el inventario.
 - NO priorices productos que caducan pronto.
-- NO es obligatorio que sean keto.
+- Respeta la dieta indicada en el contexto; si es keto, las cinco recetas deben ser keto.
 - NO repitas nombres de recetas existentes en el contexto.
 - Puedes sugerir cualquier ingrediente que tendría que comprar.
 - Busca variedad real: cambia proteína, técnica, país/estilo y formato.
 - Incluye estilos variados: mediterráneo, español, mexicano, asiático, comfort food, air fryer, horno, sartén o plato rápido.
-- La dieta puede variar: algunas ideas pueden ser keto, otras low carb y otras normales.
+- No cambies ni relajes la dieta indicada en el contexto sin petición explícita.
 - Respeta SIEMPRE los ingredientes prohibidos.
 - Puedes usar ingredientes favoritos solo si encajan de forma natural, pero no fuerces la respuesta hacia ellos.
 - Toda receta nueva debe poder guardarse como receta completa.
