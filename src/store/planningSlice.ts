@@ -63,6 +63,8 @@ export type PlanningSlice = {
     tipoComida: TipoComida
   ) => void
 
+  replanificarHuecoPlanning: (id:string,fecha:string,tipo:TipoComida) => boolean
+
   toggleCocinadoPlanning: (
     id: string
   ) => void
@@ -146,6 +148,19 @@ export const crearPlanningSlice = (
         planning:
           nuevoPlanning,
       })
+    },
+
+  replanificarHuecoPlanning:
+    (id,fecha,tipo) => {
+      const actual=get().planning
+      const origen=actual.find(p=>p.id===id)
+      if(!origen || origen.cocinado || fecha<new Date().toISOString().slice(0,10) ||
+        (origen.fecha===fecha&&origen.tipoComida===tipo) ||
+        actual.some(p=>p.id!==id&&p.fecha===fecha&&p.tipoComida===tipo))return false
+      const nuevo=actual.map(p=>p.id===id ? {...p,fecha,tipoComida:tipo} : p)
+      guardarPlanningLocal(nuevo)
+      set({planning:nuevo})
+      return true
     },
 
   toggleCocinadoPlanning:
