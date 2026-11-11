@@ -32,7 +32,7 @@ export default function ConfiguracionHogar({ onTerminar, onInventario, sharedHou
     <button type="submit" className="btn-secundario" disabled={!otroAparato.trim()}>+ Añadir aparato</button>
   </form>
   <label style={{display:'flex',gap:8,alignItems:'center'}}><input type="checkbox" style={{width:'auto'}} checked={perfil.priorizarInventario} onChange={e=>setPerfil(p=>({...p,priorizarInventario:e.target.checked}))}/>Priorizar ingredientes que ya tengo</label>
-  <button className="btn-principal" onClick={guardar}>💜 Guardar configuración</button>
-  <button className="btn-secundario" onClick={()=>{guardarPerfilHogar({...perfil,configurado:true});onInventario()}}>📦 Guardar e introducir mi despensa</button>
+  <button className="btn-principal" onClick={guardar}>{sharedHousehold ? "💜 Guardar utensilios y organización" : "💜 Guardar configuración"}</button>
+  <button className="btn-secundario" onClick={()=>{guardarPerfilHogar({...perfil,configurado:true});onInventario()}}>📦 Guardar utensilios e ir al inventario</button>
  </section>
 }
