@@ -3,8 +3,8 @@ import {addDays,format} from 'date-fns'
 import type {ItemInventario,ItemPlanning,Receta,TipoComida} from '../../store/types'
 import {evaluarReplanificacion,resultadoReplanificacion} from '../../lib/replanificacion'
 type Props={planning:ItemPlanning[];recetas:Receta[];inventario:ItemInventario[];
- limpiar:(fecha:string,tipo:TipoComida)=>void;guardar:(item:Omit<ItemPlanning,'id'>)=>void}
-export default function Replanificador({planning,recetas,inventario,limpiar,guardar}:Props){
+ replanificar:(id:string,fecha:string,tipo:TipoComida)=>boolean}
+export default function Replanificador({planning,recetas,inventario,replanificar}:Props){
  const [origenId,setOrigenId]=useState('')
  const [fecha,setFecha]=useState(format(addDays(new Date(),1),'yyyy-MM-dd'))
  const [tipo,setTipo]=useState<TipoComida>('comida')
@@ -22,11 +22,10 @@ export default function Replanificador({planning,recetas,inventario,limpiar,guar
    setMensaje('Ya no se puede realizar el cambio: revisa si alguien ha ocupado el destino.');return
   }
   if(!window.confirm('¿Confirmas mover esta comida? Se recalcularán las necesidades de compra.'))return
-  const actual=origen
-  limpiar(actual.fecha,actual.tipoComida)
-  const {id:_id,...contenido}=actual
-  void _id
-  guardar({...contenido,fecha,tipoComida:tipo})
+  if(!replanificar(origen.id,fecha,tipo)){
+   setMensaje('Alguien ha cambiado el calendario. Revisa el destino y vuelve a intentarlo.')
+   return
+  }
   setOrigenId('')
   setMensaje('✅ Comida trasladada. La lista de compra se adapta a su nueva fecha.')
  }
