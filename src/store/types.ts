@@ -46,6 +46,7 @@ export type ItemPlanning = {
   comidaLibre: string
   nota: string
   racionesOverride?: number | null
+  platosPorPersona?: Record<string, { recetaId: string | null; comidaLibre: string }>
   cocinado?: boolean
 }
 
