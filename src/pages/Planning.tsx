@@ -19,6 +19,7 @@ import {
 } from '../store'
 
 import DiaPlanning from '../components/planning/DiaPlanning'
+import PlatosPersonales from '../components/planning/PlatosPersonales'
 import AsistenteSemanal from '../components/planning/AsistenteSemanal'
 import { cargarPerfilHogar, guardarPerfilHogar } from '../lib/perfilHogar'
 import { generarMenuSemanal, recetaPermitida, recetaCompatible, recetaCompatibleHogar } from '../lib/generarMenuSemanal'
@@ -421,6 +422,7 @@ export default function Planning({
                   }
                   onAplazar={aplazarComida}
                 />
+                {planning.filter(item=>item.fecha===fecha).map(item=><section className="card" key={item.id} style={{marginTop:8,padding:12}}><strong>{item.tipoComida === 'comida' ? '🍽️ Comida' : '🌙 Cena'}</strong><PlatosPersonales item={item}/></section>)}
               </div>
             )
           }
