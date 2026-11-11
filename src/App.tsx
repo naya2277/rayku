@@ -441,7 +441,6 @@ function MainApp() {
         </div>
       </nav>
 
-      {paginaActual === 'configuracion' && <WorkspaceSwitcher userId={session.user.id} selection={workspace.selection} onSelect={workspace.select} busy={workspace.busy} />}
       {workspace.message && <p role="status" style={{textAlign:'center',margin:12}}>{workspace.message}</p>}
 
       {mensajeNube && (
