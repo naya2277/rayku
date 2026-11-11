@@ -9,6 +9,8 @@ import type {
 import {
   generarId,
 } from './utils'
+import { format } from 'date-fns'
+import { aplicarPlanMovimiento } from '../lib/replanificacionPure'
 
 import {
   normalizarPlanning,
@@ -152,12 +154,10 @@ export const crearPlanningSlice = (
 
   replanificarHuecoPlanning:
     (id,fecha,tipo) => {
-      const actual=get().planning
-      const origen=actual.find(p=>p.id===id)
-      if(!origen || origen.cocinado || fecha<new Date().toISOString().slice(0,10) ||
-        (origen.fecha===fecha&&origen.tipoComida===tipo) ||
-        actual.some(p=>p.id!==id&&p.fecha===fecha&&p.tipoComida===tipo))return false
-      const nuevo=actual.map(p=>p.id===id ? {...p,fecha,tipoComida:tipo} : p)
+      const nuevo=aplicarPlanMovimiento(get().planning,
+        {origenId:id,nuevaFecha:fecha,nuevoTipo:tipo},
+        format(new Date(),'yyyy-MM-dd'))
+      if(!nuevo)return false
       guardarPlanningLocal(nuevo)
       set({planning:nuevo})
       return true
