@@ -20,6 +20,14 @@ const containsTerm = (haystack: string, needle: string): boolean => {
 }
 const KETO_EXCLUSIONES=['arroz','pasta','macarrones','espaguetis','patata','patatas','boniato','boniatos','harina de trigo','pan','azucar','miel','maiz','cuscus','orzo','lentejas','garbanzos','alubias']
 
+const esSustitutoKeto=(ingrediente:string,excluido:string):boolean=>{
+  const t=normalize(ingrediente)
+  if(excluido==='arroz' && t.includes('coliflor')) return true
+  if(['pasta','macarrones','espaguetis','orzo'].includes(excluido) && (t.includes('konjac') || t.includes('calabacin'))) return true
+  if(excluido==='pan' && (t.includes('keto') || t.includes('almendra') || t.includes('linaza') || t.includes('lino') || t.includes('pan nube'))) return true
+  return false
+}
+
 export function revisarRespuestaChefRayku(
   raw: string,
   mode: string,
@@ -45,7 +53,7 @@ export function revisarRespuestaChefRayku(
     const texts=[idea.nombre,...idea.ingredientes]
     if(exclusions.some(ex=>texts.some(t=>containsTerm(t,ex)))) return false
     if(keto && (mode==='ideas_recetas'||mode==='menu_dieta') &&
-      KETO_EXCLUSIONES.some(ex=>idea.ingredientes?.some(t=>containsTerm(t,ex) && !normalize(t).includes('coliflor')))) return false
+      KETO_EXCLUSIONES.some(ex=>idea.ingredientes?.some(t=>containsTerm(t,ex) && !esSustitutoKeto(t,ex)))) return false
     existing.add(name)
     return true
   })
