@@ -65,9 +65,20 @@ export default function Planning({
   const [seleccion, setSeleccion] = useState<Record<string,string>>({})
   const [perfilesHogar,setPerfilesHogar] = useState<FoodProfile[]>([])
   const [estadoPerfiles,setEstadoPerfiles] = useState<'loading'|'ready'|'error'>('loading')
-  const [minutosMaximos,setMinutosMaximos] = useState(45)
-  const [presupuestoMaximo,setPresupuestoMaximo] = useState(90)
-  const [limitesPorFecha,setLimitesPorFecha] = useState<Record<string,number>>({})
+  const [minutosMaximos,setMinutosMaximos] = useState(()=>{
+    const valor=Number(localStorage.getItem('rayku-menu-tiempo-v1'))
+    return Number.isFinite(valor) && valor>0 ? valor : 45
+  })
+  const [presupuestoMaximo,setPresupuestoMaximo] = useState(()=>{
+    const valor=Number(localStorage.getItem('rayku-menu-presupuesto-v1'))
+    return Number.isFinite(valor) && valor>0 ? valor : 90
+  })
+  const [limitesPorFecha,setLimitesPorFecha] = useState<Record<string,number>>(()=>{
+    try{
+      const valor=JSON.parse(localStorage.getItem('rayku-menu-dias-v1')??'{}')
+      return valor && typeof valor==='object' && !Array.isArray(valor) ? valor : {}
+    }catch{return {}}
+  })
   const [nuevoEvitar, setNuevoEvitar] = useState('')
   const [avisoGeneracion, setAvisoGeneracion] = useState('')
   const [nuevoFavorito, setNuevoFavorito] = useState('')
@@ -127,6 +138,10 @@ export default function Planning({
           i
         )
     )
+
+  useEffect(()=>{localStorage.setItem('rayku-menu-tiempo-v1',String(minutosMaximos))},[minutosMaximos])
+  useEffect(()=>{localStorage.setItem('rayku-menu-presupuesto-v1',String(presupuestoMaximo))},[presupuestoMaximo])
+  useEffect(()=>{localStorage.setItem('rayku-menu-dias-v1',JSON.stringify(limitesPorFecha))},[limitesPorFecha])
 
   useEffect(()=>{
     if(!householdId) {setPerfilesHogar([]);setEstadoPerfiles('ready');return}
