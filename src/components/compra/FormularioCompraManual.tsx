@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { generarId } from '../../store/utils'
 
 type Props = {
   onAgregar: (item: {
@@ -24,7 +25,7 @@ export default function FormularioCompraManual({
     if (!nombreLimpio) return
 
     onAgregar({
-      id: '',
+      id: generarId(),
       nombre: nombreLimpio,
       cantidad:
         cantidad.trim() || null,
