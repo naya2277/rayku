@@ -9,6 +9,15 @@ import type {
   PreferenciasAlimentarias,
 } from './types'
 
+// Shared workspace must never overwrite the legacy personal local cache.
+let sharedWorkspaceActive = false
+export function setSharedWorkspaceStorage(active: boolean) {
+  sharedWorkspaceActive = active
+}
+function guardarSoloPersonal<T>(key: string, value: T) {
+  if (!sharedWorkspaceActive) guardar(key, value)
+}
+
 export const STORAGE_KEYS = {
   recetas: 'rayku-recetas',
   inventario: 'rayku-inventario',
@@ -22,7 +31,7 @@ export const STORAGE_KEYS = {
 export const guardarRecetasLocal = (
   recetas: Receta[]
 ) => {
-  guardar(
+  guardarSoloPersonal(
     STORAGE_KEYS.recetas,
     recetas
   )
@@ -31,7 +40,7 @@ export const guardarRecetasLocal = (
 export const guardarInventarioLocal = (
   inventario: ItemInventario[]
 ) => {
-  guardar(
+  guardarSoloPersonal(
     STORAGE_KEYS.inventario,
     inventario
   )
@@ -40,7 +49,7 @@ export const guardarInventarioLocal = (
 export const guardarPlanningLocal = (
   planning: ItemPlanning[]
 ) => {
-  guardar(
+  guardarSoloPersonal(
     STORAGE_KEYS.planning,
     planning
   )
@@ -49,7 +58,7 @@ export const guardarPlanningLocal = (
 export const guardarCompraManualLocal = (
   compraManual: ItemCompraManual[]
 ) => {
-  guardar(
+  guardarSoloPersonal(
     STORAGE_KEYS.compraManual,
     compraManual
   )
@@ -58,7 +67,7 @@ export const guardarCompraManualLocal = (
 export const guardarChecksCompraLocal = (
   checks: string[]
 ) => {
-  guardar(
+  guardarSoloPersonal(
     STORAGE_KEYS.checksCompra,
     checks
   )
@@ -67,7 +76,7 @@ export const guardarChecksCompraLocal = (
 export const guardarHistorialCocinadoLocal = (
   historial: RegistroCocinado[]
 ) => {
-  guardar(
+  guardarSoloPersonal(
     STORAGE_KEYS.historialCocinado,
     historial
   )
@@ -76,7 +85,7 @@ export const guardarHistorialCocinadoLocal = (
 export const guardarPreferenciasAlimentariasLocal = (
   preferencias: PreferenciasAlimentarias
 ) => {
-  guardar(
+  guardarSoloPersonal(
     STORAGE_KEYS.preferenciasAlimentarias,
     preferencias
   )
