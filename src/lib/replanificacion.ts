@@ -1,5 +1,6 @@
 import type { ItemInventario,ItemPlanning,Receta,TipoComida } from '../store/types'
 import { generarIngredientesCompra } from './compra/generarIngredientesCompra'
+import { aplicarPlanMovimiento } from './replanificacionPure'
 import { obtenerClaveIngredienteCompra } from './compra/normalizacionCompra'
 
 export type Replan = { origenId:string; nuevaFecha:string; nuevoTipo:TipoComida }
@@ -28,5 +29,5 @@ export function evaluarReplanificacion(
 export function resultadoReplanificacion(planning:ItemPlanning[],plan:Replan,hoy:string,recetas:Receta[],inventario:ItemInventario[]):ItemPlanning[] | null{
  const evaluacion=evaluarReplanificacion(planning,recetas,inventario,plan,hoy)
  if(!evaluacion.permitido)return null
- return planning.map(p=>p.id===plan.origenId?{...p,fecha:plan.nuevaFecha,tipoComida:plan.nuevoTipo}:p)
+ return aplicarPlanMovimiento(planning,plan,hoy)
 }
