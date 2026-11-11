@@ -496,6 +496,7 @@ function MainApp() {
         {paginaActual ===
           'planning' && (
           <Planning
+            householdId={workspace.selection !== 'personal' ? workspace.selection : undefined}
             onAbrirReceta={
               abrirReceta
             }
