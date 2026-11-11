@@ -6,6 +6,7 @@ import type { Receta } from '../../store/types'
 import { descargarRecetas } from '../../lib/sync'
 import { loadWorkspaceData, saveWorkspaceKind, type WorkspaceData } from '../../lib/workspaceData'
 import './WorkspaceSwitcher.css'
+import MyFoodProfile from './MyFoodProfile'
 
 function describirError(error: unknown): string {
   if (error instanceof Error) return error.message
@@ -198,6 +199,7 @@ export default function WorkspaceSwitcher({ userId, selection, onSelect, busy = 
           {message && <p role="status">{message}</p>}
         </div>
       </details>
+      {selection !== 'personal' && <MyFoodProfile householdId={selection} userId={userId}/>}
       {selection !== 'personal' && (
         <div style={{marginTop:12,display:'grid',gap:8}}>
           <button type="button" className="btn-principal" disabled={migrating || busy} onClick={migrateAll}>
