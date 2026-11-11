@@ -4,6 +4,8 @@ import { setSharedWorkspaceStorage } from '../store/storage'
 import { loadWorkspaceData, saveWorkspaceKind, type WorkspaceData } from './workspaceData'
 import { getWorkspaceRecord, type Workspace, type WorkspaceKind } from './workspaces'
 import { mergeSharedWorkspace } from './mergeSharedWorkspace'
+import { supabase } from './supabase'
+import { invalidateFoodProfilesCache } from './foodProfiles'
 import { normalizarCompraManual, normalizarInventario, normalizarPlanning, normalizarReceta } from '../store/normalizers'
 
 const kinds: WorkspaceKind[] = ['recipes', 'planning', 'inventory', 'shopping_list']
@@ -257,10 +259,23 @@ export function useUnifiedWorkspace(userId: string) {
         checking = false
       }
     }
+    const channel = supabase.channel('rayku-home-'+selection)
+      .on('postgres_changes',
+        {event:'*',schema:'public',table:'workspace_records',filter:'household_id=eq.'+selection},
+        ()=>{void refresh()})
+      .on('postgres_changes',
+        {event:'*',schema:'public',table:'rayku_food_profiles'},
+        ()=>{invalidateFoodProfilesCache(selection);window.dispatchEvent(new Event('rayku-food-profiles-updated'))})
+      .subscribe()
     const timer = window.setInterval(() => { void refresh() }, 12000)
     const visible = () => { if (document.visibilityState === 'visible') void refresh() }
     document.addEventListener('visibilitychange',visible)
-    return () => { cancelled = true; window.clearInterval(timer); document.removeEventListener('visibilitychange',visible) }
+    return () => {
+      cancelled = true
+      void supabase.removeChannel(channel)
+      window.clearInterval(timer)
+      document.removeEventListener('visibilitychange',visible)
+    }
   }, [selection,busy])
 
   const saveNow = useCallback(async () => {
