@@ -26,6 +26,7 @@ import BuscadorIngrediente from '../components/chef-rayku/BuscadorIngrediente'
 
 
 type Props = {
+  householdId?: string
   onAbrirReceta: (
     recetaId: string
   ) => void
@@ -38,6 +39,7 @@ function estrellas(valor: number) {
 }
 
 export default function ChefRayku({
+  householdId,
   onAbrirReceta,
 }: Props) {
   const {
@@ -149,7 +151,7 @@ export default function ChefRayku({
             flexWrap: 'wrap',
           }}
         >
-          <ChefRaykuCard />
+          <ChefRaykuCard householdId={householdId}/>
           
           <div
             style={{
