@@ -267,6 +267,7 @@ export default function ChefRaykuCard({householdId}:{householdId?:string}) {
             planning,
             historialCocinado,
             preferenciasAlimentarias:{...preferenciasAlimentarias,ingredientesProhibidos:prohibidos,ingredientesFavoritos:favoritos},
+            dietasSolicitante:mine?.diets??[],
           }
         )
 
