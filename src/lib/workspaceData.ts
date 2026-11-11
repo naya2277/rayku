@@ -57,7 +57,21 @@ export async function loadWorkspaceData(workspace: Workspace): Promise<Workspace
       // Legacy shared board stored {compra, calendario} in shopping_list.
       // Do not silently interpret or overwrite it as a generated shopping list.
       if (payload && ('compra' in payload || 'calendario' in payload)) {
-        throw new Error('El hogar tiene una lista provisional. Debe migrarse antes de activar la compra unificada.')
+        const legacy = payload as unknown as {
+          compra?: { id: string; texto: string; hecho: boolean }[]
+          calendario?: unknown[]
+        }
+        if (Array.isArray(legacy.calendario) && legacy.calendario.length) {
+          throw new Error('Hay eventos del calendario provisional. Deben migrarse antes de activar el planning compartido.')
+        }
+        data.shopping_list = {
+          compraManual: Array.isArray(legacy.compra) ? legacy.compra.map(item => ({
+            id: item.id, nombre: item.texto, cantidad: null,
+          })) : [],
+          checksCompra: Array.isArray(legacy.compra)
+            ? legacy.compra.filter(item => item.hecho).map(item => 'manual-' + item.id) : [],
+        }
+        return
       }
       data.shopping_list = {
         compraManual: isArray(payload?.compraManual) ? payload.compraManual : [],
