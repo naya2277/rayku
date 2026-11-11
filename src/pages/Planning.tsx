@@ -26,6 +26,7 @@ import AsistenteSemanal from '../components/planning/AsistenteSemanal'
 import { cargarPerfilHogar, guardarPerfilHogar } from '../lib/perfilHogar'
 import { generarPropuestasHogar, validarPropuestaHogar } from '../lib/propuestasMenu'
 import { readFoodProfiles, type FoodProfile } from '../lib/foodProfiles'
+import type { ItemPlanning } from '../store/types'
 import { calcularPresupuesto, type Precios } from '../lib/planificacionInteligente'
 
 const EMOJIS_DIA = [
