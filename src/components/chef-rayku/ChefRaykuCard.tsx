@@ -468,9 +468,10 @@ export default function ChefRaykuCard({householdId}:{householdId?:string}) {
             marginBottom: 12,
           }}
         >
-          Rayku tendrá esto en cuenta al generar recetas e ideas.
+          {householdId ? 'Cada persona tiene sus propias exclusiones. Edita las tuyas desde ⚙️ Hogar → Mi perfil alimentario.' : 'Rayku tendrá esto en cuenta al generar recetas e ideas.'}
         </p>
 
+        {!householdId && (
         <div
           style={{
             display: 'grid',
@@ -513,6 +514,7 @@ export default function ChefRaykuCard({householdId}:{householdId?:string}) {
             color="#8a6ec7"
           />
         </div>
+        )}
       </div>
 
       <div
