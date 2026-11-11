@@ -1,9 +1,5 @@
 import { supabase } from '../supabase'
 import {
-  geminiModel,
-} from '../../services/ia/gemini'
-
-import {
   consultarOllama,
 } from '../../services/ia/ollama'
 
@@ -89,24 +85,18 @@ function crearContextoTextoPorTipo(
   )
 }
 
-async function consultarGemini(
-  prompt: string
-) {
-  if(import.meta.env.VITE_CHEF_RAYKU_PROXY === 'true') {
-    const {data,error}=await supabase.functions.invoke('chef-rayku',{body:{prompt}})
-    if(error) throw new Error('No se pudo consultar Chef Rayku: '+error.message)
-    if(typeof data?.text!=='string') throw new Error('Respuesta vacía de Chef Rayku')
-    return limpiarRespuestaJson(data.text)
+async function consultarGemini(prompt: string) {
+  const { data, error } = await supabase.functions.invoke('chef-rayku', { body: { prompt } })
+  if (error) {
+    const status = 'context' in error ? (error.context as Response | undefined)?.status : undefined
+    throw new Error(status === 503
+      ? 'Chef Rayku necesita que configures la clave privada de Gemini en Supabase.'
+      : 'No se pudo consultar Gemini desde Supabase: ' + error.message)
   }
-  if(!import.meta.env.VITE_GEMINI_API_KEY) throw new Error('Gemini no está configurado todavía')
-  const resultado =
-    await geminiModel.generateContent(
-      prompt
-    )
-
-  return limpiarRespuestaJson(
-    resultado.response.text()
-  )
+  if (typeof data?.text !== 'string' || !data.text.trim()) {
+    throw new Error('Gemini devolvió una respuesta vacía.')
+  }
+  return limpiarRespuestaJson(data.text)
 }
 
 async function consultarOllamaLimpio(
@@ -163,8 +153,6 @@ export async function consultarChefRayku(
       )
     }
 
-    throw new Error(
-      'Chef Rayku está descansando un momento 💕 La IA está temporalmente saturada. Prueba de nuevo más tarde.'
-    )
+    throw errorGemini instanceof Error ? errorGemini : new Error('Chef Rayku no está disponible ahora.')
   }
 }
