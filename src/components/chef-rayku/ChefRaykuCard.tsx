@@ -26,9 +26,9 @@ const ACCIONES: {
 }[] = [
   {
     tipo: 'ideas_recetas',
-    titulo: '🍳 Dame ideas de recetas',
+    titulo: '🍳 Generar 5 recetas nuevas',
     descripcion:
-      'Ideas ricas aunque falte algún ingrediente.',
+      'Cinco propuestas desde cero siguiendo tu dieta y exclusiones.',
   },
   {
     tipo: 'cocinar_inventario',
@@ -218,6 +218,7 @@ export default function ChefRaykuCard({householdId}:{householdId?:string}) {
     guardadas,
     setGuardadas,
   ] = useState<string[]>([])
+  const [prohibidosActuales,setProhibidosActuales] = useState<string[]>([])
 
   const [
     cargando,
@@ -260,6 +261,7 @@ export default function ChefRaykuCard({householdId}:{householdId?:string}) {
       const legacy = cargarPerfilHogar().personas[0]
       const prohibidos = [...new Set([...preferenciasAlimentarias.ingredientesProhibidos,...(legacy?.prohibidos??[]),...(legacy?.rechazadas??[]),...(mine?.allergies??[]),...(mine?.intolerances??[]),...(mine?.dislikes??[])])]
       const favoritos = [...new Set([...preferenciasAlimentarias.ingredientesFavoritos,...(legacy?.favoritos??[]),...(mine?.favorites??[])])]
+      setProhibidosActuales(prohibidos)
       const texto =
         await consultarChefRayku(
           tipo,
@@ -303,6 +305,11 @@ export default function ChefRaykuCard({householdId}:{householdId?:string}) {
     if (!idea.nombre) {
       return
     }
+    const norm=(text:string)=>text.toLocaleLowerCase('es').normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim()
+    const ingredientes=(idea.ingredientes??[]).map(norm)
+    const infraccion=prohibidosActuales.find(p=>norm(p).length>2 && ingredientes.some(i=>i.includes(norm(p))))
+    if(infraccion){setError('No se ha guardado: esta propuesta contiene un ingrediente excluido ('+infraccion+').');return}
+    if(recetas.some(r=>norm(r.nombre)===norm(idea.nombre??''))){setError('Esa receta ya está en tu biblioteca. No se ha duplicado.');return}
 
     addReceta({
       id: '',
