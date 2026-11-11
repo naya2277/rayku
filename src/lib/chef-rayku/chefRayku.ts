@@ -74,7 +74,7 @@ function crearContextoTextoPorTipo(
   tipo: TipoConsultaChefRayku,
   contexto: ContextoRayku
 ) {
-  if (tipo === 'ideas_recetas') {
+  if (tipo === 'ideas_recetas' || tipo === 'menu_dieta') {
     return contextoInspiracionLibre(
       contexto
     )
