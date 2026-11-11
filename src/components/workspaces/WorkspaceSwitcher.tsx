@@ -186,18 +186,21 @@ export default function WorkspaceSwitcher({ userId, selection, onSelect, busy = 
               ? 'Estás viendo los datos anteriores a la unificación. Selecciona tu hogar para utilizar Rayku.'
               : 'Recetas, planning, inventario y compra corresponden al hogar compartido.'}
       </p>
-      <details>
-        <summary>🏡 Crear hogar o invitar a alguien</summary>
+      <details defaultOpen={Boolean(joinToken)}>
+        <summary>{joinToken ? '✉️ Tienes una invitación para unirte a un hogar' : '🏡 Crear hogar o invitar a alguien'}</summary>
         <div style={{display:'grid',gap:8,marginTop:12}}>
+          {joinToken && <p role="status">La invitación está lista para aceptarse. No necesitas pedir otro permiso ni crear un hogar nuevo: pulsa «Aceptar invitación» con tu cuenta iniciada.</p>}
+          {!joinToken && <>
           <label>Nombre del hogar<input value={newName} onChange={e=>setNewName(e.target.value)} placeholder="Nuestra casa"/></label>
           <button type="button" className="btn-secundario" disabled={!newName.trim() || status!=='ready'} onClick={create}>Crear hogar</button>
+          </>}
           {selection !== 'personal' && households.find(h=>h.id===selection)?.created_by===userId && <>
             <label>Correo de la persona invitada<input type="email" value={inviteEmail} onChange={e=>setInviteEmail(e.target.value)} placeholder="correo@ejemplo.com"/></label>
             <button type="button" className="btn-secundario" disabled={!inviteEmail.includes('@')} onClick={invite}>Generar invitación</button>
             {inviteToken && <><input readOnly aria-label="Enlace de invitación" value={invitationUrl}/><button type="button" className="btn-secundario" onClick={()=>navigator.clipboard.writeText(invitationUrl)}>Copiar enlace</button></>}
           </>}
-          <label>Aceptar invitación recibida<input value={joinToken} onChange={e=>setJoinToken(e.target.value)} placeholder="Código de invitación"/></label>
-          <button type="button" className="btn-secundario" disabled={!joinToken.trim()} onClick={join}>Unirme al hogar</button>
+          <label>{joinToken ? 'Invitación recibida' : '¿Tienes un enlace de invitación? Pégalo aquí'}<input value={joinToken} onChange={e=>setJoinToken(e.target.value)} placeholder="Enlace o código de invitación"/></label>
+          <button type="button" className="btn-principal" disabled={!joinToken.trim() || busy} onClick={join}>{joinToken ? '✅ Aceptar invitación y entrar al hogar' : 'Unirme al hogar'}</button>
           {message && <p role="status">{message}</p>}
         </div>
       </details>
