@@ -238,11 +238,19 @@ export default function Compra() {
     paraComprar,
     yaDisponibles,
   } = useMemo(() => {
+    // Do not count stock that reaches its printed expiry before the planned meal.
+    // Manual entries do not have a date and retain the usual inventory rules.
+    const requiredBy = new Map(ingredientes.map(i=>[i.clave,i.primeraUtilizacion]))
+    const inventarioVigente = inventario.filter(item=>{
+      if(!item.fechaCaducidad) return true
+      const uso = requiredBy.get(obtenerClaveIngredienteCompra(item.nombre))
+      return !uso || item.fechaCaducidad >= uso
+    })
     return separarIngredientesPorInventario(
       ingredientesConManuales,
-      inventario
+      inventarioVigente
     )
-  }, [ingredientesConManuales, inventario])
+  }, [ingredientesConManuales, inventario, ingredientes])
 
   const esItemComprado = (
     item: IngredienteCompra
