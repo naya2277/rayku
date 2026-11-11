@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
 import { readFoodProfiles, saveFoodProfile, type FoodProfile } from '../../lib/foodProfiles'
-import { listaTexto } from '../../lib/perfilHogar'
+import { listaTexto, cargarPerfilHogar } from '../../lib/perfilHogar'
+import { useRaykuStore } from '../../store'
 const blank = {display_name:'',allergies:[],intolerances:[],dislikes:[],favorites:[],diets:[]} satisfies Omit<FoodProfile,'user_id'>
-export default function MyFoodProfile({householdId,userId}:{householdId:string,userId:string}) {
+export default function MyFoodProfile({householdId,userId,isOwner=false}:{householdId:string,userId:string,isOwner?:boolean}) {
   const [profile,setProfile]=useState<Omit<FoodProfile,'user_id'>>(blank)
   const [status,setStatus]=useState('')
   const [drafts,setDrafts]=useState<Record<string,string>>({})
@@ -13,13 +14,24 @@ export default function MyFoodProfile({householdId,userId}:{householdId:string,u
     readFoodProfiles(householdId).then(profiles=>{
       if(!active)return
       const mine=profiles.find(p=>p.user_id===userId)
-      if(mine)setProfile({display_name:mine.display_name,allergies:mine.allergies,intolerances:mine.intolerances,dislikes:mine.dislikes,favorites:mine.favorites,diets:mine.diets})
-      else setProfile(blank)
-      setDrafts(Object.fromEntries((['allergies','intolerances','dislikes','favorites','diets'] as const).map(key=>[key,(mine?.[key]??[]).join(', ')])))
+      const legacy = isOwner ? cargarPerfilHogar().personas[0] : undefined
+      const historicas = isOwner ? useRaykuStore.getState().preferenciasAlimentarias : undefined
+      const initial: Omit<FoodProfile,'user_id'> = mine
+        ? {display_name:mine.display_name,allergies:mine.allergies,intolerances:mine.intolerances,dislikes:mine.dislikes,favorites:mine.favorites,diets:mine.diets}
+        : isOwner ? {
+            display_name:legacy?.nombre?.startsWith('Persona ') ? '' : legacy?.nombre ?? '',
+            allergies:[],
+            intolerances:[],
+            dislikes:[...new Set([...(legacy?.prohibidos??[]),...(legacy?.rechazadas??[]),...(historicas?.ingredientesProhibidos??[])])],
+            favorites:[...new Set([...(legacy?.favoritos??[]),...(historicas?.ingredientesFavoritos??[])])],
+            diets:legacy?.dietas??[],
+          } : blank
+      setProfile(initial)
+      setDrafts(Object.fromEntries((['allergies','intolerances','dislikes','favorites','diets'] as const).map(key=>[key,initial[key].join(', ')])))
       setLoaded(true)
     }).catch(e=>{if(active)setStatus('No se pueden cargar los perfiles. Ejecuta la migración 006 en Supabase: '+String(e))})
     return()=>{active=false}
-  },[householdId,userId])
+  },[householdId,userId,isOwner])
   const edit=(field: keyof typeof blank,value:string)=>{
     if(field==='display_name')setProfile(p=>({...p,display_name:value}))
     else setDrafts(p=>({...p,[field]:value}))
