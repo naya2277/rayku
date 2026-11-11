@@ -23,6 +23,7 @@ import {
 import FormularioInventario from '../components/inventario/FormularioInventario'
 import EntradaRapida from '../components/inventario/EntradaRapida'
 import EntradaCocina from '../components/inventario/EntradaCocina'
+import BatchCooking from '../components/inventario/BatchCooking'
 import SeccionInventario from '../components/inventario/SeccionInventario'
 import AccionesPendientesInventario from '../components/inventario/AccionesPendientesInventario'
 import AccionesAgotadosInventario from '../components/inventario/AccionesAgotadosInventario'
@@ -66,6 +67,7 @@ const FILTROS: {
 export default function Inventario() {
   const {
     inventario,
+    recetas,
     agregarItemInventario,
     editarItemInventario,
     eliminarItemInventario,
@@ -388,6 +390,7 @@ export default function Inventario() {
         </button>
       </div>
 
+      <BatchCooking recetas={recetas} agregar={agregarItemInventario}/>
       <EntradaRapida agregar={agregarItemInventario} />
 
       {productosUrgentes.length > 0 && (
