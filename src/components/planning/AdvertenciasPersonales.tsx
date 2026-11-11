@@ -25,7 +25,8 @@ export default function AdvertenciasPersonales({item,householdId}: {item: ItemPl
     }
     void load()
     window.addEventListener('rayku-food-profiles-updated',load)
-    return()=>{active=false;window.removeEventListener('rayku-food-profiles-updated',load)}
+    const timer=window.setInterval(()=>{void load()},30000)
+    return()=>{active=false;window.clearInterval(timer);window.removeEventListener('rayku-food-profiles-updated',load)}
   },[householdId])
   const ids = [...new Set([...(item.recetaIds??[]),...(item.recetaId?[item.recetaId]:[]),...Object.values(item.platosPorPersona??{}).flatMap(p=>p.recetaId?[p.recetaId]:[])])]
   const textos = [
