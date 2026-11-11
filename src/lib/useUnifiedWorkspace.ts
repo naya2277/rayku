@@ -34,10 +34,19 @@ export function useUnifiedWorkspace(userId: string) {
   const queue = useRef<Promise<void>>(Promise.resolve())
   const error = useRef<string | null>(null)
   const saving = useRef(false)
+  const previousUserId = useRef(userId)
 
   // A logout/account switch must never retain another user's selected household.
   // Pause local persistence while clearing the in-memory workspace.
   useEffect(() => {
+    // The first authenticated session must retain any existing local-only recipes.
+    // Clear the store only when the authenticated account actually changes or logs out.
+    if (previousUserId.current === userId) return
+    if (!previousUserId.current && userId) {
+      previousUserId.current = userId
+      return
+    }
+    previousUserId.current = userId
     if (pending.current) {
       clearTimeout(pending.current)
       pending.current = null
