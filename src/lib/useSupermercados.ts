@@ -31,7 +31,7 @@ export function useSupermercados(householdId?:string){
    ])
    if(p.error||o.error||estadoFuentes.error||pref.error)throw p.error??o.error??estadoFuentes.error??pref.error
    setPrecios((p.data??[]).map((x:any)=>({...x,price:Number(x.price),quantity:Number(x.quantity)})))
-   setOfertas((o.data??[]).filter((x:any)=>x.quantity>0).map((x:any)=>({...x,price:Number(x.price),quantity:Number(x.quantity)})))
+   setOfertas((o.data??[]).filter((x:any)=>x.quantity>0).map((x:any)=>({...x,product_key:obtenerClaveIngredienteCompra(x.product_key),price:Number(x.price),quantity:Number(x.quantity)})))
    setFuentes((estadoFuentes.data??[]) as typeof fuentes)
    let local:PreferenciaTienda=defaults
    try{local={...defaults,...JSON.parse(localStorage.getItem(localKey)??'{}')}}catch{/* defaults */}
