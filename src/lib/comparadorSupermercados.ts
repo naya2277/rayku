@@ -26,7 +26,7 @@ function costeIngrediente(cantidad:number,unidad:string,precio:number,cantidadEn
  // the price of the fraction consumed. Avoid reporting impossible checkout totals.
  // Only explicitly loose/by-weight products may be charged proportionally.
  const ratio=cantidad*a.factor/(cantidadEnvase*b.factor)
- return (precio.sale_mode==='granel' ? ratio : Math.ceil(ratio-1e-9))*precio
+ return (saleMode==='granel' ? ratio : Math.ceil(ratio-1e-9))*precio
 }
 
 export const TIENDAS=['Consum','Mercadona','ALDI','Lidl','Carrefour','Dia','Otro'] as const
