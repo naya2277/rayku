@@ -118,38 +118,35 @@ export default function WorkspaceSwitcher({ userId, selection, onSelect, busy = 
     try {
       const personal = await loadWorkspaceData({scope:'personal',userId})
       const shared = await loadWorkspaceData({scope:'household',householdId:selection})
-      const kinds = ['recipes','planning','inventory','shopping_list'] as const
       const descriptions: string[] = []
-      for (const kind of kinds) {
-        if (kind === 'shopping_list') {
-          const old = personal.data.shopping_list
-          const current = shared.data.shopping_list
-          const manualIds = new Set(current.compraManual.map(x=>x.id))
-          const missing = old.compraManual.filter(x=>!manualIds.has(x.id))
-          const checks = [...new Set([...current.checksCompra,...old.checksCompra])]
-          if (missing.length || checks.length !== current.checksCompra.length) {
-            const payload: WorkspaceData['shopping_list'] = {compraManual:[...current.compraManual,...missing],checksCompra:checks}
-            shared.versions[kind] = await saveWorkspaceKind({scope:'household',householdId:selection},kind,payload,shared.versions[kind])
-            descriptions.push('compra')
-          }
-        } else {
-          const current = shared.data[kind]
-          const ids = new Set(current.map(x=>x.id))
-          const missing = personal.data[kind].filter(x=>!ids.has(x.id))
-          if (!missing.length) continue
-          if (kind === 'recipes') {
-            shared.versions[kind] = await saveWorkspaceKind({scope:'household',householdId:selection},kind,[...current,...missing],shared.versions[kind])
-          } else if (kind === 'planning') {
-            const occupied = new Set(current.map(x=>x.fecha+'|'+x.tipoComida))
-            const safe = missing.filter(x=>!occupied.has(x.fecha+'|'+x.tipoComida))
-            if (!safe.length) continue
-            shared.versions[kind] = await saveWorkspaceKind({scope:'household',householdId:selection},kind,[...current,...safe],shared.versions[kind])
-            if (safe.length !== missing.length) descriptions.push('algunos días ya ocupados no se sustituyeron')
-          } else {
-            shared.versions[kind] = await saveWorkspaceKind({scope:'household',householdId:selection},kind,[...current,...missing],shared.versions[kind])
-          }
-          descriptions.push(kind+': '+missing.length)
-        }
+      const workspace = {scope:'household' as const,householdId:selection}
+      const recipeIds = new Set(shared.data.recipes.map(x=>x.id))
+      const newRecipes = personal.data.recipes.filter(x=>!recipeIds.has(x.id))
+      if(newRecipes.length) {
+        shared.versions.recipes = await saveWorkspaceKind(workspace,'recipes',[...shared.data.recipes,...newRecipes],shared.versions.recipes)
+        descriptions.push('recetas: '+newRecipes.length)
+      }
+      const occupied = new Set(shared.data.planning.map(x=>x.fecha+'|'+x.tipoComida))
+      const newPlanning = personal.data.planning.filter(x=>!occupied.has(x.fecha+'|'+x.tipoComida))
+      if(newPlanning.length) {
+        shared.versions.planning = await saveWorkspaceKind(workspace,'planning',[...shared.data.planning,...newPlanning],shared.versions.planning)
+        descriptions.push('planning: '+newPlanning.length)
+      }
+      const stockIds = new Set(shared.data.inventory.map(x=>x.id))
+      const newStock = personal.data.inventory.filter(x=>!stockIds.has(x.id))
+      if(newStock.length) {
+        shared.versions.inventory = await saveWorkspaceKind(workspace,'inventory',[...shared.data.inventory,...newStock],shared.versions.inventory)
+        descriptions.push('inventario: '+newStock.length)
+      }
+      const oldShopping = personal.data.shopping_list
+      const currentShopping = shared.data.shopping_list
+      const shoppingIds = new Set(currentShopping.compraManual.map(x=>x.id))
+      const newShopping = oldShopping.compraManual.filter(x=>!shoppingIds.has(x.id))
+      const checks = [...new Set([...currentShopping.checksCompra,...oldShopping.checksCompra])]
+      if(newShopping.length || checks.length !== currentShopping.checksCompra.length) {
+        const payload: WorkspaceData['shopping_list'] = {compraManual:[...currentShopping.compraManual,...newShopping],checksCompra:checks}
+        shared.versions.shopping_list = await saveWorkspaceKind(workspace,'shopping_list',payload,shared.versions.shopping_list)
+        descriptions.push('compra')
       }
       setMessage(descriptions.length
         ? 'Importación realizada ('+descriptions.join(', ')+'). Los originales se conservan. Recarga Rayku para ver los cambios.'
