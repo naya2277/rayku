@@ -1,5 +1,6 @@
 import { readFoodProfiles } from '../../lib/foodProfiles'
 import { supabase } from '../../lib/supabase'
+import { cargarPerfilHogar } from '../../lib/perfilHogar'
 import {
   useState,
 } from 'react'
@@ -256,8 +257,9 @@ export default function ChefRaykuCard({householdId}:{householdId?:string}) {
       const {data:{user}} = await supabase.auth.getUser()
       const profiles = householdId ? await readFoodProfiles(householdId) : []
       const mine = profiles.find(p=>p.user_id===user?.id)
-      const prohibidos = [...new Set([...preferenciasAlimentarias.ingredientesProhibidos,...(mine?.allergies??[]),...(mine?.intolerances??[]),...(mine?.dislikes??[])])]
-      const favoritos = [...new Set([...preferenciasAlimentarias.ingredientesFavoritos,...(mine?.favorites??[])])]
+      const legacy = cargarPerfilHogar().personas[0]
+      const prohibidos = [...new Set([...preferenciasAlimentarias.ingredientesProhibidos,...(legacy?.prohibidos??[]),...(legacy?.rechazadas??[]),...(mine?.allergies??[]),...(mine?.intolerances??[]),...(mine?.dislikes??[])])]
+      const favoritos = [...new Set([...preferenciasAlimentarias.ingredientesFavoritos,...(legacy?.favoritos??[]),...(mine?.favorites??[])])]
       const texto =
         await consultarChefRayku(
           tipo,
@@ -267,7 +269,7 @@ export default function ChefRaykuCard({householdId}:{householdId?:string}) {
             planning,
             historialCocinado,
             preferenciasAlimentarias:{...preferenciasAlimentarias,ingredientesProhibidos:prohibidos,ingredientesFavoritos:favoritos},
-            dietasSolicitante:mine?.diets??[],
+            dietasSolicitante:mine?.diets?.length ? mine.diets : (legacy?.dietas ?? []),
           }
         )
 
