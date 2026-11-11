@@ -90,8 +90,10 @@ async function consultarGemini(prompt: string) {
   if (error) {
     const status = 'context' in error ? (error.context as Response | undefined)?.status : undefined
     throw new Error(status === 503
-      ? 'Chef Rayku necesita que configures la clave privada de Gemini en Supabase.'
-      : 'No se pudo consultar Gemini desde Supabase: ' + error.message)
+      ? 'Chef Rayku no está configurado o el servicio está temporalmente indisponible.'
+      : status === 429
+        ? 'Has llegado al límite de 15 consultas a Chef Rayku de hoy. Podrás generar más recetas mañana.'
+        : 'No se pudo consultar Gemini desde Supabase: ' + error.message)
   }
   if (typeof data?.text !== 'string' || !data.text.trim()) {
     throw new Error('Gemini devolvió una respuesta vacía.')
