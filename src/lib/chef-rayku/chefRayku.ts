@@ -133,7 +133,7 @@ export async function consultarChefRayku(
     crearContextoTextoPorTipo(
       tipo,
       contexto
-    )
+    ) + '\n\nDIETA DEL SOLICITANTE: ' + (datos.dietasSolicitante?.join(', ') || 'Sin dieta específica; no presupongas keto.')
 
   const prompt =
     crearPromptChefRayku(
