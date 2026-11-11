@@ -19,7 +19,7 @@ export function useSupermercados(householdId?:string){
    const fecha=new Date().toLocaleDateString('sv-SE')
    const [p,o,estadoFuentes,pref]=await Promise.all([
     householdId?supabase.from('rayku_supermarket_prices')
-      .select('store,product_key,price,quantity,unit,observed_at').eq('household_id',householdId):
+      .select('store,product_key,price,quantity,unit,sale_mode,observed_at').eq('household_id',householdId):
       Promise.resolve({data:[],error:null}),
     supabase.from('rayku_public_offers')
       .select('source,product_key,product_name,price,quantity,unit,valid_from,valid_until,requires_loyalty,source_url,fetched_at')
@@ -55,15 +55,15 @@ export function useSupermercados(householdId?:string){
    .subscribe():null
   return()=>{window.removeEventListener('focus',focus);if(channel)void supabase.removeChannel(channel)}
  },[cargar,householdId])
- const guardarPrecio=useCallback(async(store:Tienda,nombre:string,price:number,quantity:number,unit:string)=>{
+ const guardarPrecio=useCallback(async(store:Tienda,nombre:string,price:number,quantity:number,unit:string,saleMode:'envase'|'granel')=>{
   if(!householdId)throw new Error('Selecciona un hogar compartido.')
   const clave=obtenerClaveIngredienteCompra(nombre)
-  if(!clave||!Number.isFinite(price)||price<0||!Number.isFinite(quantity)||quantity<=0)
+  if(!clave||!Number.isFinite(price)||price<0||!Number.isFinite(quantity)||quantity<=0||!['envase','granel'].includes(saleMode))
    throw new Error('Precio o cantidad inválidos.')
   const {data:{user},error:e}=await supabase.auth.getUser()
   if(e||!user)throw new Error('Inicia sesión de nuevo.')
   const {error:err}=await supabase.from('rayku_supermarket_prices').upsert({
-   household_id:householdId,store,product_key:clave,price,quantity,unit,updated_by:user.id,observed_at:new Date().toISOString(),
+   household_id:householdId,store,product_key:clave,price,quantity,unit,sale_mode:saleMode,updated_by:user.id,observed_at:new Date().toISOString(),
   },{onConflict:'household_id,store,product_key'})
   if(err)throw err
   await cargar()
