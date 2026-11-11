@@ -316,7 +316,7 @@ function MainApp() {
     return <div className="app"><main className="contenido-principal">
       {perfilConfigurado && <button type="button" className="btn-secundario" onClick={() => setPaginaActual(paginaAnteriorConfiguracion)}>← Volver sin guardar</button>}
       <WorkspaceSwitcher userId={session.user.id} selection={workspace.selection} onSelect={workspace.select} busy={workspace.busy} />
-      <ConfiguracionHogar onTerminar={() => { setPerfilConfigurado(true); setPaginaActual(paginaAnteriorConfiguracion) }} onInventario={() => { setPerfilConfigurado(true); setPaginaActual('inventario') }} />
+      <ConfiguracionHogar sharedHousehold={workspace.selection !== 'personal'} onTerminar={() => { setPerfilConfigurado(true); setPaginaActual(paginaAnteriorConfiguracion) }} onInventario={() => { setPerfilConfigurado(true); setPaginaActual('inventario') }} />
     </main></div>
   }
 
