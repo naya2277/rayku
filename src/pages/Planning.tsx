@@ -56,6 +56,7 @@ export default function Planning({
   const [propuestas, setPropuestas] = useState<ReturnType<typeof generarMenuSemanal> | null>(null)
   const [seleccion, setSeleccion] = useState<Record<string,string>>({})
   const [nuevoEvitar, setNuevoEvitar] = useState('')
+  const [avisoGeneracion, setAvisoGeneracion] = useState('')
   const [nuevoFavorito, setNuevoFavorito] = useState('')
   const [
     semanaBase,
@@ -146,8 +147,24 @@ export default function Planning({
 
   function sugerirSemana() {
     const resultado = generarMenuSemanal(dias.map(d => format(d, 'yyyy-MM-dd')), recetas, planning, preferenciasAlimentarias, inventario, cargarPerfilHogar(), priorizarInventario)
-    setPropuestas(resultado)
-    setSeleccion(Object.fromEntries(resultado.propuestas.map(p => [p.fecha + p.tipoComida, p.recetaId])))
+    const actual = useRaykuStore.getState()
+    let creadas = 0
+    for (const propuesta of resultado.propuestas) {
+      if (actual.planning.some(item => item.fecha === propuesta.fecha && item.tipoComida === propuesta.tipoComida)) continue
+      const receta = actual.recetas.find(item => item.id === propuesta.recetaId)
+      if (!receta || !recetaCompatible(receta, propuesta.tipoComida) ||
+          !recetaPermitida(receta, actual.preferenciasAlimentarias) ||
+          !recetaCompatibleHogar(receta, cargarPerfilHogar())) continue
+      actual.guardarHuecoPlanning({
+        fecha: propuesta.fecha, tipoComida: propuesta.tipoComida,
+        recetaId: receta.id, recetaIds: [receta.id], comidaLibre: '',
+        nota: '', cocinado: false,
+      })
+      creadas++
+    }
+    setPropuestas(null)
+    setSeleccion({})
+    setAvisoGeneracion(creadas ? 'Se han guardado ' + creadas + ' comidas y cenas en el calendario. Puedes editarlas debajo.' : 'No hay huecos nuevos compatibles. Revisa las preferencias o los días ya planificados.')
   }
   function cambiarSemana(nueva: Date) { setSemanaBase(nueva); setPropuestas(null) }
   function aceptarSemana() {
@@ -315,9 +332,10 @@ export default function Planning({
             </div>
           </div>
         </details>
-        <p>Revisa el menú sugerido. No se cambiará nada hasta que lo confirmes.</p>
+        <p>Chef Rayku rellena y guarda los huecos libres de la semana automáticamente. Después puedes cambiar cualquier plato.</p>
         <label style={{display:'flex',alignItems:'center',gap:8,marginBottom:12}}><input type="checkbox" style={{width:'auto'}} checked={priorizarInventario} onChange={e=>{setPriorizarInventario(e.target.checked);setPropuestas(null)}}/> 🧺 Priorizar lo que ya tengo en casa</label>
-        <button className="btn-principal" onClick={sugerirSemana}>✨ Proponer menú semanal</button>
+        <button className="btn-principal" onClick={sugerirSemana}>✨ Planificar y guardar mi semana</button>
+        {avisoGeneracion && <p role="status">{avisoGeneracion}</p>}
         {propuestas && <div style={{ display: 'grid', gap: 12, marginTop: 14 }}>
           {propuestas.propuestas.map(p => <label key={p.fecha + p.tipoComida}>
             <strong>{p.fecha} · {p.tipoComida}</strong>
