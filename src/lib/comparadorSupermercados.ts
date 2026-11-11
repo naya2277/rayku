@@ -1,14 +1,18 @@
 // Pure comparison module: usable by the browser and Node tests without external state.
 function claveProducto(nombre:string){
- const sinonimos:Record<string,string>={zanahorias:'zanahoria',peras:'pera',patatas:'patata',
-  tomates:'tomate',huevos:'huevo',manzanas:'manzana',cebollas:'cebolla',garbanzos:'garbanzo'}
+ const sinonimos:Record<string,string>={
+  zanahorias:'zanahoria',peras:'pera',patatas:'patata',tomates:'tomate',huevos:'huevo',
+  manzanas:'manzana',cebollas:'cebolla',garbanzos:'garbanzo',pimientos:'pimiento',
+  berenjenas:'berenjena',champinones:'champinon',esparragos:'esparrago',
+  alcachofas:'alcachofa',fresas:'fresa',espinacas:'espinaca',
+  lentejas:'lenteja',judias:'judia',almendras:'almendra',naranjas:'naranja'}
  return nombre.toLocaleLowerCase('es').normalize('NFD').replace(/[\u0300-\u036f]/g,'')
   .replace(/\([^)]*\)/g,'').replace(/[^a-z0-9 ]/g,' ').trim().split(/\s+/)
   .filter(w=>w&&!['de','del','la','el','los','las','un','una','para','tipo'].includes(w))
   .map(w=>sinonimos[w]??w).join(' ')
 }
 function costeIngrediente(cantidad:number,unidad:string,precio:number,cantidadEnvase:number,unidadEnvase:string,saleMode:'envase'|'granel'='envase'):number|null{
- if(!Number.isFinite(cantidad)||cantidad<0||!Number.isFinite(precio)||precio<0||
+ if(!Number.isFinite(cantidad)||cantidad<=0||!Number.isFinite(precio)||precio<=0||
   !Number.isFinite(cantidadEnvase)||cantidadEnvase<=0)return null
  const info=(u:string):{tipo:string;factor:number}|null=>{
   const n=u.toLowerCase().trim().replace(/\.$/,'')
@@ -22,6 +26,7 @@ function costeIngrediente(cantidad:number,unidad:string,precio:number,cantidadEn
  }
  const a=info(unidad),b=info(unidadEnvase)
  if(!a||!b||a.tipo!==b.tipo)return null
+ if(saleMode==='granel' && !['peso','volumen'].includes(a.tipo))return null
  // The price entered is the price of a purchasable package, not necessarily
  // the price of the fraction consumed. Avoid reporting impossible checkout totals.
  // Only explicitly loose/by-weight products may be charged proportionally.
@@ -47,7 +52,7 @@ export type Comparacion={
 }
 export function ofertaVigente(o:OfertaSupermercado,fecha:string,permitirFidelizacion:boolean):boolean{
  return fecha>=o.valid_from && fecha<=o.valid_until &&
-  (!o.requires_loyalty||permitirFidelizacion) && o.price>=0&&o.quantity>0
+  (!o.requires_loyalty||permitirFidelizacion) && Number.isFinite(o.price)&&o.price>0&&Number.isFinite(o.quantity)&&o.quantity>0 && o.valid_from<=o.valid_until
 }
 function costeParaNecesidad(n:Necesidad,precio:{price:number;quantity:number;unit:string;sale_mode?:'envase'|'granel'}):number|null{
  if(n.cantidad===null || !n.unidad)return null
