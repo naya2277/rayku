@@ -4,6 +4,7 @@ import { useRaykuStore } from '../../store'
 import { getWorkspaceRecord, saveSharedRecord } from '../../lib/workspaces'
 import type { Receta } from '../../store/types'
 import { descargarRecetas } from '../../lib/sync'
+import { loadWorkspaceData, saveWorkspaceKind, type WorkspaceData } from '../../lib/workspaceData'
 import './WorkspaceSwitcher.css'
 
 function describirError(error: unknown): string {
@@ -108,6 +109,54 @@ export default function WorkspaceSwitcher({ userId, selection, onSelect, busy = 
       setCopying(false)
     }
   }
+  const [migrating,setMigrating] = useState(false)
+  const migrateAll = async () => {
+    if (selection === 'personal' || migrating || busy) return
+    setMigrating(true)
+    setMessage('')
+    try {
+      const personal = await loadWorkspaceData({scope:'personal',userId})
+      const shared = await loadWorkspaceData({scope:'household',householdId:selection})
+      const kinds = ['recipes','planning','inventory','shopping_list'] as const
+      const descriptions: string[] = []
+      for (const kind of kinds) {
+        if (kind === 'shopping_list') {
+          const old = personal.data.shopping_list
+          const current = shared.data.shopping_list
+          const manualIds = new Set(current.compraManual.map(x=>x.id))
+          const missing = old.compraManual.filter(x=>!manualIds.has(x.id))
+          const checks = [...new Set([...current.checksCompra,...old.checksCompra])]
+          if (missing.length || checks.length !== current.checksCompra.length) {
+            const payload: WorkspaceData['shopping_list'] = {compraManual:[...current.compraManual,...missing],checksCompra:checks}
+            shared.versions[kind] = await saveWorkspaceKind({scope:'household',householdId:selection},kind,payload,shared.versions[kind])
+            descriptions.push('compra')
+          }
+        } else {
+          const current = shared.data[kind]
+          const ids = new Set(current.map(x=>x.id))
+          const missing = personal.data[kind].filter(x=>!ids.has(x.id))
+          if (!missing.length) continue
+          if (kind === 'recipes') {
+            shared.versions[kind] = await saveWorkspaceKind({scope:'household',householdId:selection},kind,[...current,...missing],shared.versions[kind])
+          } else if (kind === 'planning') {
+            const occupied = new Set(current.map(x=>x.fecha+'|'+x.tipoComida))
+            const safe = missing.filter(x=>!occupied.has(x.fecha+'|'+x.tipoComida))
+            if (!safe.length) continue
+            shared.versions[kind] = await saveWorkspaceKind({scope:'household',householdId:selection},kind,[...current,...safe],shared.versions[kind])
+            if (safe.length !== missing.length) descriptions.push('algunos días ya ocupados no se sustituyeron')
+          } else {
+            shared.versions[kind] = await saveWorkspaceKind({scope:'household',householdId:selection},kind,[...current,...missing],shared.versions[kind])
+          }
+          descriptions.push(kind+': '+missing.length)
+        }
+      }
+      setMessage(descriptions.length
+        ? 'Importación realizada ('+descriptions.join(', ')+'). Los originales se conservan. Recarga Rayku para ver los cambios.'
+        : 'Todo lo que tenías guardado ya está en el hogar.')
+    } catch(e) {
+      setMessage('La importación se ha detenido. Lo ya copiado se conserva y puedes reintentar sin duplicados: '+describirError(e))
+    } finally {setMigrating(false)}
+  }
   const invitationUrl = inviteToken ? window.location.origin + '/?invite=' + encodeURIComponent(inviteToken) : ''
   return (
     <section className="workspace-switcher" aria-label="Espacios de Rayku">
@@ -149,6 +198,14 @@ export default function WorkspaceSwitcher({ userId, selection, onSelect, busy = 
           {message && <p role="status">{message}</p>}
         </div>
       </details>
+      {selection !== 'personal' && (
+        <div style={{marginTop:12,display:'grid',gap:8}}>
+          <button type="button" className="btn-principal" disabled={migrating || busy} onClick={migrateAll}>
+            {migrating ? 'Unificando datos…' : '🏡 Traer todos mis datos anteriores a este hogar'}
+          </button>
+          <p>Recetas, planning, inventario y compra. Conserva originales, evita duplicados por ID y no reemplaza días ya ocupados.</p>
+        </div>
+      )}
       {selection !== 'personal' && (
         <div style={{marginTop:12,display:'grid',gap:8}}>
           <button type="button" className="btn-secundario" disabled={copying || busy} onClick={copyAllRecipes}>
