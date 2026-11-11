@@ -23,6 +23,8 @@ import PlatosPersonales from '../components/planning/PlatosPersonales'
 import SustituirPlato from '../components/planning/SustituirPlato'
 import AdvertenciasPersonales from '../components/planning/AdvertenciasPersonales'
 import AsistenteSemanal from '../components/planning/AsistenteSemanal'
+import Replanificador from '../components/planning/Replanificador'
+import { usePreciosHogar } from '../lib/householdPrices'
 import { cargarPerfilHogar, guardarPerfilHogar } from '../lib/perfilHogar'
 import { generarPropuestasHogar, validarPropuestaHogar } from '../lib/propuestasMenu'
 import { readFoodProfiles, type FoodProfile } from '../lib/foodProfiles'
@@ -63,6 +65,7 @@ export default function Planning({
   const [priorizarInventario, setPriorizarInventario] = useState(() => cargarPerfilHogar().priorizarInventario)
   const [propuestas, setPropuestas] = useState<ReturnType<typeof generarPropuestasHogar> | null>(null)
   const [seleccion, setSeleccion] = useState<Record<string,string>>({})
+  const [propuestaRapida,setPropuestaRapida] = useState<{recetaId:string;fecha:string;tipoComida:'comida'|'cena';originalId:string|null}|null>(null)
   const [perfilesHogar,setPerfilesHogar] = useState<FoodProfile[]>([])
   const [estadoPerfiles,setEstadoPerfiles] = useState<'loading'|'ready'|'error'>('loading')
   const [minutosMaximos,setMinutosMaximos] = useState(()=>{
@@ -117,9 +120,12 @@ export default function Planning({
     eliminarIngredienteFavorito,
     guardarHuecoPlanning,
     limpiarHuecoPlanning,
+    replanificarHuecoPlanning,
     toggleCocinadoPlanning,
     updateReceta,
   } = useRaykuStore()
+
+  const preciosHogar=usePreciosHogar(householdId)
 
   const inicioSemana =
     startOfWeek(
@@ -166,8 +172,7 @@ export default function Planning({
 
   const presupuestoPropuesto = (() => {
     if(!propuestas)return null
-    let precios:Precios={}
-    try{precios=JSON.parse(localStorage.getItem('rayku-precios-local-v1')??'{}') as Precios}catch{precios={}}
+    const precios:Precios=preciosHogar.precios
     const borrador:ItemPlanning[] = propuestas.propuestas.flatMap(p=>{
       const id=seleccion[p.fecha+'|'+p.tipoComida]
       return id ? [{id:'preview-'+p.fecha+p.tipoComida,fecha:p.fecha,tipoComida:p.tipoComida,recetaId:id,recetaIds:[id],comidaLibre:'',nota:'',cocinado:false}] : []
@@ -176,6 +181,57 @@ export default function Planning({
       format(dias[0],'yyyy-MM-dd'),format(dias[6],'yyyy-MM-dd'),precios)
   })()
 
+
+  const proponerRecetaRapida=(recetaId:string,destino?:{fecha:string;tipoComida:'comida'|'cena'})=>{
+    const hoy=format(new Date(),'yyyy-MM-dd')
+    const opciones=dias.map(fecha=>format(fecha,'yyyy-MM-dd'))
+      .filter(fecha=>fecha>=hoy)
+      .flatMap(fecha=>[{'fecha':fecha,'tipoComida':'comida' as const},{'fecha':fecha,'tipoComida':'cena' as const}])
+    const espacio=destino??opciones.find(o=>!planning.some(p=>p.fecha===o.fecha&&p.tipoComida===o.tipoComida))
+    if(!espacio){
+      setAvisoGeneracion('No hay huecos libres esta semana para aprovechar las sobras.')
+      return
+    }
+    const original=planning.find(p=>p.fecha===espacio.fecha&&p.tipoComida===espacio.tipoComida)
+    if(original?.cocinado){
+      setAvisoGeneracion('No puedes sustituir un plato ya cocinado.')
+      return
+    }
+    setPropuestaRapida({recetaId,fecha:espacio.fecha,tipoComida:espacio.tipoComida,originalId:original?.id??null})
+  }
+  const confirmarRecetaRapida=()=>{
+    const propuesta=propuestaRapida
+    if(!propuesta)return
+    if(householdId && (estadoPerfiles!=='ready'||perfilesHogar.length<2)){
+      setAvisoGeneracion('Primero hay que cargar los dos perfiles alimentarios.')
+      return
+    }
+    const actual=useRaykuStore.getState()
+    const original=actual.planning.find(p=>p.fecha===propuesta.fecha&&p.tipoComida===propuesta.tipoComida)
+    if((original?.id??null)!==propuesta.originalId || original?.cocinado){
+      setAvisoGeneracion('La comida ha cambiado en otro dispositivo. Revisa el calendario antes de confirmar.')
+      setPropuestaRapida(null)
+      return
+    }
+    const receta=actual.recetas.find(r=>r.id===propuesta.recetaId)
+    const restricciones=generarPropuestasHogar(
+      dias.map(d=>format(d,'yyyy-MM-dd')),actual.recetas,actual.planning,actual.inventario,
+      perfilesHogar,actual.preferenciasAlimentarias,cargarPerfilHogar(),minutosMaximos,priorizarInventario,limitesPorFecha
+    ).restricciones
+    if(!receta || !validarPropuestaHogar(receta,propuesta.tipoComida,restricciones,cargarPerfilHogar(),limitesPorFecha[propuesta.fecha]??minutosMaximos)){
+      setAvisoGeneracion('La receta no cumple las restricciones o el tiempo máximo. No se ha guardado.')
+      return
+    }
+    if(!window.confirm('¿Guardar '+receta.nombre+' el '+propuesta.fecha+' ('+propuesta.tipoComida+')?')){
+      return
+    }
+    actual.guardarHuecoPlanning({
+      fecha:propuesta.fecha,tipoComida:propuesta.tipoComida,
+      recetaId:receta.id,recetaIds:[receta.id],comidaLibre:'',nota:'',cocinado:false
+    })
+    setPropuestaRapida(null)
+    setAvisoGeneracion('✅ Propuesta confirmada. Se recalculará la compra automáticamente.')
+  }
 
   function aplazarComida(
     fecha: string, tipo: 'comida' | 'cena',
@@ -240,7 +296,7 @@ export default function Planning({
       setAvisoGeneracion('No se puede confirmar sin comprobar los perfiles alimentarios del hogar.')
       return
     }
-    const presupuestoIncompleto=(presupuestoPropuesto?.sinPrecio??0)>0
+    const presupuestoIncompleto=preciosHogar.estado!=='ready' || (presupuestoPropuesto?.sinPrecio??0)>0
     const supera=(presupuestoPropuesto?.estimado??0)>presupuestoMaximo
     if(supera || presupuestoIncompleto){
       const aviso=supera
@@ -390,7 +446,23 @@ export default function Planning({
         </button>
       </div>
 
-      <AsistenteSemanal planning={planning} recetas={recetas} inventario={inventario} desde={format(dias[0], 'yyyy-MM-dd')} hasta={format(dias[6], 'yyyy-MM-dd')} onAbrirReceta={onAbrirReceta}/>
+      <Replanificador planning={planning} recetas={recetas} inventario={inventario}
+        replanificar={replanificarHuecoPlanning}/>
+      <AsistenteSemanal planning={planning} recetas={recetas} inventario={inventario}
+        desde={format(dias[0], 'yyyy-MM-dd')} hasta={format(dias[6], 'yyyy-MM-dd')}
+        onAbrirReceta={onAbrirReceta} precios={preciosHogar.precios}
+        estadoPrecios={preciosHogar.estado} errorPrecios={preciosHogar.error}
+        onGuardarPrecio={preciosHogar.guardar} onProponer={proponerRecetaRapida}/>
+      {propuestaRapida && <section className="card" style={{marginBottom:18,borderColor:'#d8badf'}} role="region" aria-label="Revisar propuesta">
+        <h3>💜 Revisa la propuesta antes de guardar</h3>
+        <p><strong>{recetas.find(r=>r.id===propuestaRapida.recetaId)?.nombre}</strong> · {propuestaRapida.fecha} · {propuestaRapida.tipoComida}</p>
+        <p>{propuestaRapida.originalId?'Sustituirá el plato de este hueco.':'Se añadirá en un hueco libre.'}
+          {' '}Las compras se recalcularán después de confirmar.</p>
+        <div style={{display:'flex',gap:10,flexWrap:'wrap'}}>
+          <button className="btn-principal" type="button" onClick={confirmarRecetaRapida}>Confirmar propuesta</button>
+          <button className="btn-secundario" type="button" onClick={()=>setPropuestaRapida(null)}>Cancelar</button>
+        </div>
+      </section>}
       <section className="card" style={{ padding: 18, marginBottom: 20 }}>
         <h3>✨ Propuestas de Rayku</h3>
         <details style={{ marginBottom: 14, display: householdId ? 'none' : undefined }}>
