@@ -44,12 +44,10 @@ function obtenerNombresRecetas(
 }
 
 function contextoInspiracionLibre(
-  contexto: ContextoRayku
+  contexto: ContextoRayku,
+  todosLosNombres: string[]
 ) {
-  const nombresRecetas =
-    obtenerNombresRecetas(
-      contexto
-    )
+  const nombresRecetas = todosLosNombres.length ? todosLosNombres : obtenerNombresRecetas(contexto)
 
   return [
     'MODO INSPIRACIÓN LIBRE',
@@ -72,11 +70,13 @@ function contextoInspiracionLibre(
 
 function crearContextoTextoPorTipo(
   tipo: TipoConsultaChefRayku,
-  contexto: ContextoRayku
+  contexto: ContextoRayku,
+  nombres: string[]
 ) {
   if (tipo === 'ideas_recetas' || tipo === 'menu_dieta') {
     return contextoInspiracionLibre(
-      contexto
+      contexto,
+      nombres
     )
   }
 
@@ -122,7 +122,8 @@ export async function consultarChefRayku(
   const contextoTexto =
     crearContextoTextoPorTipo(
       tipo,
-      contexto
+      contexto,
+      datos.recetas.map(receta => receta.nombre)
     ) + '\n\nDIETA DEL SOLICITANTE: ' + (datos.dietasSolicitante?.join(', ') || 'Sin dieta específica; no presupongas keto.')
 
   const prompt =
