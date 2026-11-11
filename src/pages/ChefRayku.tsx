@@ -21,6 +21,7 @@ import {
 } from '../lib/chefRayku'
 
 import ChefRaykuCard from '../components/chef-rayku/ChefRaykuCard'
+import BuscadorIngrediente from '../components/chef-rayku/BuscadorIngrediente'
 
 
 
@@ -220,6 +221,7 @@ export default function ChefRayku({
         </div>
       </div>
 
+      <BuscadorIngrediente onAbrirReceta={onAbrirReceta}/>
       <div
         style={{
           display: 'grid',
