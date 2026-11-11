@@ -77,6 +77,7 @@ function obtenerPaginaInicial(): Pagina {
 
 function MainApp() {
   const [modoTablet, setModoTablet] = useState(false)
+  const [paginaAnteriorConfiguracion, setPaginaAnteriorConfiguracion] = useState<Pagina>('inicio')
   const [perfilConfigurado, setPerfilConfigurado] = useState(() => cargarPerfilHogar().configurado)
 
   const [session, setSession] =
@@ -237,7 +238,10 @@ function MainApp() {
   }
 
   if (!perfilConfigurado || paginaActual === 'configuracion') {
-    return <div className="app"><main className="contenido-principal"><ConfiguracionHogar onTerminar={() => { setPerfilConfigurado(true); setPaginaActual('planning') }} onInventario={() => { setPerfilConfigurado(true); setPaginaActual('inventario') }} /></main></div>
+    return <div className="app"><main className="contenido-principal">
+      {perfilConfigurado && <button type="button" className="btn-secundario" onClick={() => setPaginaActual(paginaAnteriorConfiguracion)}>← Volver sin guardar</button>}
+      <ConfiguracionHogar onTerminar={() => { setPerfilConfigurado(true); setPaginaActual(paginaAnteriorConfiguracion) }} onInventario={() => { setPerfilConfigurado(true); setPaginaActual('inventario') }} />
+    </main></div>
   }
 
   if (modoTablet) {
@@ -374,7 +378,7 @@ function MainApp() {
             📦 Inventario
           </button>
 
-          <button type="button" className="btn-secundario" onClick={() => setPaginaActual('configuracion')}>⚙️ Hogar</button>
+          <button type="button" className="btn-secundario" onClick={() => { setPaginaAnteriorConfiguracion(paginaActual); setPaginaActual('configuracion') }}>⚙️ Hogar</button>
           <button type="button" className="btn-secundario" onClick={() => setModoTablet(true)}>
             📱 Modo tablet
           </button>
@@ -401,7 +405,7 @@ function MainApp() {
         </div>
       </nav>
 
-      <WorkspaceSwitcher userId={session.user.id} selection={workspace.selection} onSelect={workspace.select} busy={workspace.busy} />
+      {paginaActual === 'configuracion' && <WorkspaceSwitcher userId={session.user.id} selection={workspace.selection} onSelect={workspace.select} busy={workspace.busy} />}
       {workspace.message && <p role="status" style={{textAlign:'center',margin:12}}>{workspace.message}</p>}
 
       {mensajeNube && (
