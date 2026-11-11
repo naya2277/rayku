@@ -57,7 +57,7 @@ export default function WorkspaceSwitcher({ userId, selection, onSelect, busy = 
   const refresh = async () => { const items=await listHouseholds();setHouseholds(items);setStatus('ready') }
   const create = async () => {try {const h=await createHousehold(newName);await refresh();await onSelect(h.id);setNewName('');setMessage('Hogar creado. Ya puedes utilizar sus recetas, planning, inventario y compra.')}catch(e){setMessage(describirError(e))}}
   const invite = async () => {try {const token=await createHouseholdInvitation(selection,inviteEmail);setInviteToken(token);setMessage('Invitación creada. Comparte el enlace solo con su destinatario.')}catch(e){setMessage(describirError(e))}}
-  const join = async () => {try {const id=await acceptHouseholdInvitation(joinToken.includes('?invite=') ? new URL(joinToken).searchParams.get('invite') ?? '' : joinToken);await refresh();await onSelect(id);setJoinToken('');setMessage('Invitación aceptada. Ya estás trabajando en el hogar compartido.')}catch(e){setMessage(describirError(e))}}
+  const join = async () => {try {const id=await acceptHouseholdInvitation(joinToken.includes('?invite=') ? new URL(joinToken).searchParams.get('invite') ?? '' : joinToken);await refresh();await onSelect(id);setJoinToken('');const url=new URL(window.location.href);url.searchParams.delete('invite');window.history.replaceState(null,'',url.pathname+url.search+url.hash);setMessage('Invitación aceptada. Ya estás trabajando en el hogar compartido.')}catch(e){setMessage(describirError(e))}}
   const copyRecipe = async () => {
     if (selection !== 'personal' || copying || !recipeToCopy || !copyTarget) return
     const recipe = recipes.find(item => item.id === recipeToCopy)
