@@ -11,6 +11,11 @@ export type FoodProfile = {
 const fields = 'user_id,display_name,allergies,intolerances,dislikes,favorites,diets'
 const cache = new Map<string,{expires:number;value:FoodProfile[]}>()
 const inFlight = new Map<string,Promise<FoodProfile[]>>()
+export function invalidateFoodProfilesCache(householdId?:string) {
+  if(householdId) cache.delete(householdId)
+  else cache.clear()
+}
+
 export async function readFoodProfiles(householdId: string): Promise<FoodProfile[]> {
   const cached = cache.get(householdId)
   if (cached && cached.expires > Date.now()) return cached.value
