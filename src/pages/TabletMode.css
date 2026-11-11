@@ -86,3 +86,31 @@
 .tablet-recipe-options button:nth-child(odd){background:#fff1f7}
 .tablet-recipe-options button:nth-child(even){background:#f5efff}
 .tablet-quantities button{background:#f3e6fa;border-color:#dec8ea}
+
+/* Rayku 2.0: usable touch targets and shopping dates on small screens. */
+.tablet-later{background:#fffdfc;border:1px solid #e8d6e5;border-radius:18px;padding:16px;margin:12px 0 22px}
+.tablet-later h2{color:#80547e;font-size:19px;margin:0 0 8px}
+.tablet-later p{font-size:14px;color:#745f72;margin:0 0 12px}
+.tablet-mode button:focus-visible,.tablet-mode input:focus-visible,.tablet-mode select:focus-visible{
+ outline:3px solid #8660c1;outline-offset:3px
+}
+.tablet-mode button{min-height:44px}
+@media(max-width:700px){
+ .tablet-header{position:sticky;top:0;gap:9px;align-items:stretch}
+ .tablet-header strong{font-size:19px}
+ .tablet-header nav{display:grid;grid-template-columns:1fr 1fr auto;gap:6px}
+ .tablet-header nav button{padding:11px 8px;font-size:13px}
+ .tablet-content{padding:12px;padding-bottom:calc(26px + env(safe-area-inset-bottom))}
+ .tablet-week-nav{justify-content:space-between;gap:8px;margin:6px 0 16px}
+ .tablet-week-nav h1{font-size:18px;text-align:center}
+ .tablet-week-nav button{padding:9px 14px}
+ .tablet-calendar{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+ .tablet-day{padding:11px}
+ .tablet-meal button{font-size:13px;overflow-wrap:anywhere}
+ .tablet-shopping-summary{position:static}
+ .tablet-products{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+ .tablet-products button{min-height:112px;padding:8px}
+ .tablet-dialog{padding:15px;max-height:88dvh}
+}
+@media(max-width:380px){.tablet-calendar{grid-template-columns:1fr}.tablet-day{padding:12px}}
+@media(prefers-reduced-motion:reduce){.tablet-mode *{transition:none!important;scroll-behavior:auto!important}}
