@@ -33,9 +33,11 @@ export function useUnifiedWorkspace(userId: string) {
   const pending = useRef<ReturnType<typeof setTimeout> | null>(null)
   const queue = useRef<Promise<void>>(Promise.resolve())
   const error = useRef<string | null>(null)
+  const saving = useRef(false)
 
   const persist = useCallback(async () => {
     if (active.current.scope !== 'household' || !hydrated.current) return
+    saving.current = true
     const workspace = active.current
     const snapshot = readStore()
     const next = signatures(snapshot)
@@ -52,9 +54,11 @@ export function useUnifiedWorkspace(userId: string) {
       } catch (e) {
         error.current = e instanceof Error ? e.message : JSON.stringify(e)
         setMessage('⚠️ No se ha guardado el hogar: ' + error.current + '. No cambies de espacio hasta resolverlo.')
+        saving.current = false
         throw e
       }
     }
+    saving.current = false
   }, [])
 
   const scheduleSave = useCallback(() => {
@@ -75,6 +79,22 @@ export function useUnifiedWorkspace(userId: string) {
       setSharedWorkspaceStorage(false)
     }
   }, [scheduleSave])
+
+  // Warn before a tab closes with edits that haven't reached the shared database.
+  // Browser support varies, but this avoids silently discarding in-flight changes.
+  useEffect(() => {
+    const protect = (event: BeforeUnloadEvent) => {
+      if (active.current.scope !== 'household') return
+      const now = signatures(readStore())
+      const dirty = saving.current || pending.current !== null ||
+        kinds.some(kind => now[kind] !== baseline.current[kind])
+      if (!dirty) return
+      event.preventDefault()
+      event.returnValue = ''
+    }
+    window.addEventListener('beforeunload', protect)
+    return () => window.removeEventListener('beforeunload', protect)
+  }, [])
 
   const select = useCallback(async (id: string) => {
     if (id === selection || busy) return
