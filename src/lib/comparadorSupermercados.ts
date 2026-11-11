@@ -2,8 +2,8 @@
 function claveProducto(nombre:string){
  const sinonimos:Record<string,string>={zanahorias:'zanahoria',peras:'pera',patatas:'patata',
   tomates:'tomate',huevos:'huevo',manzanas:'manzana',cebollas:'cebolla',garbanzos:'garbanzo'}
- return nombre.toLocaleLowerCase('es').normalize('NFD').replace(/[\\u0300-\\u036f]/g,'')
-  .replace(/\\([^)]*\\)/g,'').replace(/[^a-z0-9 ]/g,' ').trim().split(/\\s+/)
+ return nombre.toLocaleLowerCase('es').normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+  .replace(/\([^)]*\)/g,'').replace(/[^a-z0-9 ]/g,' ').trim().split(/\s+/)
   .filter(w=>w&&!['de','del','la','el','los','las','un','una','para','tipo'].includes(w))
   .map(w=>sinonimos[w]??w).join(' ')
 }
@@ -11,7 +11,7 @@ function costeIngrediente(cantidad:number,unidad:string,precio:number,cantidadEn
  if(!Number.isFinite(cantidad)||cantidad<0||!Number.isFinite(precio)||precio<0||
   !Number.isFinite(cantidadEnvase)||cantidadEnvase<=0)return null
  const info=(u:string):{tipo:string;factor:number}|null=>{
-  const n=u.toLowerCase().trim().replace(/\\.$/,'')
+  const n=u.toLowerCase().trim().replace(/\.$/,'')
   if(['g','gramo','gramos'].includes(n))return {tipo:'peso',factor:1}
   if(['kg','kilo','kilos'].includes(n))return {tipo:'peso',factor:1000}
   if(['ml','mililitro','mililitros'].includes(n))return {tipo:'volumen',factor:1}
