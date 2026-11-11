@@ -58,7 +58,8 @@ export function useSupermercados(householdId?:string){
  const guardarPrecio=useCallback(async(store:Tienda,nombre:string,price:number,quantity:number,unit:string,saleMode:'envase'|'granel')=>{
   if(!householdId)throw new Error('Selecciona un hogar compartido.')
   const clave=obtenerClaveIngredienteCompra(nombre)
-  if(!clave||!Number.isFinite(price)||price<0||!Number.isFinite(quantity)||quantity<=0||!['envase','granel'].includes(saleMode))
+  if(!clave||!Number.isFinite(price)||price<=0||!Number.isFinite(quantity)||quantity<=0||!['envase','granel'].includes(saleMode)||
+   (saleMode==='granel'&&!['g','kg','ml','l'].includes(unit)))
    throw new Error('Precio o cantidad inválidos.')
   const {data:{user},error:e}=await supabase.auth.getUser()
   if(e||!user)throw new Error('Inicia sesión de nuevo.')
