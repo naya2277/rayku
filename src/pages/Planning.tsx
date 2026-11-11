@@ -67,6 +67,7 @@ export default function Planning({
   const [estadoPerfiles,setEstadoPerfiles] = useState<'loading'|'ready'|'error'>('loading')
   const [minutosMaximos,setMinutosMaximos] = useState(45)
   const [presupuestoMaximo,setPresupuestoMaximo] = useState(90)
+  const [limitesPorFecha,setLimitesPorFecha] = useState<Record<string,number>>({})
   const [nuevoEvitar, setNuevoEvitar] = useState('')
   const [avisoGeneracion, setAvisoGeneracion] = useState('')
   const [nuevoFavorito, setNuevoFavorito] = useState('')
@@ -210,7 +211,7 @@ export default function Planning({
     }
     const resultado=generarPropuestasHogar(dias.map(d=>format(d,'yyyy-MM-dd')),
       recetas,planning,inventario,perfiles,preferenciasAlimentarias,
-      cargarPerfilHogar(),minutosMaximos,priorizarInventario)
+      cargarPerfilHogar(),minutosMaximos,priorizarInventario,limitesPorFecha)
     setPropuestas(resultado)
     setSeleccion(Object.fromEntries(resultado.propuestas.map(p=>[p.fecha+'|'+p.tipoComida,p.recetaId])))
     setAvisoGeneracion(resultado.propuestas.length
@@ -239,7 +240,7 @@ export default function Planning({
       const id=seleccion[p.fecha+'|'+p.tipoComida]
       if(!id || actual.planning.some(h=>h.fecha===p.fecha && h.tipoComida===p.tipoComida))continue
       const receta=actual.recetas.find(r=>r.id===id)
-      if(!receta || !validarPropuestaHogar(receta,p.tipoComida,propuestas.restricciones,hogar,minutosMaximos))continue
+      if(!receta || !validarPropuestaHogar(receta,p.tipoComida,propuestas.restricciones,hogar,limitesPorFecha[p.fecha]??minutosMaximos))continue
       actual.guardarHuecoPlanning({
         fecha:p.fecha,tipoComida:p.tipoComida,recetaId:id,recetaIds:[id],
         comidaLibre:'',nota:'',cocinado:false
@@ -416,6 +417,31 @@ export default function Planning({
               onChange={e=>setPresupuestoMaximo(Math.max(1,Number(e.target.value)||1))}/>
           </label>
         </div>
+        <details style={{marginBottom:12}}>
+          <summary>📅 ¿Algún día tenéis menos tiempo para cocinar?</summary>
+          <p style={{fontSize:13}}>Estos límites se aplican solo al día elegido; el resto utiliza el tiempo general.</p>
+          <div style={{display:'grid',gap:8,marginTop:10}}>
+            {dias.map(fecha=>{
+              const id=format(fecha,'yyyy-MM-dd')
+              return <label key={id} style={{display:'flex',justifyContent:'space-between',alignItems:'center',gap:12}}>
+                {format(fecha,'EEEE d',{locale:es})}
+                <select style={{maxWidth:160}} value={limitesPorFecha[id]??''}
+                  onChange={e=>{
+                    setLimitesPorFecha(actual=>{
+                      const next={...actual}
+                      if(e.target.value)next[id]=Number(e.target.value)
+                      else delete next[id]
+                      return next
+                    })
+                    setPropuestas(null)
+                  }}>
+                  <option value="">Tiempo general</option>
+                  {[15,20,30,45,60,90,120].map(n=><option key={n} value={n}>{n} minutos</option>)}
+                </select>
+              </label>
+            })}
+          </div>
+        </details>
         {householdId && <p style={{fontSize:13}}>
           {estadoPerfiles==='loading'?'Comprobando preferencias de ambos miembros…':
             estadoPerfiles==='error'?'No se pudieron cargar los perfiles del hogar.':
@@ -429,7 +455,7 @@ export default function Planning({
             <strong>{p.fecha} · {p.tipoComida}</strong>
             <select style={{ display: 'block', width: '100%', padding: 10 }} value={seleccion[p.fecha + '|' + p.tipoComida] ?? ''} onChange={e => setSeleccion(prev => ({ ...prev, [p.fecha + '|' + p.tipoComida]: e.target.value }))}>
               <option value="">Dejar sin planificar</option>
-              {propuestas.elegibles.filter(r => validarPropuestaHogar(r,p.tipoComida,propuestas.restricciones,cargarPerfilHogar(),minutosMaximos)).map(r => <option key={r.id} value={r.id}>{r.nombre}</option>)}
+              {propuestas.elegibles.filter(r => validarPropuestaHogar(r,p.tipoComida,propuestas.restricciones,cargarPerfilHogar(),limitesPorFecha[p.fecha]??minutosMaximos)).map(r => <option key={r.id} value={r.id}>{r.nombre}</option>)}
             </select>
             {seleccion[p.fecha + p.tipoComida] && <button type="button" className="btn-secundario" onClick={()=>rechazarReceta(seleccion[p.fecha + p.tipoComida])}>👎 No me gusta esta receta</button>}
           </label>)}
