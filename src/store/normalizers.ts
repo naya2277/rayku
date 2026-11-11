@@ -109,7 +109,9 @@ export const normalizarInventario = (
 export const normalizarCompraManual = (
   item: any
 ): ItemCompraManual => ({
-  id: item.id ?? generarId(),
+  // The manual purchase form passes id: ''. Empty IDs must not be persisted:
+  // they make independent items share the same checkbox and break sync.
+  id: typeof item.id === 'string' && item.id.trim() ? item.id : generarId(),
   nombre: item.nombre ?? '',
   cantidad:
     item.cantidad === null ||
