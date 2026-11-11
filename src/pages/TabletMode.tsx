@@ -2,7 +2,8 @@ import { useRef, useState } from 'react'
 import { addDays, addWeeks, format, startOfWeek, subWeeks } from 'date-fns'
 import { es } from 'date-fns/locale'
 import { useRaykuStore } from '../store'
-import { generarIngredientesCompra, separarIngredientesPorInventario } from '../lib/generarListaCompra'
+import { separarIngredientesPorInventario } from '../lib/generarListaCompra'
+import { planificarCompraPorConservacion } from '../lib/compra/planificarCompraPorConservacion'
 import './TabletMode.css'
 
 const PRODUCTOS = [
@@ -43,11 +44,12 @@ export default function TabletMode({ onSalir }: Props) {
   const dias = Array.from({ length: 7 }, (_, i) => addDays(inicio, i))
   const hoy = format(inicio, 'yyyy-MM-dd')
   const fin = format(addDays(inicio, 6), 'yyyy-MM-dd')
-  const ingredientesMenu = generarIngredientesCompra(
-    planning.filter(p => p.fecha >= hoy && p.fecha <= fin && !p.cocinado),
-    recetas
+  const comprasProgramadas=planificarCompraPorConservacion(
+    planning.filter(p=>p.fecha>=hoy&&p.fecha<=fin&&!p.cocinado),
+    recetas,new Date()
   )
-  const generados = separarIngredientesPorInventario(ingredientesMenu, inventario).paraComprar
+  const generados = separarIngredientesPorInventario(comprasProgramadas.ahora, inventario).paraComprar
+  const posteriores=comprasProgramadas.despues
   const pendientesGenerados = generados.filter(i => !checksCompra.includes(i.clave))
   const productosVisibles = PRODUCTOS.filter(([, nombre]) => categoria === 'Todos' || CATEGORIA_PRODUCTO[nombre] === categoria)
 
@@ -162,6 +164,15 @@ export default function TabletMode({ onSalir }: Props) {
               </button>
             )}
           </div>
+          {posteriores.length>0&&<section className="tablet-later" aria-label="Compra programada para más adelante">
+            <h2>📅 Comprar más adelante ({posteriores.length})</h2>
+            <p>Separa los alimentos frescos para que no se estropeen antes de cocinar.</p>
+            <div className="tablet-shopping">
+              {posteriores.map(item=><div key={item.clave}>
+                <span><strong>{item.nombre}</strong> · comprar desde {item.comprarDesde} · usar {item.primeraUtilizacion}</span>
+              </div>)}
+            </div>
+          </section>}
           <h2>Lista de compra</h2>
           {pendientesGenerados.length > 0 && <div className="tablet-shopping">
             {pendientesGenerados.map(item => <div key={item.clave}><span>📋 {item.nombre} · {item.cantidadFaltante ?? item.cantidad ?? 'cantidad por revisar'} {item.unidad ?? ''}</span></div>)}
