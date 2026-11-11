@@ -186,10 +186,11 @@ export default function WorkspaceSwitcher({ userId, selection, onSelect, busy = 
               ? 'Estás viendo los datos anteriores a la unificación. Selecciona tu hogar para utilizar Rayku.'
               : 'Recetas, planning, inventario y compra corresponden al hogar compartido.'}
       </p>
-      <details open={Boolean(joinToken)}>
-        <summary>{joinToken ? '✉️ Tienes una invitación para unirte a un hogar' : '🏡 Crear hogar o invitar a alguien'}</summary>
+      <details open={Boolean(joinToken) || (status === 'ready' && households.length === 0)}>
+        <summary>{joinToken ? '✉️ Aceptar invitación recibida' : selection === 'personal' && households.length === 0 ? '✉️ Unirse a un hogar existente' : '🏡 Crear hogar o invitar a alguien'}</summary>
         <div style={{display:'grid',gap:8,marginTop:12}}>
-          {joinToken && <p role="status">La invitación está lista para aceptarse. No necesitas pedir otro permiso ni crear un hogar nuevo: pulsa «Aceptar invitación» con tu cuenta iniciada.</p>}
+          {joinToken && <p role="status">La invitación está lista para aceptarse. No necesitas configurar «Persona 1» ni crear un hogar nuevo: pulsa «Aceptar invitación» con tu cuenta iniciada.</p>}
+          {!joinToken && selection==='personal' && households.length===0 && <p role="status">¿Te han invitado a Domus Infinita? Abre el enlace que te enviaron o pégalo en el campo siguiente. No crees un hogar nuevo.</p>}
           {!joinToken && <>
           <label>Nombre del hogar<input value={newName} onChange={e=>setNewName(e.target.value)} placeholder="Nuestra casa"/></label>
           <button type="button" className="btn-secundario" disabled={!newName.trim() || status!=='ready'} onClick={create}>Crear hogar</button>
