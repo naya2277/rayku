@@ -1,3 +1,5 @@
+import { readFoodProfiles } from '../../lib/foodProfiles'
+import { supabase } from '../../lib/supabase'
 import {
   useState,
 } from 'react'
@@ -182,7 +184,7 @@ function ListaPreferencias({
   )
 }
 
-export default function ChefRaykuCard() {
+export default function ChefRaykuCard({householdId}:{householdId?:string}) {
   const {
     recetas,
     inventario,
@@ -251,6 +253,11 @@ export default function ChefRaykuCard() {
     setGuardadas([])
 
     try {
+      const {data:{user}} = await supabase.auth.getUser()
+      const profiles = householdId ? await readFoodProfiles(householdId) : []
+      const mine = profiles.find(p=>p.user_id===user?.id)
+      const prohibidos = [...new Set([...preferenciasAlimentarias.ingredientesProhibidos,...(mine?.allergies??[]),...(mine?.intolerances??[]),...(mine?.dislikes??[])])]
+      const favoritos = [...new Set([...preferenciasAlimentarias.ingredientesFavoritos,...(mine?.favorites??[])])]
       const texto =
         await consultarChefRayku(
           tipo,
@@ -259,7 +266,7 @@ export default function ChefRaykuCard() {
             inventario,
             planning,
             historialCocinado,
-            preferenciasAlimentarias,
+            preferenciasAlimentarias:{...preferenciasAlimentarias,ingredientesProhibidos:prohibidos,ingredientesFavoritos:favoritos},
           }
         )
 
