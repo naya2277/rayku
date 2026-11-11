@@ -57,7 +57,7 @@ export default function WorkspaceSwitcher({ userId, selection, onSelect, busy = 
   const refresh = async () => { const items=await listHouseholds();setHouseholds(items);setStatus('ready') }
   const create = async () => {try {const h=await createHousehold(newName);await refresh();await onSelect(h.id);setNewName('');setMessage('Hogar creado. Ya puedes utilizar sus recetas, planning, inventario y compra.')}catch(e){setMessage(describirError(e))}}
   const invite = async () => {try {const token=await createHouseholdInvitation(selection,inviteEmail);setInviteToken(token);setMessage('Invitación creada. Comparte el enlace solo con su destinatario.')}catch(e){setMessage(describirError(e))}}
-  const join = async () => {try {await acceptHouseholdInvitation(joinToken.includes('?invite=') ? new URL(joinToken).searchParams.get('invite') ?? '' : joinToken);await refresh();setJoinToken('');setMessage('Invitación aceptada. Selecciona el hogar para trabajar en conjunto.')}catch(e){setMessage(describirError(e))}}
+  const join = async () => {try {const id=await acceptHouseholdInvitation(joinToken.includes('?invite=') ? new URL(joinToken).searchParams.get('invite') ?? '' : joinToken);await refresh();await onSelect(id);setJoinToken('');setMessage('Invitación aceptada. Ya estás trabajando en el hogar compartido.')}catch(e){setMessage(describirError(e))}}
   const copyRecipe = async () => {
     if (selection !== 'personal' || copying || !recipeToCopy || !copyTarget) return
     const recipe = recipes.find(item => item.id === recipeToCopy)
@@ -158,20 +158,25 @@ export default function WorkspaceSwitcher({ userId, selection, onSelect, busy = 
   const invitationUrl = inviteToken ? window.location.origin + '/?invite=' + encodeURIComponent(inviteToken) : ''
   return (
     <section className="workspace-switcher" aria-label="Espacios de Rayku">
-      <label htmlFor="rayku-workspace">🏡 Hogar activo</label>
-      <select
-        id="rayku-workspace"
-        value={selection}
-        onChange={event => { void onSelect(event.target.value).catch(error => setMessage(describirError(error))) }}
-        disabled={status !== 'ready' || busy}
-      >
-        <option value="personal">👤 Datos anteriores (solo para migración)</option>
-        {households.map(household => (
-          <option key={household.id} value={household.id}>
-            🏡 {household.name}
-          </option>
-        ))}
-      </select>
+      <strong>🏡 {households.find(h => h.id === selection)?.name ?? 'Configurar hogar'}</strong>
+      <details>
+        <summary>Opciones avanzadas del hogar y datos anteriores</summary>
+        <label htmlFor="rayku-workspace">Espacio que quieres consultar</label>
+        <select
+          id="rayku-workspace"
+          value={selection}
+          onChange={event => { void onSelect(event.target.value).catch(error => setMessage(describirError(error))) }}
+          disabled={status !== 'ready' || busy}
+        >
+          <option value="personal">👤 Datos anteriores (solo para migración)</option>
+          {households.map(household => (
+            <option key={household.id} value={household.id}>
+              🏡 {household.name}
+            </option>
+          ))}
+        </select>
+        <p>Los datos personales anteriores se conservan como respaldo. El hogar compartido es el espacio de trabajo habitual.</p>
+      </details>
       <p className="workspace-switcher-note" role="status">
         {status === 'loading'
           ? 'Buscando hogares…'
@@ -198,20 +203,20 @@ export default function WorkspaceSwitcher({ userId, selection, onSelect, busy = 
       </details>
       {selection !== 'personal' && <MyFoodProfile householdId={selection} userId={userId}/>}
       {selection !== 'personal' && (
-        <div style={{marginTop:12,display:'grid',gap:8}}>
+        <details style={{marginTop:12}}><summary>📦 Importar datos antiguos al hogar (opcional)</summary><div style={{marginTop:8,display:'grid',gap:8}}>
           <button type="button" className="btn-principal" disabled={migrating || busy} onClick={migrateAll}>
             {migrating ? 'Unificando datos…' : '🏡 Traer todos mis datos anteriores a este hogar'}
           </button>
           <p>Recetas, planning, inventario y compra. Conserva originales, evita duplicados por ID y no reemplaza días ya ocupados.</p>
-        </div>
+        </div></details>
       )}
       {selection !== 'personal' && (
-        <div style={{marginTop:12,display:'grid',gap:8}}>
+        <details style={{marginTop:12}}><summary>📚 Importar recetas antiguas (opcional)</summary><div style={{marginTop:8,display:'grid',gap:8}}>
           <button type="button" className="btn-secundario" disabled={copying || busy} onClick={copyAllRecipes}>
             {copying ? 'Importando recetas…' : '📚 Importar todas mis recetas personales al hogar'}
           </button>
           <p>Importa todas las recetas de tu cuenta de una vez, sin duplicados y sin borrar las originales.</p>
-        </div>
+        </div></details>
       )}
       {selection === 'personal' && households.length > 0 && (
         <details>
