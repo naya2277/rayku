@@ -3,6 +3,7 @@ import { generarIngredientesCompra } from './compra/generarIngredientesCompra'
 import { separarIngredientesPorInventario } from './compra/inventarioCompra'
 import { obtenerClaveIngredienteCompra } from './compra/normalizacionCompra'
 import { costeIngrediente } from './compra/costeIngrediente'
+import { sobraProponible } from './sobrasSeguras'
 
 export type PrecioUnitario = { precio: number; cantidad: number; unidad: string }
 export type Precios = Record<string, PrecioUnitario>
@@ -50,8 +51,7 @@ export function preparacionesAnticipadas(planning:ItemPlanning[],recetas:Receta[
 }
 
 export function sugerirSobras(inventario:ItemInventario[],recetas:Receta[],hoy=new Date().toISOString().slice(0,10)) {
-  const sobras=inventario.filter(i=>i.esCocinado && i.cantidad>0 && i.ubicacion!=='pendiente' &&
-    (!i.fechaCaducidad || i.fechaCaducidad>=hoy))
+  const sobras=inventario.filter(i=>sobraProponible(i,hoy))
   return sobras.map(item=>{
     const nombre=item.nombre.replace(/^Preparación:\s*/i,'')
     const clave=obtenerClaveIngredienteCompra(nombre)
