@@ -186,7 +186,7 @@ export default function WorkspaceSwitcher({ userId, selection, onSelect, busy = 
               ? 'Estás viendo los datos anteriores a la unificación. Selecciona tu hogar para utilizar Rayku.'
               : 'Recetas, planning, inventario y compra corresponden al hogar compartido.'}
       </p>
-      <details defaultOpen={Boolean(joinToken)}>
+      <details open={Boolean(joinToken)}>
         <summary>{joinToken ? '✉️ Tienes una invitación para unirte a un hogar' : '🏡 Crear hogar o invitar a alguien'}</summary>
         <div style={{display:'grid',gap:8,marginTop:12}}>
           {joinToken && <p role="status">La invitación está lista para aceptarse. No necesitas pedir otro permiso ni crear un hogar nuevo: pulsa «Aceptar invitación» con tu cuenta iniciada.</p>}
