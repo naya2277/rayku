@@ -26,6 +26,7 @@ export default function WorkspaceSwitcher({ userId, selection, onSelect, busy = 
   const [newName,setNewName] = useState('')
   const [copying,setCopying] = useState(false)
   const [recipeToCopy,setRecipeToCopy] = useState('')
+  const [copyTarget,setCopyTarget] = useState('')
   const recipes = useRaykuStore(state => state.recetas)
   const [inviteEmail,setInviteEmail] = useState('')
   const [inviteToken,setInviteToken] = useState('')
@@ -55,20 +56,20 @@ export default function WorkspaceSwitcher({ userId, selection, onSelect, busy = 
   const invite = async () => {try {const token=await createHouseholdInvitation(selection,inviteEmail);setInviteToken(token);setMessage('Invitación creada. Comparte el enlace solo con su destinatario.')}catch(e){setMessage(describirError(e))}}
   const join = async () => {try {await acceptHouseholdInvitation(joinToken.includes('?invite=') ? new URL(joinToken).searchParams.get('invite') ?? '' : joinToken);await refresh();setJoinToken('');setMessage('Invitación aceptada. Selecciona el hogar para trabajar en conjunto.')}catch(e){setMessage(describirError(e))}}
   const copyRecipe = async () => {
-    if (selection === 'personal' || copying || !recipeToCopy) return
+    if (selection !== 'personal' || copying || !recipeToCopy || !copyTarget) return
     const recipe = recipes.find(item => item.id === recipeToCopy)
     if (!recipe) return
     setCopying(true)
     setMessage('')
     try {
-      const workspace = { scope: 'household' as const, householdId: selection }
+      const workspace = { scope: 'household' as const, householdId: copyTarget }
       const record = await getWorkspaceRecord<Receta[]>(workspace, 'recipes')
       const existing = Array.isArray(record?.payload) ? record.payload : []
       if (existing.some(item => item.id === recipe.id)) {
         setMessage('La receta ya existe en Domus Infinita. No se ha duplicado.')
         return
       }
-      await saveSharedRecord(selection, 'recipes', [...existing, recipe], record?.version ?? 0)
+      await saveSharedRecord(copyTarget, 'recipes', [...existing, recipe], record?.version ?? 0)
       setRecipeToCopy('')
       setMessage('Receta copiada al hogar. La original sigue siendo privada y no se ha modificado.')
     } catch (error) {
@@ -118,15 +119,19 @@ export default function WorkspaceSwitcher({ userId, selection, onSelect, busy = 
           {message && <p role="status">{message}</p>}
         </div>
       </details>
-      {selection !== 'personal' && households.some(h=>h.id===selection) && (
+      {selection === 'personal' && households.length > 0 && (
         <details>
           <summary>📖 Compartir una receta personal con este hogar</summary>
           <div style={{display:'flex',gap:8,marginTop:12,flexWrap:'wrap'}}>
+            <select aria-label="Hogar destinatario" value={copyTarget} onChange={event=>setCopyTarget(event.target.value)}>
+              <option value="">Selecciona hogar</option>
+              {households.map(h=><option key={h.id} value={h.id}>{h.name}</option>)}
+            </select>
             <select aria-label="Receta personal para copiar" value={recipeToCopy} onChange={event=>setRecipeToCopy(event.target.value)}>
               <option value="">Elige una receta</option>
               {recipes.map(recipe=><option key={recipe.id} value={recipe.id}>{recipe.nombre}</option>)}
             </select>
-            <button type="button" className="btn-secundario" disabled={!recipeToCopy || copying} onClick={copyRecipe}>
+            <button type="button" className="btn-secundario" disabled={!recipeToCopy || !copyTarget || copying} onClick={copyRecipe}>
               {copying ? 'Copiando…' : 'Copiar receta al hogar'}
             </button>
           </div>
