@@ -30,6 +30,7 @@ import { useUnifiedWorkspace } from './lib/useUnifiedWorkspace'
 import TabletMode from './pages/TabletMode'
 import TabletDemo from './pages/TabletDemo'
 import { descargarCompra, subirCompra } from './lib/sync'
+import { listHouseholds } from './lib/workspaces'
 import { normalizarCompraManual } from './store/normalizers'
 import { guardarCompraManualLocal, guardarChecksCompraLocal } from './store/storage'
 
@@ -152,6 +153,38 @@ function MainApp() {
 
   useEffect(() => {
     if (!session?.user.id) return
+    let cancelled = false
+    const initialize = async () => {
+      try {
+        await Promise.all([
+          sincronizarRecetasDesdeSupabase(session.user.id),
+          sincronizarInventarioDesdeSupabase(session.user.id),
+          sincronizarPlanningDesdeSupabase(session.user.id),
+        ])
+        const compra = await descargarCompra(session.user.id)
+        if (compra && !cancelled) {
+          const compraManual = compra.compraManual.map(normalizarCompraManual)
+          const checksCompra = compra.checksCompra.filter((c): c is string => typeof c === 'string')
+          guardarCompraManualLocal(compraManual)
+          guardarChecksCompraLocal(checksCompra)
+          useRaykuStore.setState({ compraManual, checksCompra })
+        }
+        const households = await listHouseholds()
+        if (!cancelled && households.length) {
+          await workspace.select(households[0].id)
+        }
+      } catch (error) {
+        console.error('No se pudo inicializar el hogar:', error)
+      }
+    }
+    void initialize()
+    return () => { cancelled = true }
+  }, [session?.user.id])
+
+  /* Previous personal-only startup sync disabled: initialization above now
+     loads personal data first, then activates the household if it exists.
+  useEffect(() => {
+    if (!session?.user.id) return
 
     sincronizarRecetasDesdeSupabase(
       session.user.id
@@ -181,6 +214,8 @@ function MainApp() {
     sincronizarInventarioDesdeSupabase,
     sincronizarPlanningDesdeSupabase,
   ])
+
+  */
 
   const abrirReceta = (
     recetaId: string
