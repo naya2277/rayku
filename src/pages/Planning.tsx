@@ -153,10 +153,10 @@ export default function Planning({
     if(!propuestas)return null
     let precios:Precios={}
     try{precios=JSON.parse(localStorage.getItem('rayku-precios-local-v1')??'{}') as Precios}catch{precios={}}
-    const borrador = propuestas.propuestas.map(p=>{
+    const borrador:ItemPlanning[] = propuestas.propuestas.flatMap(p=>{
       const id=seleccion[p.fecha+'|'+p.tipoComida]
-      return id? {id:'preview-'+p.fecha+p.tipoComida,fecha:p.fecha,tipoComida:p.tipoComida,recetaId:id,recetaIds:[id],comidaLibre:'',nota:'',cocinado:false} : null
-    }).filter((p):p is ItemPlanning=>p!==null)
+      return id ? [{id:'preview-'+p.fecha+p.tipoComida,fecha:p.fecha,tipoComida:p.tipoComida,recetaId:id,recetaIds:[id],comidaLibre:'',nota:'',cocinado:false}] : []
+    })
     return calcularPresupuesto([...planning,...borrador],recetas,inventario,
       format(dias[0],'yyyy-MM-dd'),format(dias[6],'yyyy-MM-dd'),precios)
   })()
