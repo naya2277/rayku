@@ -78,6 +78,8 @@ function obtenerPaginaInicial(): Pagina {
 
 function MainApp() {
   const [modoTablet, setModoTablet] = useState(false)
+  const [inicializando, setInicializando] = useState(true)
+  const [errorInicializacion, setErrorInicializacion] = useState('')
   const [paginaAnteriorConfiguracion, setPaginaAnteriorConfiguracion] = useState<Pagina>('inicio')
   const [perfilConfigurado, setPerfilConfigurado] = useState(() => cargarPerfilHogar().configurado)
 
@@ -154,6 +156,8 @@ function MainApp() {
   useEffect(() => {
     if (!session?.user.id) return
     let cancelled = false
+    setInicializando(true)
+    setErrorInicializacion('')
     const initialize = async () => {
       try {
         await Promise.all([
@@ -175,6 +179,9 @@ function MainApp() {
         }
       } catch (error) {
         console.error('No se pudo inicializar el hogar:', error)
+        if (!cancelled) setErrorInicializacion(error instanceof Error ? error.message : String(error))
+      } finally {
+        if (!cancelled) setInicializando(false)
       }
     }
     void initialize()
@@ -270,6 +277,10 @@ function MainApp() {
 
   if (!session) {
     return <Auth />
+  }
+
+  if (inicializando && session) {
+    return <div className="app"><main className="contenido-principal"><section className="card" role="status"><h2>🏡 Preparando tu hogar…</h2><p>Estamos cargando tus recetas, planning, compra e inventario. Espera antes de hacer cambios.</p></section></main></div>
   }
 
   if (!perfilConfigurado || paginaActual === 'configuracion') {
@@ -441,6 +452,7 @@ function MainApp() {
         </div>
       </nav>
 
+      {errorInicializacion && <p role="alert" style={{textAlign:'center'}}>⚠️ No se ha podido cargar el hogar: {errorInicializacion}. Evita editar hasta resolverlo.</p>}
       {workspace.message && <p role="status" style={{textAlign:'center',margin:12}}>{workspace.message}</p>}
 
       {mensajeNube && (
