@@ -1,3 +1,4 @@
+import { supabase } from '../supabase'
 import {
   geminiModel,
 } from '../../services/ia/gemini'
@@ -91,6 +92,13 @@ function crearContextoTextoPorTipo(
 async function consultarGemini(
   prompt: string
 ) {
+  if(import.meta.env.VITE_CHEF_RAYKU_PROXY === 'true') {
+    const {data,error}=await supabase.functions.invoke('chef-rayku',{body:{prompt}})
+    if(error) throw new Error('No se pudo consultar Chef Rayku: '+error.message)
+    if(typeof data?.text!=='string') throw new Error('Respuesta vacía de Chef Rayku')
+    return limpiarRespuestaJson(data.text)
+  }
+  if(!import.meta.env.VITE_GEMINI_API_KEY) throw new Error('Gemini no está configurado todavía')
   const resultado =
     await geminiModel.generateContent(
       prompt
