@@ -29,8 +29,8 @@ export function recetaCompatible(receta: Receta, tipo: TipoComida) {
 
 export function recetaCompatibleHogar(receta: Receta, hogar?: PerfilHogar) {
   if (!hogar) return true
-  const prohibidos = hogar.personas.flatMap(p => p.prohibidos)
-  if (!recetaPermitida(receta, {ingredientesProhibidos: prohibidos, ingredientesFavoritos: []})) return false
+  // Food restrictions are per person: a shared recipe remains available to others.
+  // The UI must display affected-person warnings rather than suppressing the recipe.
   const aparatos = hogar.aparatos
   const pasos = normalizarIngrediente(receta.pasos)
   if (aparatos.length && /\bhorno\b/.test(pasos) && !aparatos.includes('Horno') && !/freidora de aire|air ?fryer/.test(pasos)) return false
@@ -47,7 +47,7 @@ export function generarMenuSemanal(
   hogar?: PerfilHogar,
   priorizarInventario = false,
 ): Resultado {
-  const prohibidosHogar = hogar?.personas.flatMap(p => p.prohibidos) ?? []
+  const prohibidosHogar: string[] = []
   const preferenciasCombinadas = { ...preferencias, ingredientesProhibidos: [...preferencias.ingredientesProhibidos, ...prohibidosHogar], ingredientesFavoritos: [...preferencias.ingredientesFavoritos, ...(hogar?.personas.flatMap(p=>p.favoritos) ?? [])] }
   const elegibles = recetas.filter(r => r.nombre.trim() && recetaPermitida(r, preferenciasCombinadas) && recetaCompatibleHogar(r, hogar))
   const disponibles = new Map<string, number>()
