@@ -7,7 +7,7 @@ function claveProducto(nombre:string){
   .filter(w=>w&&!['de','del','la','el','los','las','un','una','para','tipo'].includes(w))
   .map(w=>sinonimos[w]??w).join(' ')
 }
-function costeIngrediente(cantidad:number,unidad:string,precio:number,cantidadEnvase:number,unidadEnvase:string):number|null{
+function costeIngrediente(cantidad:number,unidad:string,precio:number,cantidadEnvase:number,unidadEnvase:string,saleMode:'envase'|'granel'='envase'):number|null{
  if(!Number.isFinite(cantidad)||cantidad<0||!Number.isFinite(precio)||precio<0||
   !Number.isFinite(cantidadEnvase)||cantidadEnvase<=0)return null
  const info=(u:string):{tipo:string;factor:number}|null=>{
@@ -22,17 +22,21 @@ function costeIngrediente(cantidad:number,unidad:string,precio:number,cantidadEn
  }
  const a=info(unidad),b=info(unidadEnvase)
  if(!a||!b||a.tipo!==b.tipo)return null
- return cantidad*a.factor/(cantidadEnvase*b.factor)*precio
+ // The price entered is the price of a purchasable package, not necessarily
+ // the price of the fraction consumed. Avoid reporting impossible checkout totals.
+ // Only explicitly loose/by-weight products may be charged proportionally.
+ const ratio=cantidad*a.factor/(cantidadEnvase*b.factor)
+ return (precio.sale_mode==='granel' ? ratio : Math.ceil(ratio-1e-9))*precio
 }
 
 export const TIENDAS=['Consum','Mercadona','ALDI','Lidl','Carrefour','Dia','Otro'] as const
 export type Tienda=typeof TIENDAS[number]
 export type ObjetivoCompra='ahorro'|'equilibrio'|'comodidad'
-export type PrecioTienda={store:Tienda;product_key:string;price:number;quantity:number;unit:string;observed_at?:string}
+export type PrecioTienda={store:Tienda;product_key:string;price:number;quantity:number;unit:string;observed_at?:string;sale_mode?:'envase'|'granel'}
 export type OfertaSupermercado={
  source:'ALDI'|'Lidl';product_key:string;product_name:string;price:number;
  quantity:number;unit:string;valid_from:string;valid_until:string;
- requires_loyalty:boolean;source_url:string;fetched_at?:string
+ requires_loyalty:boolean;source_url:string;fetched_at?:string;sale_mode?:'envase'|'granel'
 }
 export type Necesidad={nombre:string;cantidad:number|null;unidad:string|null}
 export type ComparacionItem={producto:string;cantidad:number;unidad:string;
@@ -45,9 +49,9 @@ export function ofertaVigente(o:OfertaSupermercado,fecha:string,permitirFideliza
  return fecha>=o.valid_from && fecha<=o.valid_until &&
   (!o.requires_loyalty||permitirFidelizacion) && o.price>=0&&o.quantity>0
 }
-function costeParaNecesidad(n:Necesidad,precio:{price:number;quantity:number;unit:string}):number|null{
+function costeParaNecesidad(n:Necesidad,precio:{price:number;quantity:number;unit:string;sale_mode?:'envase'|'granel'}):number|null{
  if(n.cantidad===null || !n.unidad)return null
- return costeIngrediente(n.cantidad,n.unidad,precio.price,precio.quantity,precio.unit)
+ return costeIngrediente(n.cantidad,n.unidad,precio.price,precio.quantity,precio.unit,precio.sale_mode)
 }
 export function compararSupermercados(
  necesidades:Necesidad[],precios:PrecioTienda[],ofertas:OfertaSupermercado[],
