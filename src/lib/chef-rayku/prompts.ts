@@ -133,23 +133,21 @@ REGLAS ESPECÍFICAS:
 - Toda receta nueva debe poder guardarse como receta completa.
 `
         : `
-La usuaria quiere un menú adaptado a su alimentación.
+La persona quiere propuestas NUEVAS para su menú, adaptadas a su dieta real.
 
 OBJETIVO:
-Crear un menú keto práctico y realista.
+Crear un menú con recetas originales, completas y distintas de las que ya tiene guardadas.
 
 REGLAS ESPECÍFICAS:
-- Devuelve:
-  - una comida
-  - una cena
-  - una alternativa opcional
-- Prioriza opciones keto o bajas en carbohidratos.
-- Puedes usar recetas guardadas, inventario e ingredientes favoritos si ayudan.
-- No recomiendes recetas guardadas que contengan ingredientes prohibidos.
-- Si falta algún ingrediente importante, dilo claramente en "aprovecha" o "consejo".
-- Piensa como una planificadora semanal.
-- Respeta SIEMPRE los ingredientes prohibidos.
-- Toda receta nueva debe poder guardarse como receta completa.
+- Devuelve exactamente 3 recetas nuevas: una comida, una cena y una alternativa.
+- Todas deben tener "origen": "nueva".
+- Respeta la dieta indicada en el contexto. Si dice Keto, las tres recetas deben ser keto, no simplemente bajas en carbohidratos.
+- NO reutilices recetas de la biblioteca ni copies sus nombres o preparaciones.
+- NO bases las propuestas en el inventario: el menú es inspiración nueva.
+- Si hace falta comprar ingredientes, indícalos en la receta.
+- Busca variedad de ingredientes, técnicas y platos.
+- Respeta SIEMPRE los ingredientes prohibidos, alergias, intolerancias y rechazos.
+- Las tres recetas deben tener cantidades, tiempos, raciones y pasos completos, y se deben poder guardar.
 `
 
   return [
