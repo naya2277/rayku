@@ -9,6 +9,7 @@ import {
 import {
   normalizarInventario,
 } from './normalizers'
+import { combinarEntradaInventario } from '../lib/inventario/combinarLotes'
 
 import {
   guardarInventarioLocal,
@@ -49,19 +50,13 @@ export const crearInventarioSlice = (
 
   agregarItemInventario:
     (item) => {
-      const nuevoInventario =
-        [
-          ...get().inventario,
-
-          normalizarInventario(
-            {
-              ...item,
-              id:
-                item.id ||
-                generarId(),
-            }
-          ),
-        ]
+      const nuevoInventario = combinarEntradaInventario(
+        get().inventario,
+        normalizarInventario({
+          ...item,
+          id: item.id || generarId(),
+        }),
+      )
 
       guardarInventarioLocal(
         nuevoInventario
