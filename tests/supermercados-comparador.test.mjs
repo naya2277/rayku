@@ -48,3 +48,28 @@ test('si falta un producto no presenta el parcial como total',()=>{
  assert.deepEqual(r.sinPrecio,['Boniato'])
  assert.equal(r.totalConPrecio,1)
 })
+
+test('no infravalora un envase cerrado cuando solo se necesita una parte',()=>{
+ const necesidades=[{nombre:'Salmón',cantidad:250,unidad:'g'}]
+ const datos=[{store:'Consum',product_key:'salmon',price:8,quantity:1,unit:'kg'}]
+ const r=compararSupermercados(necesidades,datos,[],['Consum'],'ahorro','2026-11-11',false,4)
+ assert.equal(r.coste,8)
+})
+test('compra suficientes envases completos y mantiene la conversión kg/g',()=>{
+ const necesidades=[{nombre:'Salmón',cantidad:1250,unidad:'g'}]
+ const datos=[{store:'Consum',product_key:'salmon',price:8,quantity:1,unit:'kg'}]
+ const r=compararSupermercados(necesidades,datos,[],['Consum'],'ahorro','2026-11-11',false,4)
+ assert.equal(r.coste,16)
+})
+test('admite un precio a granel solo cuando se identifica expresamente',()=>{
+ const necesidades=[{nombre:'Zanahoria',cantidad:250,unidad:'g'}]
+ const datos=[{store:'Consum',product_key:'zanahoria',price:2,quantity:1,unit:'kg',sale_mode:'granel'}]
+ const r=compararSupermercados(necesidades,datos,[],['Consum'],'ahorro','2026-11-11',false,4)
+ assert.equal(r.coste,0.5)
+})
+test('unidades indivisibles no se cobran proporcionalmente',()=>{
+ const necesidades=[{nombre:'Huevos',cantidad:2,unidad:'u'}]
+ const datos=[{store:'Consum',product_key:'huevo',price:3,quantity:12,unit:'u'}]
+ const r=compararSupermercados(necesidades,datos,[],['Consum'],'ahorro','2026-11-11',false,4)
+ assert.equal(r.coste,3)
+})
