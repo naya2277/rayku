@@ -667,7 +667,7 @@ export default function Compra() {
                 color: '#9e7d90',
               }}
             >
-              Aún no hay ingredientes pendientes en este rango ni extras manuales 💕
+              {comprasPosteriores.length ? '✅ No hay compras necesarias hoy. Los frescos para próximos días están programados arriba.' : 'Aún no hay ingredientes pendientes en este rango ni extras manuales 💕'}
             </p>
           </div>
         )}
