@@ -73,3 +73,21 @@ test('unidades indivisibles no se cobran proporcionalmente',()=>{
  const r=compararSupermercados(necesidades,datos,[],['Consum'],'ahorro','2026-11-11',false,4)
  assert.equal(r.coste,3)
 })
+
+test('nunca considera una promoción de coste cero ni fechas invertidas',()=>{
+ const base={source:'ALDI',product_key:'pera',product_name:'Pera',price:0,quantity:1,unit:'kg',valid_from:'2026-11-09',valid_until:'2026-11-15',requires_loyalty:false,source_url:'https://www.aldi.es/ofertas.html'}
+ assert.equal(ofertaVigente(base,'2026-11-11',false),false)
+ assert.equal(ofertaVigente({...base,price:1,valid_from:'2026-11-16'},'2026-11-11',false),false)
+})
+test('no cobra a granel unidades que no pueden fraccionarse',()=>{
+ const necesidades=[{nombre:'Huevos',cantidad:2,unidad:'u'}]
+ const datos=[{store:'Consum',product_key:'huevo',price:3,quantity:12,unit:'u',sale_mode:'granel'}]
+ const r=compararSupermercados(necesidades,datos,[],['Consum'],'ahorro','2026-11-11',false,4)
+ assert.deepEqual(r.sinPrecio,['Huevos'])
+})
+test('normaliza plurales de alimentos sin perder la coincidencia',()=>{
+ const necesidades=[{nombre:'Champiñones',cantidad:500,unidad:'g'}]
+ const datos=[{store:'Consum',product_key:'champinon',price:2.4,quantity:500,unit:'g'}]
+ const r=compararSupermercados(necesidades,datos,[],['Consum'],'ahorro','2026-11-11',false,4)
+ assert.equal(r.coste,2.4)
+})
