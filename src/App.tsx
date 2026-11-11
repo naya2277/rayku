@@ -80,6 +80,7 @@ function MainApp() {
   const [modoTablet, setModoTablet] = useState(false)
   const [inicializando, setInicializando] = useState(true)
   const [errorInicializacion, setErrorInicializacion] = useState('')
+  const [reintentosInicio, setReintentosInicio] = useState(0)
   const [paginaAnteriorConfiguracion, setPaginaAnteriorConfiguracion] = useState<Pagina>('inicio')
   const [perfilConfigurado, setPerfilConfigurado] = useState(() => cargarPerfilHogar().configurado)
 
@@ -186,7 +187,7 @@ function MainApp() {
     }
     void initialize()
     return () => { cancelled = true }
-  }, [session?.user.id])
+  }, [session?.user.id, reintentosInicio])
 
   /* Previous personal-only startup sync disabled: initialization above now
      loads personal data first, then activates the household if it exists.
@@ -295,6 +296,18 @@ function MainApp() {
 
   if (inicializando && session) {
     return <div className="app"><main className="contenido-principal"><section className="card" role="status"><h2>🏡 Preparando tu hogar…</h2><p>Estamos cargando tus recetas, planning, compra e inventario. Espera antes de hacer cambios.</p></section></main></div>
+  }
+
+  if (errorInicializacion) {
+    return <div className="app"><main className="contenido-principal">
+      <section className="card" role="alert">
+        <h2>⚠️ No se ha podido cargar Rayku con seguridad</h2>
+        <p>{errorInicializacion}</p>
+        <p>Para proteger tus recetas y datos, la edición permanecerá bloqueada hasta recuperar la conexión.</p>
+        <button type="button" className="btn-principal" onClick={() => setReintentosInicio(n => n + 1)}>Reintentar conexión</button>
+        <button type="button" className="btn-secundario" onClick={() => { void supabase.auth.signOut() }}>Cerrar sesión</button>
+      </section>
+    </main></div>
   }
 
   if ((!perfilConfigurado && workspace.selection === 'personal') || paginaActual === 'configuracion') {
