@@ -20,23 +20,12 @@ export function generarPropuestasHogar(
   ingredientesFavoritos:[...new Set([...preferencias.ingredientesFavoritos,...favoritos].map(x=>x.trim()).filter(Boolean))],
  }
  const elegibles=recetas.filter(r=>
-  recetaPermitida(r,combinadas) && recetaCompatibleHogar(r,hogar))
- const propuestas:ReturnType<typeof generarMenuSemanal>['propuestas']=[]
- const sinCubrir:string[]=[]
- // Score each day against the current calendar plus earlier draft choices.
- // Calling the generator one day at a time lets families define busy days.
- for(const fecha of [...fechas].sort()){
-  const limite=limitesPorFecha[fecha]??minutosMaximos
-  const disponibles=elegibles.filter(r=>r.tiempo>0 && r.tiempo<=limite)
-  const resultado=generarMenuSemanal([fecha],disponibles,
-    [...planning,...propuestas.map(p=>({
-      id:'borrador-'+p.fecha+'-'+p.tipoComida,fecha:p.fecha,tipoComida:p.tipoComida,
-      recetaId:p.recetaId,recetaIds:[p.recetaId],comidaLibre:'',nota:'',cocinado:false,
-    }))],combinadas,inventario,hogar,priorizarInventario)
-  propuestas.push(...resultado.propuestas)
-  sinCubrir.push(...resultado.sinCubrir)
+  r.tiempo>0 && recetaPermitida(r,combinadas) && recetaCompatibleHogar(r,hogar))
+ const limites=Object.fromEntries(fechas.map(f=>[f,limitesPorFecha[f]??minutosMaximos]))
+ return {
+  ...generarMenuSemanal(fechas,elegibles,planning,combinadas,inventario,hogar,priorizarInventario,limites),
+  elegibles,restricciones:combinadas,
  }
- return {propuestas,sinCubrir,elegibles,restricciones:combinadas}
 
 }
 
