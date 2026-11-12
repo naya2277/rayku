@@ -64,7 +64,7 @@ const FILTROS: {
   { key: 'otros', label: '✨ Otros' },
 ]
 
-export default function Inventario() {
+export default function Inventario({ householdId }: { householdId?: string }) {
   const {
     inventario,
     recetas,
@@ -409,7 +409,7 @@ export default function Inventario() {
       </div>
 
       <BatchCooking recetas={recetas} inventario={inventario} agregar={agregarItemInventario}/>
-      <EntradaRapida agregar={agregarItemInventario} />
+      <EntradaRapida agregar={agregarItemInventario} householdId={householdId} />
 
       {productosUrgentes.length > 0 && (
         <div
@@ -782,6 +782,7 @@ export default function Inventario() {
 
       {mostrarFormulario && (
         <FormularioInventario
+          householdId={householdId}
           agregarItemInventario={
             agregarItemInventario
           }

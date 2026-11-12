@@ -1,4 +1,6 @@
 import { useRef, useState } from 'react'
+import TabletShoppingCatalog from '../components/tablet/TabletShoppingCatalog'
+import { generarId } from '../store/utils'
 import { addDays, addWeeks, format, startOfWeek, subWeeks } from 'date-fns'
 import { es } from 'date-fns/locale'
 import { useRaykuStore } from '../store'
@@ -6,38 +8,19 @@ import { separarIngredientesPorInventario } from '../lib/generarListaCompra'
 import { planificarCompraPorConservacion } from '../lib/compra/planificarCompraPorConservacion'
 import './TabletMode.css'
 
-const PRODUCTOS = [
-  ['🍗','Muslitos de pollo'],['🥩','Pechuga de pollo'],['🍅','Tomates'],
-  ['🥔','Patatas'],['🥚','Huevos'],['🥛','Leche'],['🍚','Arroz'],
-  ['🍝','Macarrones'],['🥕','Zanahorias'],['🥦','Brócoli'],
-  ['🐟','Salmón'],['🧀','Queso'],['🍎','Manzanas'],['🍞','Pan'],
-] as const
-const CATEGORIAS = ['Todos', 'Carnes y pescado', 'Verduras', 'Básicos', 'Lácteos y huevos'] as const
-const CATEGORIA_PRODUCTO: Record<string, typeof CATEGORIAS[number]> = {
-  'Muslitos de pollo': 'Carnes y pescado', 'Pechuga de pollo': 'Carnes y pescado',
-  'Salmón': 'Carnes y pescado', 'Tomates': 'Verduras', 'Patatas': 'Verduras',
-  'Zanahorias': 'Verduras', 'Brócoli': 'Verduras', 'Manzanas': 'Verduras',
-  'Huevos': 'Lácteos y huevos', 'Leche': 'Lácteos y huevos',
-  'Queso': 'Lácteos y huevos', 'Arroz': 'Básicos',
-  'Macarrones': 'Básicos', 'Pan': 'Básicos',
-}
-const CANTIDADES = ['1 unidad', '2 unidades', '500 g', '1 kg', '1 paquete', '2 paquetes']
+type Props = { onSalir: () => void; householdId?: string }
 
-type Props = { onSalir: () => void }
-
-export default function TabletMode({ onSalir }: Props) {
+export default function TabletMode({ onSalir, householdId }: Props) {
   const { planning, recetas, inventario, compraManual, checksCompra, agregarItemCompraManual, eliminarItemCompraManual, guardarHuecoPlanning, limpiarHuecoPlanning } = useRaykuStore()
-  const vistaPrevia = window.location.hostname.includes('rayku-git-rayku-20')
+  const vistaPrevia = window.location.hostname === 'rayku-20.vercel.app' || window.location.hostname.includes('rayku-git-rayku-20') || (/^rayku-[a-z0-9]+-planningdecomidas\.vercel\.app$/.test(window.location.hostname))
   const [edicionPruebas, setEdicionPruebas] = useState(() => localStorage.getItem('rayku-tablet-edicion-activada-v1') === 'si')
   const soloLectura = vistaPrevia && !edicionPruebas
   const [panel, setPanel] = useState<'calendario' | 'compra'>('calendario')
   const [semana, setSemana] = useState(new Date())
   const [recetaId, setRecetaId] = useState<string | null>(null)
-  const [producto, setProducto] = useState<string | null>(null)
   const [huecoEditando, setHuecoEditando] = useState<{ fecha: string; tipo: 'comida' | 'cena' } | null>(null)
   const [busquedaReceta, setBusquedaReceta] = useState('')
   const [confirmacion, setConfirmacion] = useState('')
-  const [categoria, setCategoria] = useState<typeof CATEGORIAS[number]>('Todos')
   const inicio = startOfWeek(semana, { weekStartsOn: 1 })
   const touchX = useRef<number | null>(null)
   const receta = recetas.find(r => r.id === recetaId)
@@ -51,7 +34,6 @@ export default function TabletMode({ onSalir }: Props) {
   const generados = separarIngredientesPorInventario(comprasProgramadas.ahora, inventario).paraComprar
   const posteriores=comprasProgramadas.despues
   const pendientesGenerados = generados.filter(i => !checksCompra.includes(i.clave))
-  const productosVisibles = PRODUCTOS.filter(([, nombre]) => categoria === 'Todos' || CATEGORIA_PRODUCTO[nombre] === categoria)
 
 
   function activarEdicion() {
@@ -92,19 +74,13 @@ export default function TabletMode({ onSalir }: Props) {
     setBusquedaReceta('')
   }
 
-  function agregar(cantidad: string) {
-    if (!producto || soloLectura) return
-    agregarItemCompraManual({ id: '', nombre: producto, cantidad })
-    setConfirmacion(`${producto} · ${cantidad} añadido a la compra`)
-    setProducto(null)
-  }
 
   return (
     <div className="tablet-mode"
-      onTouchStart={e => { touchX.current = e.touches[0]?.clientX ?? null }}
+      onTouchStart={e => { touchX.current = (e.target as HTMLElement).closest('.tablet-catalog-panel, .tablet-overlay') ? null : e.touches[0]?.clientX ?? null }}
       onTouchEnd={e => {
         const final = e.changedTouches[0]?.clientX
-        if (touchX.current === null || final === undefined || recetaId || producto || huecoEditando) return
+        if (touchX.current === null || final === undefined || recetaId || huecoEditando) return
         const distancia = final - touchX.current
         if (Math.abs(distancia) > 90) setPanel(distancia < 0 ? 'compra' : 'calendario')
         touchX.current = null
@@ -149,20 +125,14 @@ export default function TabletMode({ onSalir }: Props) {
         </main>
       ) : (
         <main className="tablet-content">
-          <h1>🛒 Añadir sin escribir</h1>
-          <p>{soloLectura ? 'Activa la edición de prueba para añadir productos.' : 'Toca un producto y elige la cantidad.'}</p>
-          <div className="tablet-categories" aria-label="Categorías de productos">
-            {CATEGORIAS.map(c => <button key={c} className={categoria === c ? 'tablet-active' : ''} onClick={() => setCategoria(c)}>{c}</button>)}
-          </div>
+          <TabletShoppingCatalog householdId={householdId} soloLectura={soloLectura}
+            onAgregar={(nombre,cantidad) => {
+              if(soloLectura)return
+              agregarItemCompraManual({id:generarId(),nombre,cantidad})
+              setConfirmacion('✅ '+nombre+' · '+cantidad+' añadido a la compra')
+            }}/>
           <div className="tablet-shopping-summary">
-            🧺 En tu lista: {compraManual.length} añadidos a mano · {pendientesGenerados.length} ingredientes del menú
-          </div>
-          <div className="tablet-products">
-            {productosVisibles.map(([emoji, nombre]) =>
-              <button key={nombre} onClick={() => { if (!soloLectura) setProducto(nombre) }} disabled={soloLectura}>
-                <span aria-hidden="true">{emoji}</span>{nombre}
-              </button>
-            )}
+            🧺 En tu lista: {compraManual.length} añadidos manualmente · {pendientesGenerados.length} ingredientes del menú
           </div>
           {posteriores.length>0&&<section className="tablet-later" aria-label="Compra programada para más adelante">
             <h2>📅 Comprar más adelante ({posteriores.length})</h2>
@@ -197,13 +167,6 @@ export default function TabletMode({ onSalir }: Props) {
             <button onClick={() => elegirReceta(null)}>➖ Dejar sin planificar</button>
           </div>
           <button className="btn-secundario" onClick={() => { setHuecoEditando(null); setBusquedaReceta('') }}>Cancelar</button>
-        </div>
-      </div>}
-      {producto && <div className="tablet-overlay" role="dialog" aria-modal="true" aria-label={`Cantidad de ${producto}`}>
-        <div className="tablet-dialog">
-          <h2>¿Cuánto necesitas de {producto}?</h2>
-          <div className="tablet-quantities">{CANTIDADES.map(c => <button key={c} onClick={() => agregar(c)}>{c}</button>)}</div>
-          <button className="btn-secundario" onClick={() => setProducto(null)}>Cancelar</button>
         </div>
       </div>}
       {receta && <div className="tablet-overlay" role="dialog" aria-modal="true" aria-label={receta.nombre}>

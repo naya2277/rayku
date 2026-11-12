@@ -88,6 +88,7 @@ function MainApp() {
   const [reintentosInicio, setReintentosInicio] = useState(0)
   const [paginaAnteriorConfiguracion, setPaginaAnteriorConfiguracion] = useState<Pagina>('inicio')
   const [perfilConfigurado, setPerfilConfigurado] = useState(() => cargarPerfilHogar().configurado)
+  const [permitirSalirConfiguracion, setPermitirSalirConfiguracion] = useState(false)
 
   const [session, setSession] =
     useState<Session | null>(null)
@@ -281,6 +282,17 @@ function MainApp() {
       }, 2500)
     }
 
+  const salirDeHogar = () => {
+    // Explicit leave never writes a partial draft to the profile.
+    setPermitirSalirConfiguracion(true)
+    setPaginaActual(paginaAnteriorConfiguracion === 'configuracion' ? 'inicio' : paginaAnteriorConfiguracion)
+  }
+
+  const abrirHogar = () => {
+    setPaginaAnteriorConfiguracion(paginaActual)
+    setPaginaActual('configuracion')
+  }
+
   const salir = async () => {
     if (workspace.selection !== 'personal') {
       try {
@@ -315,24 +327,27 @@ function MainApp() {
     </main></div>
   }
 
-  if ((!perfilConfigurado && workspace.selection === 'personal') || paginaActual === 'configuracion') {
-    return <div className="app"><main className="contenido-principal">
-      {perfilConfigurado && <button type="button" className="btn-secundario" onClick={() => setPaginaActual(paginaAnteriorConfiguracion)}>← Volver sin guardar</button>}
+  if ((!perfilConfigurado && workspace.selection === 'personal' && !permitirSalirConfiguracion) || paginaActual === 'configuracion') {
+    return <div className="app"><main className="contenido-principal rayku-home-screen">
+      <div className="rayku-home-topbar">
+        <div><strong>🏡 Configuración del hogar</strong><p>Puedes volver a Rayku sin guardar cambios.</p></div>
+        <button type="button" className="btn-secundario" onClick={salirDeHogar}>← Salir de Hogar sin guardar</button>
+      </div>
       <WorkspaceSwitcher userId={session.user.id} selection={workspace.selection} onSelect={workspace.select} busy={workspace.busy} />
       {workspace.selection === 'personal' && !perfilConfigurado ? (
         <details style={{maxWidth:900,margin:'12px auto',padding:14,border:'1px solid #eddbe7',borderRadius:14}}>
           <summary>Configuración antigua para utilizar Rayku sin un hogar compartido</summary>
           <p>Si tienes una invitación, no necesitas configurar «Persona 1». Abre el enlace o pégalo en «Unirme al hogar» arriba.</p>
-          <ConfiguracionHogar onTerminar={() => { setPerfilConfigurado(true); setPaginaActual('inicio') }} onInventario={() => { setPerfilConfigurado(true); setPaginaActual('inventario') }} />
+          <ConfiguracionHogar onCancelar={salirDeHogar} onTerminar={() => { setPerfilConfigurado(true); setPaginaActual('inicio') }} onInventario={() => { setPerfilConfigurado(true); setPaginaActual('inventario') }} />
         </details>
       ) : (
-        <ConfiguracionHogar sharedHousehold={workspace.selection !== 'personal'} onTerminar={() => { setPerfilConfigurado(true); setPaginaActual(paginaAnteriorConfiguracion) }} onInventario={() => { setPerfilConfigurado(true); setPaginaActual('inventario') }} />
+        <ConfiguracionHogar sharedHousehold={workspace.selection !== 'personal'} onCancelar={salirDeHogar} onTerminar={() => { setPerfilConfigurado(true); setPaginaActual(paginaAnteriorConfiguracion) }} onInventario={() => { setPerfilConfigurado(true); setPaginaActual('inventario') }} />
       )}
     </main></div>
   }
 
   if (modoTablet) {
-    return <TabletMode onSalir={() => setModoTablet(false)} />
+    return <TabletMode onSalir={() => setModoTablet(false)} householdId={workspace.selection !== 'personal' ? workspace.selection : undefined} />
   }
 
   return (
@@ -471,7 +486,6 @@ function MainApp() {
             📦 Inventario
           </button>
 
-          <button type="button" className="btn-secundario" onClick={() => { setPaginaAnteriorConfiguracion(paginaActual); setPaginaActual('configuracion') }}>⚙️ Hogar</button>
           <button type="button" className="btn-secundario" onClick={() => setModoTablet(true)}>
             📱 Modo tablet
           </button>
@@ -493,6 +507,7 @@ function MainApp() {
           >
             🚪 Salir
           </button>
+          <button type="button" className="btn-secundario" onClick={abrirHogar}>⚙️ Hogar</button>
         </div>
       </nav>
 
@@ -581,7 +596,7 @@ function MainApp() {
         )}
         {paginaActual ===
           'inventario' && (
-          <Inventario />
+          <Inventario householdId={workspace.selection !== 'personal' ? workspace.selection : undefined} />
         )}
         </>}
       </main>

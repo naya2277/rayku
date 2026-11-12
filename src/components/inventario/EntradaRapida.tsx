@@ -5,9 +5,9 @@ import type { UbicacionInventario } from '../../lib/inventario'
 import { UNIDADES_CATALOGO } from '../../lib/inventario/catalogoProductos'
 import SelectorProducto from './SelectorProducto'
 
-type Props = { agregar: (item: ItemInventario) => void }
+type Props = { agregar: (item: ItemInventario) => void; householdId?: string }
 type Entrada = {nombre:string;cantidad:number;unidad:string}
-export default function EntradaRapida({ agregar }: Props) {
+export default function EntradaRapida({ agregar, householdId }: Props) {
  const [nombre,setNombre] = useState('')
  const [cantidad,setCantidad] = useState('1')
  const [unidad,setUnidad] = useState('u.')
@@ -34,7 +34,7 @@ export default function EntradaRapida({ agregar }: Props) {
  return <section className="card" style={{marginBottom:18,display:'grid',gap:10}}>
   <h3>⚡ Añadir varios productos</h3>
   <p>Busca cada producto por su nombre fijo y añade la cantidad aparte. Puedes preparar una lista y guardarla de una vez.</p>
-  <SelectorProducto value={nombre} onChange={setNombre}/>
+  <SelectorProducto value={nombre} onChange={setNombre} householdId={householdId}/>
   <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
    <label style={{flex:'1 1 100px'}}>Cantidad
     <input type="number" min="0.01" step="any" value={cantidad} onChange={e=>setCantidad(e.target.value)}/>

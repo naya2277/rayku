@@ -38,7 +38,7 @@ export default function MyFoodProfile({householdId,userId,isOwner=false}:{househ
     if(field==='display_name')setProfile(p=>({...p,display_name:value}))
     else setDrafts(p=>({...p,[field]:value}))
   }
-  return <section style={{marginTop:16,padding:12,border:'1px solid #eddbe7',borderRadius:12}}>
+  return <section className="rayku-profile-settings" style={{marginTop:16,padding:16,border:'1px solid var(--borde2)',borderRadius:20}}>
     <h3>👤 {exists ? 'Editar mi perfil alimentario' : 'Configurar mi perfil alimentario'}</h3>
     <p>{exists ? 'Este es tu único perfil alimentario. Puedes actualizarlo siempre que quieras; los cambios sustituyen los datos anteriores, no crean otro perfil.' : 'Solo necesitas guardar este perfil una vez. Después podrás editarlo, sin crear perfiles adicionales.'} Los miembros de tu hogar pueden consultar tus restricciones para planificar.</p>
     {loaded && <form onSubmit={async e=>{e.preventDefault();setStatus('Guardando…');try{await saveFoodProfile({...profile,allergies:listaTexto(drafts.allergies??''),intolerances:listaTexto(drafts.intolerances??''),dislikes:listaTexto(drafts.dislikes??''),favorites:listaTexto(drafts.favorites??''),diets:listaTexto(drafts.diets??'')});setExists(true);setStatus('Perfil guardado en el hogar compartido')}catch(err){setStatus('Error al guardar: '+String(err))}}} style={{display:'grid',gap:10}}>

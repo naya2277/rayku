@@ -1,8 +1,14 @@
 import { useState } from 'react'
 import { APARATOS, DIETAS, cargarPerfilHogar, guardarPerfilHogar, listaTexto, type PerfilHogar, type PerfilPersona } from '../lib/perfilHogar'
 
-export default function ConfiguracionHogar({ onTerminar, onInventario, sharedHousehold = false }: { onTerminar: () => void; onInventario: () => void; sharedHousehold?: boolean }) {
+export default function ConfiguracionHogar({ onTerminar, onInventario, onCancelar, sharedHousehold = false }: { onTerminar: () => void; onInventario: () => void; onCancelar?: () => void; sharedHousehold?: boolean }) {
  const [perfil, setPerfil] = useState<PerfilHogar>(cargarPerfilHogar)
+ const [original] = useState<PerfilHogar>(cargarPerfilHogar)
+ const hayCambios = JSON.stringify(perfil) !== JSON.stringify(original)
+ const cancelar = () => {
+  if (hayCambios && !window.confirm('¿Salir de Hogar sin guardar los cambios de este formulario?')) return
+  onCancelar?.()
+ }
  const [otroAparato, setOtroAparato] = useState('')
  const agregarAparato = () => {
   const nombre = otroAparato.trim()
@@ -12,8 +18,11 @@ export default function ConfiguracionHogar({ onTerminar, onInventario, sharedHou
  }
  const editar = (id: string, cambios: Partial<PerfilPersona>) => setPerfil(p=>({...p,personas:p.personas.map(x=>x.id===id?{...x,...cambios}:x)}))
  const guardar = () => { guardarPerfilHogar({...perfil,configurado:true}); onTerminar() }
- return <section className="card" style={{display:'grid',gap:18}}>
-  <div><h1>🏡 Tu hogar en Rayku</h1><p>{sharedHousehold ? 'Aquí puedes editar los utensilios y la organización de la cocina. Tu perfil alimentario único se edita arriba, en «Mi perfil alimentario».' : 'Configura una vez los gustos y utensilios. Podrás cambiarlos cuando quieras.'}</p></div>
+ return <section className="card rayku-home-settings" style={{display:'grid',gap:18}}>
+  <div className="rayku-home-settings-header">
+    <div><h1>🏡 Tu hogar en Rayku</h1><p>{sharedHousehold ? 'Aquí puedes editar los utensilios y la organización de la cocina. Tu perfil alimentario único se edita arriba, en «Mi perfil alimentario».' : 'Configura una vez los gustos y utensilios. Podrás cambiarlos cuando quieras.'}</p></div>
+    {onCancelar && <button type="button" className="btn-secundario" onClick={cancelar}>← Volver sin guardar</button>}
+  </div>
   {!sharedHousehold && perfil.personas.slice(0,1).map((persona,i)=><div key={persona.id} style={{display:'grid',gap:9,borderTop:'1px solid var(--borde)',paddingTop:15}}>
    <h3>👤 Persona {i+1}</h3>
    <label>Nombre<input value={persona.nombre} onChange={e=>editar(persona.id,{nombre:e.target.value})}/></label>
@@ -32,7 +41,10 @@ export default function ConfiguracionHogar({ onTerminar, onInventario, sharedHou
     <button type="submit" className="btn-secundario" disabled={!otroAparato.trim()}>+ Añadir aparato</button>
   </form>
   <label style={{display:'flex',gap:8,alignItems:'center'}}><input type="checkbox" style={{width:'auto'}} checked={perfil.priorizarInventario} onChange={e=>setPerfil(p=>({...p,priorizarInventario:e.target.checked}))}/>Priorizar ingredientes que ya tengo</label>
-  <button className="btn-principal" onClick={guardar}>{sharedHousehold ? "💜 Guardar utensilios y organización" : "💜 Guardar configuración"}</button>
-  <button className="btn-secundario" onClick={()=>{guardarPerfilHogar({...perfil,configurado:true});onInventario()}}>📦 Guardar utensilios e ir al inventario</button>
+  <div className="rayku-home-footer">
+   <button type="button" className="btn-principal" onClick={guardar}>{sharedHousehold ? "💜 Guardar utensilios y organización" : "💜 Guardar configuración"}</button>
+   <button type="button" className="btn-secundario" onClick={()=>{guardarPerfilHogar({...perfil,configurado:true});onInventario()}}>📦 Guardar e ir al inventario</button>
+   {onCancelar && <button type="button" className="btn-secundario" onClick={cancelar}>Salir sin guardar</button>}
+  </div>
  </section>
 }

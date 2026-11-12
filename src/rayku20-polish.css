@@ -192,3 +192,52 @@
  .supermercados-rayku > header.card,.supermercados-rayku > section.card {padding:17px}
  .rayku-day-select {min-height:26px;min-width:26px;padding:2px}
 }
+
+/* Rayku 2.0 settings — accessible exit and consistent cozy cards */
+.rayku-home-screen {max-width:1030px;padding-top:16px}
+.rayku-home-screen .workspace-switcher {
+ width:100%;max-width:100%;margin:12px 0;
+ background:linear-gradient(120deg,#fffafc,#f7f1f8);
+ border:1px solid var(--borde2);border-radius:22px;
+ padding:18px 20px;box-shadow:0 8px 25px rgba(93,65,83,.05)
+}
+.rayku-home-topbar {
+ position:sticky;top:0;z-index:120;
+ display:flex;align-items:center;justify-content:space-between;gap:14px;
+ flex-wrap:wrap;padding:14px 18px;margin:0 0 15px;
+ border:1px solid #e9dce4;background:rgba(255,251,253,.97);
+ box-shadow:0 7px 18px rgba(91,65,80,.07);border-radius:18px;
+ backdrop-filter:blur(12px)
+}
+.rayku-home-topbar strong {font-size:17px;color:#6b5068;font-weight:900}
+.rayku-home-topbar p {font-size:12px;color:#8b7382;margin:4px 0 0}
+.rayku-home-topbar button {background:#fff;border-color:#dcb8cd;color:#80536e;font-size:13px}
+.rayku-home-settings {
+ padding:clamp(18px,3vw,28px)!important;
+ background:linear-gradient(155deg,#fffdfc,#fffbfe);
+ border-color:#ecdfeb;max-width:100%;
+}
+.rayku-home-settings-header {display:flex;gap:15px;justify-content:space-between;align-items:start;flex-wrap:wrap;padding-bottom:15px;border-bottom:1px solid #eee2e9}
+.rayku-home-settings-header h1 {font-size:clamp(22px,3vw,27px);color:#634e66;margin:0 0 6px}
+.rayku-home-settings-header p {font-size:14px;color:#816e7b;max-width:670px;line-height:1.6}
+.rayku-home-settings h3 {font-size:18px;color:#72566c}
+.rayku-home-settings label {font-size:13px;font-weight:800;color:#705967;line-height:1.5}
+.rayku-home-settings label:has(> input:not([type=checkbox])) {display:grid;gap:6px}
+.rayku-home-settings input:not([type=checkbox]) {min-height:44px;background:#fff}
+.rayku-home-settings input[type=checkbox] {accent-color:#ad7f98}
+.rayku-home-footer {display:flex;gap:10px;flex-wrap:wrap;align-items:center;padding-top:12px;border-top:1px solid var(--borde)}
+.rayku-home-footer button {min-height:47px}
+.rayku-product-picker {border:1px solid #eee0e9;border-radius:18px;padding:14px;background:#fffafc}
+.rayku-product-picker label {display:grid;gap:7px;font-weight:850;font-size:13px;color:#735a6c}
+.rayku-product-picker input,.rayku-product-picker select {min-height:46px;font-size:15px}
+.rayku-manual-product {display:grid;gap:12px;padding:14px;background:linear-gradient(120deg,#f8eff6,#f9f7ff);border:1px solid #e4d4e0;border-radius:16px}
+.rayku-manual-actions {display:flex;gap:9px;align-items:center;flex-wrap:wrap}
+.rayku-manual-product p {font-size:12px;line-height:1.5;color:#78576c}
+@media(max-width:600px){
+ .rayku-home-topbar{padding:10px 12px;top:0}
+ .rayku-home-topbar button{width:100%;justify-content:center}
+ .rayku-home-settings{padding:16px!important}
+ .rayku-home-settings-header>button{width:100%;justify-content:center}
+ .rayku-home-footer button,.rayku-manual-actions button{width:100%;justify-content:center}
+ .rayku-home-screen .workspace-switcher{padding:14px}
+}

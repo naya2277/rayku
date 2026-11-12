@@ -18,11 +18,13 @@ type Props = {
   ) => void
 
   cerrarFormulario: () => void
+  householdId?: string
 }
 
 export default function FormularioInventario({
   agregarItemInventario,
   cerrarFormulario,
+  householdId,
 }: Props) {
   const [
     ubicacionForm,
@@ -109,7 +111,7 @@ export default function FormularioInventario({
           gap: '12px',
         }}
       >
-        <SelectorProducto value={nombre} onChange={valor=>{setNombre(valor);setCategoria(detectarCategoriaIngrediente(valor))}} />
+        <SelectorProducto value={nombre} householdId={householdId} onChange={valor=>{setNombre(valor);setCategoria(detectarCategoriaIngrediente(valor))}} />
 
         <div
           style={{

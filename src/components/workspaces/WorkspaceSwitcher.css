@@ -17,3 +17,15 @@
   .workspace-switcher { margin-top: 8px; padding: 10px; }
   .workspace-switcher select { max-width: none; }
 }
+
+/* Rayku 2.0 · shared home setup and food profile */
+.rayku-profile-settings{background:linear-gradient(150deg,#fffdfc,#fff9fc);border:1px solid #eadde7!important;
+ box-shadow:0 7px 25px rgba(94,59,78,.045);border-radius:20px!important;padding:20px!important}
+.rayku-profile-settings h3{font-size:19px;font-weight:900;color:#71536a;margin-bottom:8px}
+.rayku-profile-settings p{color:#826f7e;line-height:1.55;margin:8px 0 15px}
+.rayku-profile-settings label{display:grid;gap:7px;color:#71586b;font-size:13px;font-weight:850}
+.rayku-profile-settings form{gap:13px!important}
+.rayku-profile-settings input,.rayku-profile-settings textarea{border:1px solid #e6d6e1;background:#fff;border-radius:13px}
+.rayku-profile-settings textarea{line-height:1.5;min-height:68px}
+.rayku-profile-settings button{justify-self:start}
+@media(max-width:600px){.rayku-profile-settings{padding:15px!important}.rayku-profile-settings button{width:100%;justify-content:center}}
