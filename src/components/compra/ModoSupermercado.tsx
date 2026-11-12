@@ -135,10 +135,7 @@ export default function ModoSupermercado({
                     item
                   )
 
-                const idCheck =
-                  manual
-                    ? `manual-${manual.id}`
-                    : item.nombre
+                const idCheck = item.clave
 
                 const comprado =
                   comprados.includes(
@@ -152,11 +149,7 @@ export default function ModoSupermercado({
 
                 return (
                   <button
-                    key={
-                      manual
-                        ? manual.id
-                        : item.nombre
-                    }
+                    key={item.clave}
                     type="button"
                     onClick={() =>
                       onToggleComprado(

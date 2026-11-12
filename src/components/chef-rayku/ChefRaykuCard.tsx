@@ -1,3 +1,8 @@
+import { readFoodProfiles } from '../../lib/foodProfiles'
+import { supabase } from '../../lib/supabase'
+import { listHouseholds } from '../../lib/workspaces'
+import { cargarPerfilHogar } from '../../lib/perfilHogar'
+import { revisarRespuestaChefRayku } from '../../lib/chef-rayku/revisarRespuesta'
 import {
   useState,
 } from 'react'
@@ -23,9 +28,9 @@ const ACCIONES: {
 }[] = [
   {
     tipo: 'ideas_recetas',
-    titulo: '🍳 Dame ideas de recetas',
+    titulo: '🍳 Generar 5 recetas nuevas',
     descripcion:
-      'Ideas ricas aunque falte algún ingrediente.',
+      'Cinco propuestas desde cero siguiendo tu dieta y exclusiones.',
   },
   {
     tipo: 'cocinar_inventario',
@@ -35,9 +40,9 @@ const ACCIONES: {
   },
   {
     tipo: 'menu_dieta',
-    titulo: '🥑 Menú según mi dieta',
+    titulo: '🥑 Crear menú nuevo según mi dieta',
     descripcion:
-      'Menú keto o bajo en carbohidratos adaptado a ti.',
+      'Tres recetas originales para comida, cena y alternativa según tu dieta.',
   },
 ]
 
@@ -182,7 +187,7 @@ function ListaPreferencias({
   )
 }
 
-export default function ChefRaykuCard() {
+export default function ChefRaykuCard({householdId}:{householdId?:string}) {
   const {
     recetas,
     inventario,
@@ -215,6 +220,7 @@ export default function ChefRaykuCard() {
     guardadas,
     setGuardadas,
   ] = useState<string[]>([])
+  const [prohibidosActuales,setProhibidosActuales] = useState<string[]>([])
 
   const [
     cargando,
@@ -251,6 +257,20 @@ export default function ChefRaykuCard() {
     setGuardadas([])
 
     try {
+      const {data:{user},error:authError} = await supabase.auth.getUser()
+      if(authError || !user) throw new Error('Inicia sesión antes de utilizar Chef Rayku.')
+      const profiles = householdId ? await readFoodProfiles(householdId) : []
+      const mine = profiles.find(p=>p.user_id===user.id)
+      const hogares = householdId ? await listHouseholds() : []
+      const esPropietario = !householdId || hogares.some(h=>h.id===householdId && h.created_by===user.id)
+      if(householdId && !esPropietario && !mine) {
+        throw new Error('Configura primero tu perfil alimentario en Hogar para que Rayku no utilice las preferencias de otra persona.')
+      }
+      const legacy = esPropietario && !mine ? cargarPerfilHogar().personas[0] : undefined
+      const historicas = esPropietario && !mine ? preferenciasAlimentarias : {ingredientesProhibidos:[],ingredientesFavoritos:[]}
+      const prohibidos = [...new Set([...historicas.ingredientesProhibidos,...(legacy?.prohibidos??[]),...(legacy?.rechazadas??[]),...(mine?.allergies??[]),...(mine?.intolerances??[]),...(mine?.dislikes??[])])]
+      const favoritos = [...new Set([...historicas.ingredientesFavoritos,...(legacy?.favoritos??[]),...(mine?.favorites??[])])]
+      setProhibidosActuales(prohibidos)
       const texto =
         await consultarChefRayku(
           tipo,
@@ -259,11 +279,15 @@ export default function ChefRaykuCard() {
             inventario,
             planning,
             historialCocinado,
-            preferenciasAlimentarias,
+            preferenciasAlimentarias:{...historicas,ingredientesProhibidos:prohibidos,ingredientesFavoritos:favoritos},
+            dietasSolicitante:mine?.diets?.length ? mine.diets : (legacy?.dietas ?? []),
           }
         )
 
-      setRespuesta(texto)
+      const dietas=mine?.diets?.length ? mine.diets : (legacy?.dietas ?? [])
+      const validacion = revisarRespuestaChefRayku(texto,tipo,prohibidos,dietas,recetas.map(r=>r.nombre))
+      setRespuesta(validacion.respuesta)
+      if(validacion.descartadas>0) setError('Chef Rayku ha descartado '+validacion.descartadas+' propuesta(s) por incompatibilidades, repeticiones o datos incompletos. Revisa siempre los ingredientes y etiquetas.')
     } catch (err) {
       console.error(err)
 
@@ -293,6 +317,11 @@ export default function ChefRaykuCard() {
     if (!idea.nombre) {
       return
     }
+    const norm=(text:string)=>text.toLocaleLowerCase('es').normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim()
+    const ingredientes=(idea.ingredientes??[]).map(norm)
+    const infraccion=prohibidosActuales.find(p=>norm(p).length>2 && ingredientes.some(i=>i.includes(norm(p))))
+    if(infraccion){setError('No se ha guardado: esta propuesta contiene un ingrediente excluido ('+infraccion+').');return}
+    if(recetas.some(r=>norm(r.nombre)===norm(idea.nombre??''))){setError('Esa receta ya está en tu biblioteca. No se ha duplicado.');return}
 
     addReceta({
       id: '',
@@ -439,9 +468,10 @@ export default function ChefRaykuCard() {
             marginBottom: 12,
           }}
         >
-          Rayku tendrá esto en cuenta al generar recetas e ideas.
+          {householdId ? 'Cada persona tiene sus propias exclusiones. Edita las tuyas desde ⚙️ Hogar → Mi perfil alimentario.' : 'Rayku tendrá esto en cuenta al generar recetas e ideas.'}
         </p>
 
+        {!householdId && (
         <div
           style={{
             display: 'grid',
@@ -484,6 +514,7 @@ export default function ChefRaykuCard() {
             color="#8a6ec7"
           />
         </div>
+        )}
       </div>
 
       <div

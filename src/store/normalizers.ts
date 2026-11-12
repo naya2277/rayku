@@ -91,6 +91,9 @@ export const normalizarInventario = (
     fechaCaducidad:
       item.fechaCaducidad ??
       null,
+    fechaPreparacion: item.fechaPreparacion ?? null,
+    fechaConsumoSugerida: item.fechaConsumoSugerida ?? null,
+    esCocinado: item.esCocinado ?? false,
     fechaDescongelar:
       item.fechaDescongelar ??
       null,
@@ -106,7 +109,9 @@ export const normalizarInventario = (
 export const normalizarCompraManual = (
   item: any
 ): ItemCompraManual => ({
-  id: item.id ?? generarId(),
+  // The manual purchase form passes id: ''. Empty IDs must not be persisted:
+  // they make independent items share the same checkbox and break sync.
+  id: typeof item.id === 'string' && item.id.trim() ? item.id : generarId(),
   nombre: item.nombre ?? '',
   cantidad:
     item.cantidad === null ||
@@ -157,6 +162,7 @@ export const normalizarPlanning = (
     racionesOverride:
       item.racionesOverride ??
       null,
+    platosPorPersona: item.platosPorPersona && typeof item.platosPorPersona === 'object' && !Array.isArray(item.platosPorPersona) ? item.platosPorPersona : {},
     cocinado:
       item.cocinado ?? false,
   }

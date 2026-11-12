@@ -19,6 +19,17 @@ import {
 } from '../store'
 
 import DiaPlanning from '../components/planning/DiaPlanning'
+import PlatosPersonales from '../components/planning/PlatosPersonales'
+import SustituirPlato from '../components/planning/SustituirPlato'
+import AdvertenciasPersonales from '../components/planning/AdvertenciasPersonales'
+import AsistenteSemanal from '../components/planning/AsistenteSemanal'
+import Replanificador from '../components/planning/Replanificador'
+import { usePreciosHogar } from '../lib/householdPrices'
+import { cargarPerfilHogar, guardarPerfilHogar } from '../lib/perfilHogar'
+import { generarPropuestasHogar, validarPropuestaHogar } from '../lib/propuestasMenu'
+import { readFoodProfiles, type FoodProfile } from '../lib/foodProfiles'
+import type { ItemPlanning } from '../store/types'
+import { calcularPresupuesto, type Precios } from '../lib/planificacionInteligente'
 
 const EMOJIS_DIA = [
   '🌸',
@@ -41,14 +52,39 @@ const COLORES_DIA = [
 ]
 
 type Props = {
+  householdId?: string
   onAbrirReceta: (
     recetaId: string
   ) => void
 }
 
 export default function Planning({
+  householdId,
   onAbrirReceta,
 }: Props) {
+  const [priorizarInventario, setPriorizarInventario] = useState(() => cargarPerfilHogar().priorizarInventario)
+  const [propuestas, setPropuestas] = useState<ReturnType<typeof generarPropuestasHogar> | null>(null)
+  const [seleccion, setSeleccion] = useState<Record<string,string>>({})
+  const [propuestaRapida,setPropuestaRapida] = useState<{recetaId:string;fecha:string;tipoComida:'comida'|'cena';originalId:string|null}|null>(null)
+  const [perfilesHogar,setPerfilesHogar] = useState<FoodProfile[]>([])
+  const [estadoPerfiles,setEstadoPerfiles] = useState<'loading'|'ready'|'error'>('loading')
+  const [minutosMaximos,setMinutosMaximos] = useState(()=>{
+    const valor=Number(localStorage.getItem('rayku-menu-tiempo-v1'))
+    return Number.isFinite(valor) && valor>0 ? valor : 45
+  })
+  const [presupuestoMaximo,setPresupuestoMaximo] = useState(()=>{
+    const valor=Number(localStorage.getItem('rayku-menu-presupuesto-v1'))
+    return Number.isFinite(valor) && valor>0 ? valor : 90
+  })
+  const [limitesPorFecha,setLimitesPorFecha] = useState<Record<string,number>>(()=>{
+    try{
+      const valor=JSON.parse(localStorage.getItem('rayku-menu-dias-v1')??'{}')
+      return valor && typeof valor==='object' && !Array.isArray(valor) ? valor : {}
+    }catch{return {}}
+  })
+  const [nuevoEvitar, setNuevoEvitar] = useState('')
+  const [avisoGeneracion, setAvisoGeneracion] = useState('')
+  const [nuevoFavorito, setNuevoFavorito] = useState('')
   const [
     semanaBase,
     setSemanaBase,
@@ -77,11 +113,19 @@ export default function Planning({
     recetas,
     planning,
     inventario,
+    preferenciasAlimentarias,
+    agregarIngredienteProhibido,
+    eliminarIngredienteProhibido,
+    agregarIngredienteFavorito,
+    eliminarIngredienteFavorito,
     guardarHuecoPlanning,
     limpiarHuecoPlanning,
+    replanificarHuecoPlanning,
     toggleCocinadoPlanning,
     updateReceta,
   } = useRaykuStore()
+
+  const preciosHogar=usePreciosHogar(householdId)
 
   const inicioSemana =
     startOfWeek(
@@ -100,6 +144,192 @@ export default function Planning({
           i
         )
     )
+
+  useEffect(()=>{localStorage.setItem('rayku-menu-tiempo-v1',String(minutosMaximos))},[minutosMaximos])
+  useEffect(()=>{localStorage.setItem('rayku-menu-presupuesto-v1',String(presupuestoMaximo))},[presupuestoMaximo])
+  useEffect(()=>{localStorage.setItem('rayku-menu-dias-v1',JSON.stringify(limitesPorFecha))},[limitesPorFecha])
+
+  useEffect(()=>{
+    if(!householdId) {setPerfilesHogar([]);setEstadoPerfiles('ready');return}
+    let active=true
+    const cargar=async()=>{
+      setEstadoPerfiles('loading')
+      try{
+        const perfiles=await readFoodProfiles(householdId)
+        if(!active)return
+        setPerfilesHogar(perfiles)
+        setEstadoPerfiles('ready')
+        setPropuestas(null)
+      }catch(error){
+        console.warn('No se pudieron cargar perfiles alimentarios',error)
+        if(active)setEstadoPerfiles('error')
+      }
+    }
+    void cargar()
+    window.addEventListener('rayku-food-profiles-updated',cargar)
+    return()=>{active=false;window.removeEventListener('rayku-food-profiles-updated',cargar)}
+  },[householdId])
+
+  const presupuestoPropuesto = (() => {
+    if(!propuestas)return null
+    const precios:Precios=preciosHogar.precios
+    const borrador:ItemPlanning[] = propuestas.propuestas.flatMap(p=>{
+      const id=seleccion[p.fecha+'|'+p.tipoComida]
+      return id ? [{id:'preview-'+p.fecha+p.tipoComida,fecha:p.fecha,tipoComida:p.tipoComida,recetaId:id,recetaIds:[id],comidaLibre:'',nota:'',cocinado:false}] : []
+    })
+    return calcularPresupuesto([...planning,...borrador],recetas,inventario,
+      format(dias[0],'yyyy-MM-dd'),format(dias[6],'yyyy-MM-dd'),precios)
+  })()
+
+
+  const proponerRecetaRapida=(recetaId:string,destino?:{fecha:string;tipoComida:'comida'|'cena'})=>{
+    const hoy=format(new Date(),'yyyy-MM-dd')
+    const opciones=dias.map(fecha=>format(fecha,'yyyy-MM-dd'))
+      .filter(fecha=>fecha>=hoy)
+      .flatMap(fecha=>[{'fecha':fecha,'tipoComida':'comida' as const},{'fecha':fecha,'tipoComida':'cena' as const}])
+    const espacio=destino??opciones.find(o=>!planning.some(p=>p.fecha===o.fecha&&p.tipoComida===o.tipoComida))
+    if(!espacio){
+      setAvisoGeneracion('No hay huecos libres esta semana para aprovechar las sobras.')
+      return
+    }
+    const original=planning.find(p=>p.fecha===espacio.fecha&&p.tipoComida===espacio.tipoComida)
+    if(original?.cocinado){
+      setAvisoGeneracion('No puedes sustituir un plato ya cocinado.')
+      return
+    }
+    setPropuestaRapida({recetaId,fecha:espacio.fecha,tipoComida:espacio.tipoComida,originalId:original?.id??null})
+  }
+  const confirmarRecetaRapida=()=>{
+    const propuesta=propuestaRapida
+    if(!propuesta)return
+    if(householdId && (estadoPerfiles!=='ready'||perfilesHogar.length<2)){
+      setAvisoGeneracion('Primero hay que cargar los dos perfiles alimentarios.')
+      return
+    }
+    const actual=useRaykuStore.getState()
+    const original=actual.planning.find(p=>p.fecha===propuesta.fecha&&p.tipoComida===propuesta.tipoComida)
+    if((original?.id??null)!==propuesta.originalId || original?.cocinado){
+      setAvisoGeneracion('La comida ha cambiado en otro dispositivo. Revisa el calendario antes de confirmar.')
+      setPropuestaRapida(null)
+      return
+    }
+    const receta=actual.recetas.find(r=>r.id===propuesta.recetaId)
+    const restricciones=generarPropuestasHogar(
+      dias.map(d=>format(d,'yyyy-MM-dd')),actual.recetas,actual.planning,actual.inventario,
+      perfilesHogar,actual.preferenciasAlimentarias,cargarPerfilHogar(),minutosMaximos,priorizarInventario,limitesPorFecha
+    ).restricciones
+    if(!receta || !validarPropuestaHogar(receta,propuesta.tipoComida,restricciones,cargarPerfilHogar(),limitesPorFecha[propuesta.fecha]??minutosMaximos)){
+      setAvisoGeneracion('La receta no cumple las restricciones o el tiempo máximo. No se ha guardado.')
+      return
+    }
+    if(!window.confirm('¿Guardar '+receta.nombre+' el '+propuesta.fecha+' ('+propuesta.tipoComida+')?')){
+      return
+    }
+    actual.guardarHuecoPlanning({
+      fecha:propuesta.fecha,tipoComida:propuesta.tipoComida,
+      recetaId:receta.id,recetaIds:[receta.id],comidaLibre:'',nota:'',cocinado:false
+    })
+    setPropuestaRapida(null)
+    setAvisoGeneracion('✅ Propuesta confirmada. Se recalculará la compra automáticamente.')
+  }
+
+  function aplazarComida(
+    fecha: string, tipo: 'comida' | 'cena',
+    nuevaFecha: string, nuevoTipo: 'comida' | 'cena',
+    destino: 'intercambiar' | 'mover' | 'cancelar',
+    fechaDesplazada?: string, tipoDesplazado?: 'comida' | 'cena',
+  ) {
+    const estado = useRaykuStore.getState()
+    const origen = estado.planning.find(p => p.fecha === fecha && p.tipoComida === tipo)
+    const ocupado = estado.planning.find(p => p.fecha === nuevaFecha && p.tipoComida === nuevoTipo)
+    if (!origen || origen.cocinado || !nuevaFecha || nuevaFecha < fecha ||
+      (fecha === nuevaFecha && tipo === nuevoTipo) || ocupado?.cocinado) return false
+    if (ocupado && destino === 'mover') {
+      if (!fechaDesplazada || !tipoDesplazado ||
+        (fechaDesplazada === nuevaFecha && tipoDesplazado === nuevoTipo) ||
+        (fechaDesplazada === fecha && tipoDesplazado === tipo) ||
+        estado.planning.some(p => p.fecha === fechaDesplazada && p.tipoComida === tipoDesplazado)) return false
+    }
+    // Clear both original slots first so moving meals never silently merges their contents.
+    estado.limpiarHuecoPlanning(fecha, tipo)
+    if (ocupado) estado.limpiarHuecoPlanning(nuevaFecha, nuevoTipo)
+    if (ocupado && destino !== 'cancelar') {
+      const desplazado = destino === 'intercambiar'
+        ? { fecha, tipoComida: tipo }
+        : { fecha: fechaDesplazada!, tipoComida: tipoDesplazado! }
+      estado.guardarHuecoPlanning({ ...ocupado, ...desplazado })
+    }
+    estado.guardarHuecoPlanning({ ...origen, fecha: nuevaFecha, tipoComida: nuevoTipo })
+    return true
+  }
+
+  async function sugerirSemana() {
+    setAvisoGeneracion('')
+    let perfiles=perfilesHogar
+    if(householdId) {
+      try {
+        perfiles=await readFoodProfiles(householdId)
+        if(perfiles.length<2){
+          setAvisoGeneracion('Para proponer un menú compartido deben estar disponibles los perfiles alimentarios de los dos miembros.')
+          return
+        }
+        setPerfilesHogar(perfiles)
+        setEstadoPerfiles('ready')
+      } catch {
+        setAvisoGeneracion('No se pueden comprobar las restricciones del hogar. No se ha generado ni guardado ningún menú.')
+        return
+      }
+    }
+    const resultado=generarPropuestasHogar(dias.map(d=>format(d,'yyyy-MM-dd')),
+      recetas,planning,inventario,perfiles,preferenciasAlimentarias,
+      cargarPerfilHogar(),minutosMaximos,priorizarInventario,limitesPorFecha)
+    setPropuestas(resultado)
+    setSeleccion(Object.fromEntries(resultado.propuestas.map(p=>[p.fecha+'|'+p.tipoComida,p.recetaId])))
+    setAvisoGeneracion(resultado.propuestas.length
+      ? 'Estas son propuestas. Nada se guardará en el calendario hasta que las confirmes.'
+      : 'No hay recetas compatibles para los huecos libres. Puedes ajustar el tiempo máximo o las recetas disponibles.')
+  }
+  function cambiarSemana(nueva: Date) { setSemanaBase(nueva); setPropuestas(null) }
+  function aceptarSemana() {
+    if(!propuestas)return
+    if(householdId && estadoPerfiles!=='ready') {
+      setAvisoGeneracion('No se puede confirmar sin comprobar los perfiles alimentarios del hogar.')
+      return
+    }
+    const presupuestoIncompleto=preciosHogar.estado!=='ready' || (presupuestoPropuesto?.sinPrecio??0)>0
+    const supera=(presupuestoPropuesto?.estimado??0)>presupuestoMaximo
+    if(supera || presupuestoIncompleto){
+      const aviso=supera
+        ? 'La estimación supera el presupuesto indicado.'
+        : 'No se puede garantizar el presupuesto porque faltan precios de referencia.'
+      if(!window.confirm(aviso+' ¿Quieres confirmar igualmente las recetas seleccionadas?'))return
+    }
+    const actual=useRaykuStore.getState()
+    const hogar=cargarPerfilHogar()
+    let aceptadas=0
+    for(const p of propuestas.propuestas){
+      const id=seleccion[p.fecha+'|'+p.tipoComida]
+      if(!id || actual.planning.some(h=>h.fecha===p.fecha && h.tipoComida===p.tipoComida))continue
+      const receta=actual.recetas.find(r=>r.id===id)
+      if(!receta || !validarPropuestaHogar(receta,p.tipoComida,propuestas.restricciones,hogar,limitesPorFecha[p.fecha]??minutosMaximos))continue
+      actual.guardarHuecoPlanning({
+        fecha:p.fecha,tipoComida:p.tipoComida,recetaId:id,recetaIds:[id],
+        comidaLibre:'',nota:'',cocinado:false
+      })
+      aceptadas++
+    }
+    setPropuestas(null)
+    setAvisoGeneracion(aceptadas
+      ? 'Has confirmado '+aceptadas+' platos. Ahora aparecen en el calendario compartido.'
+      : 'No se añadió ningún plato: los huecos estaban ocupados o ya no eran compatibles.')
+  }
+  function rechazarReceta(id: string) {
+    const hogar = cargarPerfilHogar()
+    const persona = hogar.personas[0]
+    if (!persona) return
+    guardarPerfilHogar({...hogar, personas: hogar.personas.map(p=>p.id===persona.id?{...p,rechazadas:[...new Set([...p.rechazadas,id])]}:p)})
+    setPropuestas(null)
+  }
 
   const hoy = format(
     new Date(),
@@ -152,7 +382,7 @@ export default function Planning({
   }
 
   return (
-    <div>
+    <div className="rayku-planning">
       <div
         style={{
           display: 'flex',
@@ -170,7 +400,7 @@ export default function Planning({
         <button
           className="btn-secundario"
           onClick={() =>
-            setSemanaBase(
+            cambiarSemana(
               subWeeks(
                 semanaBase,
                 1
@@ -204,7 +434,7 @@ export default function Planning({
         <button
           className="btn-secundario"
           onClick={() =>
-            setSemanaBase(
+            cambiarSemana(
               addWeeks(
                 semanaBase,
                 1
@@ -216,6 +446,118 @@ export default function Planning({
         </button>
       </div>
 
+      <Replanificador planning={planning} recetas={recetas} inventario={inventario}
+        replanificar={replanificarHuecoPlanning}/>
+      <AsistenteSemanal planning={planning} recetas={recetas} inventario={inventario}
+        desde={format(dias[0], 'yyyy-MM-dd')} hasta={format(dias[6], 'yyyy-MM-dd')}
+        onAbrirReceta={onAbrirReceta} precios={preciosHogar.precios}
+        estadoPrecios={preciosHogar.estado} errorPrecios={preciosHogar.error}
+        onGuardarPrecio={preciosHogar.guardar} onProponer={proponerRecetaRapida}/>
+      {propuestaRapida && <section className="card" style={{marginBottom:18,borderColor:'#d8badf'}} role="region" aria-label="Revisar propuesta">
+        <h3>💜 Revisa la propuesta antes de guardar</h3>
+        <p><strong>{recetas.find(r=>r.id===propuestaRapida.recetaId)?.nombre}</strong> · {propuestaRapida.fecha} · {propuestaRapida.tipoComida}</p>
+        <p>{propuestaRapida.originalId?'Sustituirá el plato de este hueco.':'Se añadirá en un hueco libre.'}
+          {' '}Las compras se recalcularán después de confirmar.</p>
+        <div style={{display:'flex',gap:10,flexWrap:'wrap'}}>
+          <button className="btn-principal" type="button" onClick={confirmarRecetaRapida}>Confirmar propuesta</button>
+          <button className="btn-secundario" type="button" onClick={()=>setPropuestaRapida(null)}>Cancelar</button>
+        </div>
+      </section>}
+      <section className="card planning-proposals" style={{ padding: 18, marginBottom: 20 }}>
+        <h3>✨ Propuestas de Rayku</h3>
+        <details style={{ marginBottom: 14, display: householdId ? 'none' : undefined }}>
+          <summary style={{ cursor: 'pointer', fontWeight: 700 }}>💜 Preferencias del menú</summary>
+          <p>Los ingredientes que evites se excluirán de las propuestas. Tus favoritos tendrán prioridad.</p>
+          <div style={{ display: 'grid', gap: 12 }}>
+            <div>
+              <strong>🚫 Ingredientes que evito</strong>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, margin: '8px 0' }}>
+                {preferenciasAlimentarias.ingredientesProhibidos.map(i => <button type="button" className="btn-secundario" key={i} onClick={() => { eliminarIngredienteProhibido(i); setPropuestas(null) }}>{i} ✕</button>)}
+              </div>
+              <form onSubmit={e => { e.preventDefault(); agregarIngredienteProhibido(nuevoEvitar); setNuevoEvitar(''); setPropuestas(null) }} style={{ display: 'flex', gap: 8 }}>
+                <input aria-label="Ingrediente que evito" placeholder="Ej.: cebolla" value={nuevoEvitar} onChange={e => setNuevoEvitar(e.target.value)} style={{ flex: 1, minWidth: 0, padding: 10 }} />
+                <button type="submit" className="btn-secundario" disabled={!nuevoEvitar.trim()}>Añadir</button>
+              </form>
+            </div>
+            <div>
+              <strong>💕 Ingredientes favoritos</strong>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, margin: '8px 0' }}>
+                {preferenciasAlimentarias.ingredientesFavoritos.map(i => <button type="button" className="btn-secundario" key={i} onClick={() => { eliminarIngredienteFavorito(i); setPropuestas(null) }}>{i} ✕</button>)}
+              </div>
+              <form onSubmit={e => { e.preventDefault(); agregarIngredienteFavorito(nuevoFavorito); setNuevoFavorito(''); setPropuestas(null) }} style={{ display: 'flex', gap: 8 }}>
+                <input aria-label="Ingrediente favorito" placeholder="Ej.: salmón" value={nuevoFavorito} onChange={e => setNuevoFavorito(e.target.value)} style={{ flex: 1, minWidth: 0, padding: 10 }} />
+                <button type="submit" className="btn-secundario" disabled={!nuevoFavorito.trim()}>Añadir</button>
+              </form>
+            </div>
+          </div>
+        </details>
+        <p>Rayku propone comidas para los huecos libres. Revisa o cambia cada propuesta antes de confirmarla; nunca modifica el calendario por sí solo.</p>
+        <label style={{display:'flex',alignItems:'center',gap:8,marginBottom:12}}><input type="checkbox" style={{width:'auto'}} checked={priorizarInventario} onChange={e=>{setPriorizarInventario(e.target.checked);setPropuestas(null)}}/> 🧺 Priorizar lo que ya tengo en casa</label>
+        <div style={{display:'flex',gap:12,flexWrap:'wrap',marginBottom:12}}>
+          <label>⏱️ Tiempo máximo por receta
+            <select value={minutosMaximos} onChange={e=>{setMinutosMaximos(Number(e.target.value));setPropuestas(null)}}>
+              {[15,20,30,45,60,90,120,240].map(n=><option key={n} value={n}>{n} min</option>)}
+            </select>
+          </label>
+          <label>💶 Presupuesto máximo semanal (€)
+            <input type="number" min="1" step="1" value={presupuestoMaximo}
+              onChange={e=>setPresupuestoMaximo(Math.max(1,Number(e.target.value)||1))}/>
+          </label>
+        </div>
+        <details style={{marginBottom:12}}>
+          <summary>📅 ¿Algún día tenéis menos tiempo para cocinar?</summary>
+          <p style={{fontSize:13}}>Estos límites se aplican solo al día elegido; el resto utiliza el tiempo general.</p>
+          <div style={{display:'grid',gap:8,marginTop:10}}>
+            {dias.map(fecha=>{
+              const id=format(fecha,'yyyy-MM-dd')
+              return <label key={id} style={{display:'flex',justifyContent:'space-between',alignItems:'center',gap:12}}>
+                {format(fecha,'EEEE d',{locale:es})}
+                <select style={{maxWidth:160}} value={limitesPorFecha[id]??''}
+                  onChange={e=>{
+                    setLimitesPorFecha(actual=>{
+                      const next={...actual}
+                      if(e.target.value)next[id]=Number(e.target.value)
+                      else delete next[id]
+                      return next
+                    })
+                    setPropuestas(null)
+                  }}>
+                  <option value="">Tiempo general</option>
+                  {[15,20,30,45,60,90,120].map(n=><option key={n} value={n}>{n} minutos</option>)}
+                </select>
+              </label>
+            })}
+          </div>
+        </details>
+        {householdId && <p style={{fontSize:13}}>
+          {estadoPerfiles==='loading'?'Comprobando preferencias de ambos miembros…':
+            estadoPerfiles==='error'?'No se pudieron cargar los perfiles del hogar.':
+            'Perfiles alimentarios disponibles: '+perfilesHogar.length+'. Las restricciones conocidas de ambos se aplican a las propuestas.'}
+        </p>}
+        <button className="btn-principal" disabled={Boolean(householdId) && estadoPerfiles!=='ready'}
+          onClick={()=>{void sugerirSemana()}}>✨ Proponer menú sin guardar</button>
+        {avisoGeneracion && <p role="status">{avisoGeneracion}</p>}
+        {propuestas && <div style={{ display: 'grid', gap: 12, marginTop: 14 }}>
+          {propuestas.propuestas.map(p => <label key={p.fecha + '|' + p.tipoComida}>
+            <strong>{p.fecha} · {p.tipoComida}</strong>
+            <select style={{ display: 'block', width: '100%', padding: 10 }} value={seleccion[p.fecha + '|' + p.tipoComida] ?? ''} onChange={e => setSeleccion(prev => ({ ...prev, [p.fecha + '|' + p.tipoComida]: e.target.value }))}>
+              <option value="">Dejar sin planificar</option>
+              {propuestas.elegibles.filter(r => validarPropuestaHogar(r,p.tipoComida,propuestas.restricciones,cargarPerfilHogar(),limitesPorFecha[p.fecha]??minutosMaximos)).map(r => <option key={r.id} value={r.id}>{r.nombre}</option>)}
+            </select>
+            {seleccion[p.fecha + p.tipoComida] && <button type="button" className="btn-secundario" onClick={()=>rechazarReceta(seleccion[p.fecha + p.tipoComida])}>👎 No me gusta esta receta</button>}
+          </label>)}
+          {presupuestoPropuesto && <p style={{padding:12,border:'1px solid var(--borde)',borderRadius:12}}>
+            💶 Compra estimada con los precios introducidos: <strong>{presupuestoPropuesto.estimado.toFixed(2)} €</strong>
+            {' '}de {presupuestoMaximo.toFixed(2)} € de presupuesto semanal.
+            {presupuestoPropuesto.sinPrecio>0 && <span> ⚠️ Faltan precios de {presupuestoPropuesto.sinPrecio} productos; el coste real puede ser mayor.</span>}
+            {presupuestoPropuesto.estimado>presupuestoMaximo && <span> ⚠️ Se supera el presupuesto.</span>}
+          </p>}
+          <p style={{fontSize:12}}>Las coincidencias por ingredientes no garantizan seguridad frente a alergias. Revisa ingredientes, etiquetas y posibles trazas antes de preparar cada plato.</p>
+          {propuestas.sinCubrir.length > 0 && <p>{propuestas.sinCubrir.length} huecos sin recetas compatibles.</p>}
+          <button className="btn-principal" onClick={aceptarSemana}>💜 Confirmar propuestas</button>
+          <button className="btn-secundario" onClick={() => setPropuestas(null)}>Cancelar</button>
+        </div>}
+      </section>
       <div
         style={{
           display: 'grid',
@@ -285,7 +627,9 @@ export default function Planning({
                   updateReceta={
                     updateReceta
                   }
+                  onAplazar={aplazarComida}
                 />
+                {planning.filter(item=>item.fecha===fecha).map(item=><section className="card" key={item.id} style={{marginTop:8,padding:12}}><strong>{item.tipoComida === 'comida' ? '🍽️ Comida' : '🌙 Cena'}</strong><AdvertenciasPersonales item={item} householdId={householdId}/><SustituirPlato item={item}/><PlatosPersonales item={item}/></section>)}
               </div>
             )
           }

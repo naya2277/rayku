@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import SelectorProducto from './SelectorProducto'
 
 import type { ItemInventario } from '../../store'
 
@@ -17,11 +18,13 @@ type Props = {
   ) => void
 
   cerrarFormulario: () => void
+  householdId?: string
 }
 
 export default function FormularioInventario({
   agregarItemInventario,
   cerrarFormulario,
+  householdId,
 }: Props) {
   const [
     ubicacionForm,
@@ -40,7 +43,7 @@ export default function FormularioInventario({
   ] = useState('')
 
   const [unidad, setUnidad] =
-    useState('comida')
+    useState('u.')
 
   const [
     categoria,
@@ -63,7 +66,7 @@ export default function FormularioInventario({
   ] = useState(false)
 
   const guardar = () => {
-    if (!nombre.trim()) return
+    if (!nombre.trim() || !cantidad.trim() || !(Number(cantidad)>0)) return
 
     const cantidadLimpia =
       parseFloat(cantidad)
@@ -75,10 +78,7 @@ export default function FormularioInventario({
         Number.isFinite(cantidadLimpia)
           ? cantidadLimpia
           : 1,
-      unidad:
-        cantidad.trim()
-          ? unidad
-          : 'comida',
+      unidad,
       categoria,
       ubicacion: ubicacionForm,
       fechaCaducidad:
@@ -111,24 +111,7 @@ export default function FormularioInventario({
           gap: '12px',
         }}
       >
-        <input
-          placeholder="🏷️ Nombre del producto"
-          value={nombre}
-          onChange={(e) => {
-            const valor =
-              e.target.value
-
-            setNombre(valor)
-
-            if (valor.trim()) {
-              setCategoria(
-                detectarCategoriaIngrediente(
-                  valor
-                )
-              )
-            }
-          }}
-        />
+        <SelectorProducto value={nombre} householdId={householdId} onChange={valor=>{setNombre(valor);setCategoria(detectarCategoriaIngrediente(valor))}} />
 
         <div
           style={{
@@ -161,9 +144,7 @@ export default function FormularioInventario({
               setUnidad(e.target.value)
             }
           >
-            <option value="comida">
-              comida
-            </option>
+            <option value="comida">comida preparada</option>
             <option value="g">g</option>
             <option value="kg">kg</option>
             <option value="ml">ml</option>
@@ -186,7 +167,7 @@ export default function FormularioInventario({
             margin: 0,
           }}
         >
-          Si no pones cantidad, Rayku lo guardará como 1 comida.
+          Especifica siempre cantidad y unidad. Por ejemplo, «Mezcla de ensalada» + 150 g.
         </p>
 
         <select
@@ -312,6 +293,7 @@ export default function FormularioInventario({
 
         <button
           className="btn-principal"
+          disabled={!nombre || !(Number(cantidad)>0)}
           onClick={guardar}
         >
           💕 Guardar producto

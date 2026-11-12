@@ -103,12 +103,12 @@ REGLAS ESPECÍFICAS:
 - NO uses recetas guardadas de Rayku como ideas principales.
 - NO bases las recetas en el inventario.
 - NO priorices productos que caducan pronto.
-- NO es obligatorio que sean keto.
+- Respeta la dieta indicada en el contexto; si es keto, las cinco recetas deben ser keto.
 - NO repitas nombres de recetas existentes en el contexto.
 - Puedes sugerir cualquier ingrediente que tendría que comprar.
 - Busca variedad real: cambia proteína, técnica, país/estilo y formato.
 - Incluye estilos variados: mediterráneo, español, mexicano, asiático, comfort food, air fryer, horno, sartén o plato rápido.
-- La dieta puede variar: algunas ideas pueden ser keto, otras low carb y otras normales.
+- No cambies ni relajes la dieta indicada en el contexto sin petición explícita.
 - Respeta SIEMPRE los ingredientes prohibidos.
 - Puedes usar ingredientes favoritos solo si encajan de forma natural, pero no fuerces la respuesta hacia ellos.
 - Toda receta nueva debe poder guardarse como receta completa.
@@ -133,23 +133,21 @@ REGLAS ESPECÍFICAS:
 - Toda receta nueva debe poder guardarse como receta completa.
 `
         : `
-La usuaria quiere un menú adaptado a su alimentación.
+La persona quiere propuestas NUEVAS para su menú, adaptadas a su dieta real.
 
 OBJETIVO:
-Crear un menú keto práctico y realista.
+Crear un menú con recetas originales, completas y distintas de las que ya tiene guardadas.
 
 REGLAS ESPECÍFICAS:
-- Devuelve:
-  - una comida
-  - una cena
-  - una alternativa opcional
-- Prioriza opciones keto o bajas en carbohidratos.
-- Puedes usar recetas guardadas, inventario e ingredientes favoritos si ayudan.
-- No recomiendes recetas guardadas que contengan ingredientes prohibidos.
-- Si falta algún ingrediente importante, dilo claramente en "aprovecha" o "consejo".
-- Piensa como una planificadora semanal.
-- Respeta SIEMPRE los ingredientes prohibidos.
-- Toda receta nueva debe poder guardarse como receta completa.
+- Devuelve exactamente 3 recetas nuevas: una comida, una cena y una alternativa.
+- Todas deben tener "origen": "nueva".
+- Respeta la dieta indicada en el contexto. Si dice Keto, las tres recetas deben ser keto, no simplemente bajas en carbohidratos.
+- NO reutilices recetas de la biblioteca ni copies sus nombres o preparaciones.
+- NO bases las propuestas en el inventario: el menú es inspiración nueva.
+- Si hace falta comprar ingredientes, indícalos en la receta.
+- Busca variedad de ingredientes, técnicas y platos.
+- Respeta SIEMPRE los ingredientes prohibidos, alergias, intolerancias y rechazos.
+- Las tres recetas deben tener cantidades, tiempos, raciones y pasos completos, y se deben poder guardar.
 `
 
   return [

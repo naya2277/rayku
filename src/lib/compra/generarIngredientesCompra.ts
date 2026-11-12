@@ -168,6 +168,22 @@ export function generarIngredientesCompra(
       ).forEach(añadirIngrediente)
     })
 
+    // Personal alternatives belong to the same shared meal. A manually written
+    // dish is added as a free-text shopping need; saved recipes add ingredients.
+    const personas = (hueco as typeof hueco & {
+      platosPorPersona?: Record<string, { recetaId: string | null; comidaLibre: string }>
+    }).platosPorPersona ?? {}
+    Object.values(personas).forEach(plato => {
+      if (plato.recetaId) {
+        const receta = recetas.find(r => r.id === plato.recetaId)
+        if (receta) calcularIngredientesEscalados(receta, 1).forEach(añadirIngrediente)
+      } else if (plato.comidaLibre.trim()) {
+        calcularIngredientesEscalados({
+          ingredientes: separarTextoIngredientes(plato.comidaLibre), raciones: 1,
+        }, 1).map(asegurarCantidadComidaLibre).forEach(añadirIngrediente)
+      }
+    })
+
     if (hueco.comidaLibre) {
       calcularIngredientesEscalados(
         {

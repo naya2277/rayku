@@ -22,6 +22,9 @@ import {
 } from '../lib/generarListaCompra'
 
 import FormularioCompraManual from '../components/compra/FormularioCompraManual'
+import { planificarCompraPorConservacion } from '../lib/compra/planificarCompraPorConservacion'
+import { obtenerClaveIngredienteCompra } from '../lib/compra/normalizacionCompra'
+import { compraManualParaInventario } from '../lib/compra/manualCheckout'
 import ResumenCompra from '../components/compra/ResumenCompra'
 import GrupoCompra from '../components/compra/GrupoCompra'
 import ModoSupermercado from '../components/compra/ModoSupermercado'
@@ -177,12 +180,28 @@ export default function Compra() {
       )
     }, [planning, rangoCompra])
 
-  const ingredientes = useMemo(() => {
-    return generarIngredientesCompra(
-      planningFiltrado,
-      recetas
-    )
-  }, [planningFiltrado, recetas])
+  const comprasPorFecha = useMemo(() =>
+    planificarCompraPorConservacion(planningFiltrado,recetas,new Date()),
+    [planningFiltrado,recetas]
+  )
+  const ingredientes = comprasPorFecha.ahora
+  const comprasPosteriores = comprasPorFecha.despues
+
+  const usosPorIngrediente = useMemo(() => {
+    const usos = new Map<string, { fecha: string; receta: string }[]>()
+    for (const hueco of [...planningFiltrado].sort((a,b)=>a.fecha.localeCompare(b.fecha))) {
+      const ids = hueco.recetaIds?.length ? hueco.recetaIds : hueco.recetaId ? [hueco.recetaId] : []
+      for (const id of ids) {
+        const receta = recetas.find(r=>r.id===id)
+        if (!receta) continue
+        for (const ingrediente of generarIngredientesCompra([{...hueco,recetaIds:[id],recetaId:id,comidaLibre:''}],[receta])) {
+          const clave = obtenerClaveIngredienteCompra(ingrediente.nombre)
+          usos.set(clave,[...(usos.get(clave)??[]),{fecha:hueco.fecha,receta:receta.nombre}])
+        }
+      }
+    }
+    return usos
+  },[planningFiltrado,recetas])
 
   const itemsManualesComoCompra =
     useMemo<IngredienteCompra[]>(
@@ -220,11 +239,19 @@ export default function Compra() {
     paraComprar,
     yaDisponibles,
   } = useMemo(() => {
+    // Do not count stock that reaches its printed expiry before the planned meal.
+    // Manual entries do not have a date and retain the usual inventory rules.
+    const requiredBy = new Map(ingredientes.map(i=>[i.clave,i.primeraUtilizacion]))
+    const inventarioVigente = inventario.filter(item=>{
+      if(!item.fechaCaducidad) return true
+      const uso = requiredBy.get(obtenerClaveIngredienteCompra(item.nombre))
+      return !uso || item.fechaCaducidad >= uso
+    })
     return separarIngredientesPorInventario(
       ingredientesConManuales,
-      inventario
+      inventarioVigente
     )
-  }, [ingredientesConManuales, inventario])
+  }, [ingredientesConManuales, inventario, ingredientes])
 
   const esItemComprado = (
     item: IngredienteCompra
@@ -263,27 +290,24 @@ export default function Compra() {
       compraManual,
     ])
 
+  const confirmarCompra = () => {
+    const comprados = paraComprar
+      .filter(item => checksCompra.includes(item.clave))
+      .map(item => {
+        const manual = compraManual.find(m => item.clave === `manual-${m.id}`)
+        if (manual) return compraManualParaInventario(manual)
+        return {
+          nombre: item.nombre,
+          cantidad: item.cantidadFaltante ?? item.cantidad,
+          unidad: item.unidad,
+        }
+      })
+    finalizarCompra(comprados)
+  }
+
   const compradosOcultos =
     paraComprar.length -
     paraComprarVisibles.length
-
-    console.log('======== COMPRA ========')
-
-console.table(
-  paraComprar.map((item) => ({
-    clave: item.clave,
-    nombre: item.nombre,
-    cantidad: item.cantidad,
-    disponible: item.cantidadDisponible,
-    faltante: item.cantidadFaltante,
-  }))
-)
-
-console.log('Inventario', inventario)
-
-console.log('Checks', checksCompra)
-
-console.log('========================')
 
   const agrupadosComprar =
     useMemo(() => {
@@ -323,7 +347,7 @@ console.log('========================')
               color: '#9e7d90',
             }}
           >
-            Lista inteligente {rangoCompra.texto} + extras manuales 💕
+            Lista inteligente {rangoCompra.texto} + extras manuales 💕 Los frescos se programan según su día de uso.
           </p>
         </div>
 
@@ -496,6 +520,29 @@ console.log('========================')
         )}
       </div>
 
+      {comprasPosteriores.length > 0 && (
+        <section className="card" style={{marginBottom:18,borderColor:'#e8c8d8'}}>
+          <h2 style={{fontSize:18,marginBottom:8}}>📅 Comprar más cerca del día de uso</h2>
+          <p style={{fontSize:13,marginBottom:12}}>
+            Estos frescos no se incluyen en la compra de hoy porque podrían estropearse antes de cocinarlos.
+            Vuelven automáticamente a la lista cuando se acerca su fecha de compra.
+          </p>
+          <div style={{display:'grid',gap:8}}>
+            {comprasPosteriores.map(item=><div key={item.clave} style={{padding:'10px 12px',borderRadius:12,background:'#fff9fc',border:'1px solid #eddbe7'}}>
+              <strong>{item.nombre}</strong>
+              <div style={{fontSize:13}}>🛍️ Comprar a partir del <strong>{item.comprarDesde}</strong> · Para cocinar el {item.fechasUso.join(', ')}</div>
+              {item.cantidad !== null && item.unidad && <div style={{fontSize:12}}>Cantidad orientativa: {item.cantidad} {item.unidad}</div>}
+            </div>)}
+          </div>
+          <p style={{fontSize:12,marginTop:10}}>La conservación usada es orientativa para productos frescos refrigerados. Comprueba siempre la caducidad real del envase y las condiciones de almacenamiento; congelar cambia la planificación.</p>
+        </section>
+      )}
+      {comprasPosteriores.some(item=>ingredientes.some(actual=>actual.clave===item.clave)) && (
+        <p className="card" role="status" style={{marginBottom:16}}>
+          💡 Algunos alimentos aparecen tanto en la compra actual como en la posterior: se necesitan en días separados y conviene comprarlos en dos tandas.
+        </p>
+      )}
+
       {!modoSupermercado && (
         <FormularioCompraManual
           onAgregar={
@@ -504,6 +551,16 @@ console.log('========================')
         />
       )}
 
+      {paraComprar.length > 0 && <details className="card" style={{marginBottom:18}}>
+        <summary style={{cursor:'pointer',fontWeight:800}}>📅 ¿Para qué día necesito cada producto?</summary>
+        <div style={{display:'grid',gap:10,marginTop:12}}>
+          {paraComprar.filter(item=>!item.clave.startsWith('manual-')).map(item=><div key={item.clave} style={{borderBottom:'1px solid var(--borde)',paddingBottom:8}}>
+            <strong>{item.nombre}</strong>{item.cantidadFaltante!==null && item.unidad ? ` · comprar ${item.cantidadFaltante} ${item.unidad}` : ''}
+            <div style={{fontSize:13,color:'var(--txt2)'}}>{(usosPorIngrediente.get(item.clave)??[]).map(u=>`${u.fecha} (${u.receta})`).join(' · ') || 'Sin fecha identificada'}</div>
+          </div>)}
+        </div>
+        <p style={{fontSize:12,marginTop:10}}>Las fechas indican cuándo se usa el ingrediente; la cantidad a comprar es el total pendiente del rango seleccionado.</p>
+      </details>}
       <ResumenCompra
         total={
           paraComprar.length +
@@ -522,7 +579,7 @@ console.log('========================')
           checksCompra.length
         }
         onFinalizarCompra={
-          finalizarCompra
+          confirmarCompra
         }
       />
 
@@ -612,7 +669,7 @@ console.log('========================')
                 color: '#9e7d90',
               }}
             >
-              Aún no hay ingredientes pendientes en este rango ni extras manuales 💕
+              {comprasPosteriores.length ? '✅ No hay compras necesarias hoy. Los frescos para próximos días están programados arriba.' : 'Aún no hay ingredientes pendientes en este rango ni extras manuales 💕'}
             </p>
           </div>
         )}

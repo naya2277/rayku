@@ -19,7 +19,7 @@ export default defineConfig({
         background_color: '#fffaf8',
 
         display: 'standalone',
-        orientation: 'portrait',
+        orientation: 'any',
 
         icons: [
           {

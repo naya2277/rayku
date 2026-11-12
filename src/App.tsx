@@ -16,37 +16,54 @@ import {
 } from './store'
 
 import Inicio from './pages/Inicio'
+import ConfiguracionHogar from './pages/ConfiguracionHogar'
+import { cargarPerfilHogar } from './lib/perfilHogar'
 import Planning from './pages/Planning'
 import CalendarioPlanning from './pages/CalendarioPlanning'
 import Recetas from './pages/Recetas'
 import Inventario from './pages/Inventario'
 import Compra from './pages/Compra'
+import Supermercados from './pages/Supermercados'
 import Auth from './pages/Auth'
 import ChefRayku from './pages/ChefRayku'
+import WorkspaceSwitcher from './components/workspaces/WorkspaceSwitcher'
+import { useUnifiedWorkspace } from './lib/useUnifiedWorkspace'
+import TabletMode from './pages/TabletMode'
+import TabletDemo from './pages/TabletDemo'
+import { descargarCompra, subirCompra } from './lib/sync'
+import { listHouseholds } from './lib/workspaces'
+import { normalizarCompraManual } from './store/normalizers'
+import { guardarCompraManualLocal, guardarChecksCompraLocal } from './store/storage'
 
 type Pagina =
   | 'inicio'
+  | 'configuracion'
   | 'chef'
   | 'planning'
   | 'calendario'
   | 'recetas'
   | 'inventario'
   | 'compra'
+  | 'supermercados'
 
 const PAGINA_KEY =
   'rayku-pagina-actual'
 
 const PAGINAS_VALIDAS: Pagina[] = [
   'inicio',
+  'configuracion',
   'chef',
   'planning',
   'calendario',
   'recetas',
   'inventario',
   'compra',
+  'supermercados',
 ]
 
 function obtenerPaginaInicial(): Pagina {
+  // Opening an invite link should show the join form even on an existing device.
+  if (new URLSearchParams(window.location.search).has('invite')) return 'configuracion'
   const guardada =
     sessionStorage.getItem(
       PAGINA_KEY
@@ -64,7 +81,15 @@ function obtenerPaginaInicial(): Pagina {
   return 'inicio'
 }
 
-export default function App() {
+function MainApp() {
+  const [modoTablet, setModoTablet] = useState(false)
+  const [inicializando, setInicializando] = useState(true)
+  const [errorInicializacion, setErrorInicializacion] = useState('')
+  const [reintentosInicio, setReintentosInicio] = useState(0)
+  const [paginaAnteriorConfiguracion, setPaginaAnteriorConfiguracion] = useState<Pagina>('inicio')
+  const [perfilConfigurado, setPerfilConfigurado] = useState(() => cargarPerfilHogar().configurado)
+  const [permitirSalirConfiguracion, setPermitirSalirConfiguracion] = useState(false)
+
   const [session, setSession] =
     useState<Session | null>(null)
 
@@ -72,6 +97,7 @@ export default function App() {
     mensajeNube,
     setMensajeNube,
   ] = useState('')
+  const workspace = useUnifiedWorkspace(session?.user.id ?? '')
 
   const {
     sincronizarRecetasDesdeSupabase,
@@ -136,6 +162,43 @@ export default function App() {
 
   useEffect(() => {
     if (!session?.user.id) return
+    let cancelled = false
+    setInicializando(true)
+    setErrorInicializacion('')
+    const initialize = async () => {
+      try {
+        await Promise.all([
+          sincronizarRecetasDesdeSupabase(session.user.id),
+          sincronizarInventarioDesdeSupabase(session.user.id),
+          sincronizarPlanningDesdeSupabase(session.user.id),
+        ])
+        const compra = await descargarCompra(session.user.id)
+        if (compra && !cancelled) {
+          const compraManual = compra.compraManual.map(normalizarCompraManual)
+          const checksCompra = compra.checksCompra.filter((c): c is string => typeof c === 'string')
+          guardarCompraManualLocal(compraManual)
+          guardarChecksCompraLocal(checksCompra)
+          useRaykuStore.setState({ compraManual, checksCompra })
+        }
+        const households = await listHouseholds()
+        if (!cancelled && households.length) {
+          await workspace.select(households[0].id)
+        }
+      } catch (error) {
+        console.error('No se pudo inicializar el hogar:', error)
+        if (!cancelled) setErrorInicializacion(error instanceof Error ? error.message : String(error))
+      } finally {
+        if (!cancelled) setInicializando(false)
+      }
+    }
+    void initialize()
+    return () => { cancelled = true }
+  }, [session?.user.id, reintentosInicio])
+
+  /* Previous personal-only startup sync disabled: initialization above now
+     loads personal data first, then activates the household if it exists.
+  useEffect(() => {
+    if (!session?.user.id) return
 
     sincronizarRecetasDesdeSupabase(
       session.user.id
@@ -148,6 +211,16 @@ export default function App() {
     sincronizarPlanningDesdeSupabase(
       session.user.id
     )
+
+    // Load shopping only when a cloud copy exists; preserve legacy local lists otherwise.
+    descargarCompra(session.user.id).then(compra => {
+      if (!compra) return
+      const compraManual = compra.compraManual.map(normalizarCompraManual)
+      const checksCompra = compra.checksCompra.filter((c): c is string => typeof c === 'string')
+      guardarCompraManualLocal(compraManual)
+      guardarChecksCompraLocal(checksCompra)
+      useRaykuStore.setState({ compraManual, checksCompra })
+    }).catch(error => console.error('No se pudo cargar la compra:', error))
   }, [
     session?.user.id,
 
@@ -155,6 +228,8 @@ export default function App() {
     sincronizarInventarioDesdeSupabase,
     sincronizarPlanningDesdeSupabase,
   ])
+
+  */
 
   const abrirReceta = (
     recetaId: string
@@ -173,6 +248,15 @@ export default function App() {
       setMensajeNube(
         '☁️ Guardando...'
       )
+      if (workspace.selection !== 'personal') {
+        try {
+          await workspace.saveNow()
+          setMensajeNube('✅ Hogar guardado en la nube')
+        } catch (error) {
+          setMensajeNube('⚠️ Error al guardar hogar: ' + (error instanceof Error ? error.message : String(error)))
+        }
+        return
+      }
 
       await guardarRecetasEnSupabase(
         session.user.id
@@ -186,6 +270,9 @@ export default function App() {
         session.user.id
       )
 
+      const { compraManual, checksCompra } = useRaykuStore.getState()
+      await subirCompra(compraManual, checksCompra, session.user.id)
+
       setMensajeNube(
         '✅ Datos guardados en la nube'
       )
@@ -195,8 +282,72 @@ export default function App() {
       }, 2500)
     }
 
+  const salirDeHogar = () => {
+    // Explicit leave never writes a partial draft to the profile.
+    setPermitirSalirConfiguracion(true)
+    setPaginaActual(paginaAnteriorConfiguracion === 'configuracion' ? 'inicio' : paginaAnteriorConfiguracion)
+  }
+
+  const abrirHogar = () => {
+    setPaginaAnteriorConfiguracion(paginaActual)
+    setPaginaActual('configuracion')
+  }
+
+  const salir = async () => {
+    if (workspace.selection !== 'personal') {
+      try {
+        setMensajeNube('☁️ Guardando los últimos cambios antes de salir…')
+        await workspace.saveNow()
+      } catch (error) {
+        setMensajeNube('⚠️ No se ha cerrado la sesión: hay cambios sin guardar. ' + (error instanceof Error ? error.message : String(error)))
+        return
+      }
+    }
+    const { error } = await supabase.auth.signOut()
+    if (error) setMensajeNube('⚠️ No se pudo cerrar sesión: ' + error.message)
+  }
+
   if (!session) {
     return <Auth />
+  }
+
+  if (inicializando && session) {
+    return <div className="app"><main className="contenido-principal"><section className="card" role="status"><h2>🏡 Preparando tu hogar…</h2><p>Estamos cargando tus recetas, planning, compra e inventario. Espera antes de hacer cambios.</p></section></main></div>
+  }
+
+  if (errorInicializacion) {
+    return <div className="app"><main className="contenido-principal">
+      <section className="card" role="alert">
+        <h2>⚠️ No se ha podido cargar Rayku con seguridad</h2>
+        <p>{errorInicializacion}</p>
+        <p>Para proteger tus recetas y datos, la edición permanecerá bloqueada hasta recuperar la conexión.</p>
+        <button type="button" className="btn-principal" onClick={() => setReintentosInicio(n => n + 1)}>Reintentar conexión</button>
+        <button type="button" className="btn-secundario" onClick={() => { void supabase.auth.signOut() }}>Cerrar sesión</button>
+      </section>
+    </main></div>
+  }
+
+  if ((!perfilConfigurado && workspace.selection === 'personal' && !permitirSalirConfiguracion) || paginaActual === 'configuracion') {
+    return <div className="app"><main className="contenido-principal rayku-home-screen">
+      <div className="rayku-home-topbar">
+        <div><strong>🏡 Configuración del hogar</strong><p>Puedes volver a Rayku sin guardar cambios.</p></div>
+        <button type="button" className="btn-secundario" onClick={salirDeHogar}>← Salir de Hogar sin guardar</button>
+      </div>
+      <WorkspaceSwitcher userId={session.user.id} selection={workspace.selection} onSelect={workspace.select} busy={workspace.busy} />
+      {workspace.selection === 'personal' && !perfilConfigurado ? (
+        <details style={{maxWidth:900,margin:'12px auto',padding:14,border:'1px solid #eddbe7',borderRadius:14}}>
+          <summary>Configuración antigua para utilizar Rayku sin un hogar compartido</summary>
+          <p>Si tienes una invitación, no necesitas configurar «Persona 1». Abre el enlace o pégalo en «Unirme al hogar» arriba.</p>
+          <ConfiguracionHogar onCancelar={salirDeHogar} onTerminar={() => { setPerfilConfigurado(true); setPaginaActual('inicio') }} onInventario={() => { setPerfilConfigurado(true); setPaginaActual('inventario') }} />
+        </details>
+      ) : (
+        <ConfiguracionHogar sharedHousehold={workspace.selection !== 'personal'} onCancelar={salirDeHogar} onTerminar={() => { setPerfilConfigurado(true); setPaginaActual(paginaAnteriorConfiguracion) }} onInventario={() => { setPerfilConfigurado(true); setPaginaActual('inventario') }} />
+      )}
+    </main></div>
+  }
+
+  if (modoTablet) {
+    return <TabletMode onSalir={() => setModoTablet(false)} householdId={workspace.selection !== 'personal' ? workspace.selection : undefined} />
   }
 
   return (
@@ -314,6 +465,12 @@ export default function App() {
 
           <button
             type="button"
+            className={paginaActual === 'supermercados' ? 'activo' : ''}
+            onClick={() => setPaginaActual('supermercados')}
+          >💶 Supermercados</button>
+
+          <button
+            type="button"
             className={
               paginaActual ===
               'inventario'
@@ -329,6 +486,10 @@ export default function App() {
             📦 Inventario
           </button>
 
+          <button type="button" className="btn-secundario" onClick={() => setModoTablet(true)}>
+            📱 Modo tablet
+          </button>
+
           <button
             type="button"
             className="btn-secundario"
@@ -342,14 +503,16 @@ export default function App() {
           <button
             type="button"
             className="btn-secundario"
-            onClick={() =>
-              supabase.auth.signOut()
-            }
+            onClick={() => { void salir() }}
           >
             🚪 Salir
           </button>
+          <button type="button" className="btn-secundario" onClick={abrirHogar}>⚙️ Hogar</button>
         </div>
       </nav>
+
+      {errorInicializacion && <p role="alert" style={{textAlign:'center'}}>⚠️ No se ha podido cargar el hogar: {errorInicializacion}. Evita editar hasta resolverlo.</p>}
+      {workspace.message && <p role="status" style={{textAlign:'center',margin:12}}>{workspace.message}</p>}
 
       {mensajeNube && (
         <div
@@ -370,7 +533,8 @@ export default function App() {
         </div>
       )}
 
-      <main className="contenido-principal">
+      <main className="contenido-principal" aria-busy={workspace.busy}>
+        {workspace.busy ? <p role="status">Cambiando de espacio y protegiendo tus datos…</p> : <>
         {paginaActual ===
           'inicio' && (
           <Inicio
@@ -382,6 +546,7 @@ export default function App() {
         {paginaActual ===
   'chef' && (
   <ChefRayku
+    householdId={workspace.selection !== 'personal' ? workspace.selection : undefined}
     onAbrirReceta={
       abrirReceta
     }
@@ -391,6 +556,7 @@ export default function App() {
         {paginaActual ===
           'planning' && (
           <Planning
+            householdId={workspace.selection !== 'personal' ? workspace.selection : undefined}
             onAbrirReceta={
               abrirReceta
             }
@@ -425,11 +591,23 @@ export default function App() {
           <Compra />
         )}
 
+        {paginaActual === 'supermercados' && (
+          <Supermercados householdId={workspace.selection !== 'personal' ? workspace.selection : undefined}/>
+        )}
         {paginaActual ===
           'inventario' && (
-          <Inventario />
+          <Inventario householdId={workspace.selection !== 'personal' ? workspace.selection : undefined} />
         )}
+        </>}
       </main>
     </div>
   )
+}
+
+// The standalone demo never mounts the authenticated app or its Supabase sync effects.
+export default function App() {
+  if (window.location.pathname === '/demo-tablet') {
+    return <TabletDemo />
+  }
+  return <MainApp />
 }

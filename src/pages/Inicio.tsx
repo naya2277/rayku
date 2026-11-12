@@ -305,39 +305,41 @@ export default function Inicio({
         style={{
           marginBottom: 20,
           background:
-            'linear-gradient(135deg, #fff0f6, #fffaf8)',
-          borderColor: '#f5c8d8',
+            'linear-gradient(115deg, #fbeaf3, #f4edff 60%, #fff8f5)',
+          borderColor: '#ead5e5',
+          boxShadow: '0 12px 32px rgba(120,75,110,0.08)',
+          padding: '22px 24px',
         }}
       >
         <div
           style={{
             display: 'flex',
             alignItems: 'center',
-            gap: 14,
+            gap: 20,
+            flexWrap: 'wrap',
           }}
         >
           <div
             style={{
-              width: 74,
-              height: 74,
+              width: 112,
+              height: 112,
               borderRadius: '50%',
               overflow: 'hidden',
-              border: '3px solid #f5bfd2',
-              background: '#fff0f6',
+              border: '4px solid #fff',
+              background: '#f5e5f0',
               boxShadow:
-                '0 8px 18px rgba(180,120,150,0.14)',
+                '0 10px 28px rgba(140,88,130,0.18)',
               flexShrink: 0,
             }}
           >
             <img
-              src="/rayku-buenosdias.png"
+              src="https://raw.githubusercontent.com/naya2277/rayku/main/public/rayku-buenosdias.png.png"
               alt="Rayku dando los buenos días"
               style={{
                 width: '100%',
                 height: '100%',
                 objectFit: 'cover',
-                objectPosition: 'center 40%',
-                transform: 'scale(1.56)',
+                objectPosition: 'center center',
               }}
             />
           </div>
@@ -346,9 +348,11 @@ export default function Inicio({
             <h1
               style={{
                 margin: 0,
-                color: '#c45b86',
+                color: '#936080',
+                fontWeight: 900,
+                letterSpacing: '-0.035em',
                 fontFamily:
-                  "'Comic Sans MS', 'Trebuchet MS', cursive",
+                  "'Nunito', sans-serif",
               }}
             >
               Buenos días 💕

@@ -1,7 +1,4 @@
-import {
-  geminiModel,
-} from '../../services/ia/gemini'
-
+import { supabase } from '../supabase'
 import {
   consultarOllama,
 } from '../../services/ia/ollama'
@@ -47,12 +44,10 @@ function obtenerNombresRecetas(
 }
 
 function contextoInspiracionLibre(
-  contexto: ContextoRayku
+  contexto: ContextoRayku,
+  todosLosNombres: string[]
 ) {
-  const nombresRecetas =
-    obtenerNombresRecetas(
-      contexto
-    )
+  const nombresRecetas = todosLosNombres.length ? todosLosNombres : obtenerNombresRecetas(contexto)
 
   return [
     'MODO INSPIRACIÓN LIBRE',
@@ -75,11 +70,13 @@ function contextoInspiracionLibre(
 
 function crearContextoTextoPorTipo(
   tipo: TipoConsultaChefRayku,
-  contexto: ContextoRayku
+  contexto: ContextoRayku,
+  nombres: string[]
 ) {
-  if (tipo === 'ideas_recetas') {
+  if (tipo === 'ideas_recetas' || tipo === 'menu_dieta') {
     return contextoInspiracionLibre(
-      contexto
+      contexto,
+      nombres
     )
   }
 
@@ -88,17 +85,20 @@ function crearContextoTextoPorTipo(
   )
 }
 
-async function consultarGemini(
-  prompt: string
-) {
-  const resultado =
-    await geminiModel.generateContent(
-      prompt
-    )
-
-  return limpiarRespuestaJson(
-    resultado.response.text()
-  )
+async function consultarGemini(prompt: string) {
+  const { data, error } = await supabase.functions.invoke('chef-rayku', { body: { prompt } })
+  if (error) {
+    const status = 'context' in error ? (error.context as Response | undefined)?.status : undefined
+    throw new Error(status === 503
+      ? 'Chef Rayku no está configurado o el servicio está temporalmente indisponible.'
+      : status === 429
+        ? 'Has llegado al límite de 15 consultas a Chef Rayku de hoy. Podrás generar más recetas mañana.'
+        : 'No se pudo consultar Gemini desde Supabase: ' + error.message)
+  }
+  if (typeof data?.text !== 'string' || !data.text.trim()) {
+    throw new Error('Gemini devolvió una respuesta vacía.')
+  }
+  return limpiarRespuestaJson(data.text)
 }
 
 async function consultarOllamaLimpio(
@@ -124,8 +124,9 @@ export async function consultarChefRayku(
   const contextoTexto =
     crearContextoTextoPorTipo(
       tipo,
-      contexto
-    )
+      contexto,
+      datos.recetas.map(receta => receta.nombre)
+    ) + '\n\nDIETA DEL SOLICITANTE: ' + (datos.dietasSolicitante?.join(', ') || 'Sin dieta específica; no presupongas keto.')
 
   const prompt =
     crearPromptChefRayku(
@@ -155,8 +156,6 @@ export async function consultarChefRayku(
       )
     }
 
-    throw new Error(
-      'Chef Rayku está descansando un momento 💕 La IA está temporalmente saturada. Prueba de nuevo más tarde.'
-    )
+    throw errorGemini instanceof Error ? errorGemini : new Error('Chef Rayku no está disponible ahora.')
   }
 }

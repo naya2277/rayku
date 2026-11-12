@@ -1,0 +1,23 @@
+name: Rayku 2.0 - comprobación
+on:
+  push:
+    branches: [rayku-2.0]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: node --experimental-strip-types --test tests/*.test.mjs
+      - run: npm run build
+      - name: Comprobar PWA generada
+        run: |
+          test -s dist/sw.js
+          test -s dist/manifest.webmanifest

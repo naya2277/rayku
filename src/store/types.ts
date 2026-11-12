@@ -46,6 +46,7 @@ export type ItemPlanning = {
   comidaLibre: string
   nota: string
   racionesOverride?: number | null
+  platosPorPersona?: Record<string, { recetaId: string | null; comidaLibre: string }>
   cocinado?: boolean
 }
 
@@ -63,6 +64,9 @@ export type ItemInventario = {
   categoria: string
   ubicacion: UbicacionInventario
   fechaCaducidad: string | null
+  fechaPreparacion?: string | null
+  fechaConsumoSugerida?: string | null
+  esCocinado?: boolean
   fechaDescongelar?: string | null
   necesitaDescongelar: boolean
   avisarStockBajo?: boolean

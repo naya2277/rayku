@@ -12,6 +12,7 @@ type Props = {
 
   seleccionables?: boolean
   seleccionados?: string[]
+  accionSeleccion?: 'mover' | 'eliminar'
 
   onToggleSeleccion?: (
     id: string
@@ -34,6 +35,7 @@ export default function SeccionInventario({
   items,
   seleccionables = false,
   seleccionados = [],
+  accionSeleccion = 'mover',
   onToggleSeleccion,
   editarItemInventario,
   eliminarItemInventario,
@@ -150,11 +152,8 @@ export default function SeccionInventario({
                             ? '#6d9b6d'
                             : '#c45b86',
                       }}
-                      aria-label={
-                        seleccionado
-                          ? 'Quitar selección'
-                          : 'Seleccionar producto'
-                      }
+                      aria-label={`${seleccionado ? 'Deseleccionar' : 'Seleccionar'} ${item.nombre} para ${accionSeleccion === 'eliminar' ? 'eliminar' : 'mover'}`}
+                      aria-pressed={seleccionado}
                     >
                       {seleccionado
                         ? '✅'

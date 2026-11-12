@@ -7,6 +7,7 @@ import type {
 } from '../../store'
 
 export type DatosContextoRayku = {
+  dietasSolicitante?: string[]
   recetas: Receta[]
   inventario: ItemInventario[]
   planning: ItemPlanning[]
