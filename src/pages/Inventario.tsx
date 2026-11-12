@@ -71,6 +71,7 @@ export default function Inventario() {
     agregarItemInventario,
     editarItemInventario,
     eliminarItemInventario,
+    eliminarItemsInventario,
     agregarAgotadosACompra,
     compraManual,
   } = useRaykuStore()
@@ -83,6 +84,12 @@ export default function Inventario() {
 
   const [filtroActivo, setFiltroActivo] =
     useState<FiltroInventario>('todos')
+
+  const [modoBorrado, setModoBorrado] = useState(false)
+  const [seleccionadosBorrado, setSeleccionadosBorrado] = useState<string[]>([])
+  const [avisoBorrado, setAvisoBorrado] = useState('')
+  const toggleBorrado = (id: string) => setSeleccionadosBorrado(actual =>
+    actual.includes(id) ? actual.filter(x => x !== id) : [...actual, id])
 
   const [
     seleccionadosPendientes,
@@ -350,6 +357,17 @@ export default function Inventario() {
         coincideFiltro(item) &&
         coincideBusqueda(item)
     )
+
+  const visiblesIds = inventarioFiltrado.map(item => item.id)
+  const seleccionActual = seleccionadosBorrado.filter(id => inventario.some(item => item.id === id))
+  const borrarSeleccionados = () => {
+    if (!seleccionActual.length) return
+    if (!window.confirm(`¿Eliminar definitivamente ${seleccionActual.length} registros de Cocina? Se borrarán los registros completos, sea cual sea su unidad o cantidad. Si usáis un hogar compartido, el borrado se sincronizará. No se eliminarán las recetas.`)) return
+    const total = eliminarItemsInventario(seleccionActual)
+    setSeleccionadosBorrado([])
+    setModoBorrado(false)
+    setAvisoBorrado(`Se han eliminado ${total} registros del inventario.`)
+  }
 
   return (
     <div>
@@ -707,9 +725,35 @@ export default function Inventario() {
         )}
       </div>
 
+      <section className="card rayku-inventory-bulk" style={{marginBottom:18}}>
+        <div className="rayku-bulk-title">
+          <div>
+            <h2>🧹 Limpieza del inventario</h2>
+            <p>Selecciona varios registros para eliminarlos juntos, sin importar si están en gramos, kilos o unidades.</p>
+          </div>
+          <button type="button" className={modoBorrado ? 'btn-principal' : 'btn-secundario'}
+            onClick={() => {setModoBorrado(!modoBorrado);setSeleccionadosBorrado([]);setAvisoBorrado('');setSeleccionadosPendientes([])}}>
+            {modoBorrado ? 'Cancelar selección' : '☑ Seleccionar registros'}
+          </button>
+        </div>
+        {modoBorrado && <div className="rayku-bulk-controls">
+          <span className="pill pill-malva">{seleccionActual.length} de {inventario.length} registros seleccionados</span>
+          <button type="button" className="btn-secundario" onClick={() => setSeleccionadosBorrado(actual =>
+            [...new Set([...actual, ...visiblesIds])])}>Seleccionar visibles ({inventarioFiltrado.length})</button>
+          <button type="button" className="btn-secundario" onClick={() =>
+            setSeleccionadosBorrado(inventario.map(item=>item.id))}>Seleccionar todo ({inventario.length})</button>
+          <button type="button" className="btn-secundario" onClick={() => setSeleccionadosBorrado([])}>Deseleccionar</button>
+          <button type="button" className="btn-principal rayku-danger" disabled={!seleccionActual.length} onClick={borrarSeleccionados}>
+            🗑️ Borrar {seleccionActual.length} registros
+          </button>
+          <p className="rayku-helper">Puedes filtrar primero por nevera, congelador, despensa o buscar un nombre. Marca los artículos con las casillas que aparecen junto a cada producto. El borrado pedirá confirmación.</p>
+        </div>}
+        {avisoBorrado && <p role="status">{avisoBorrado}</p>}
+      </section>
+
       <EntradaCocina pendientes={productosPendientes} onGuardar={editarItemInventario} />
 
-      <AccionesPendientesInventario
+      {!modoBorrado && <AccionesPendientesInventario
         totalPendientes={
           productosPendientes.length
         }
@@ -722,7 +766,7 @@ export default function Inventario() {
         onLimpiarSeleccion={
           limpiarSeleccionPendiente
         }
-      />
+      />}
 
       <AccionesAgotadosInventario
         productosAgotados={
@@ -778,19 +822,10 @@ export default function Inventario() {
                 emoji={emoji}
                 color={color}
                 items={items}
-                seleccionables={
-                  esPendiente
-                }
-                seleccionados={
-                  esPendiente
-                    ? seleccionadosPendientes
-                    : []
-                }
-                onToggleSeleccion={
-                  esPendiente
-                    ? toggleSeleccionPendiente
-                    : undefined
-                }
+                seleccionables={modoBorrado || esPendiente}
+                seleccionados={modoBorrado ? seleccionActual : (esPendiente ? seleccionadosPendientes : [])}
+                onToggleSeleccion={modoBorrado ? toggleBorrado : (esPendiente ? toggleSeleccionPendiente : undefined)}
+                accionSeleccion={modoBorrado ? 'eliminar' : 'mover'}
                 editarItemInventario={
                   editarItemInventario
                 }
