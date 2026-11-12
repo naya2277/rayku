@@ -11,6 +11,7 @@ import {
 } from './utils'
 import { format } from 'date-fns'
 import { aplicarPlanMovimiento } from '../lib/replanificacionPure'
+import { quitarDiasNoCocinados } from '../lib/borradoMasivo'
 
 import {
   normalizarPlanning,
@@ -64,6 +65,8 @@ export type PlanningSlice = {
     fecha: string,
     tipoComida: TipoComida
   ) => void
+
+  limpiarDiasPlanning: (fechas: string[]) => number
 
   replanificarHuecoPlanning: (id:string,fecha:string,tipo:TipoComida) => boolean
 
@@ -151,6 +154,17 @@ export const crearPlanningSlice = (
           nuevoPlanning,
       })
     },
+
+  limpiarDiasPlanning: (fechas) => {
+    const anterior = get().planning
+    const nuevo = quitarDiasNoCocinados(anterior, fechas)
+    const eliminados = anterior.length - nuevo.length
+    if (eliminados > 0) {
+      guardarPlanningLocal(nuevo)
+      set({ planning: nuevo })
+    }
+    return eliminados
+  },
 
   replanificarHuecoPlanning:
     (id,fecha,tipo) => {
