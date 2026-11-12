@@ -36,7 +36,7 @@ export default function AsistenteSemanal({planning,recetas,inventario,desde,hast
   }catch(err){setMensaje('⚠️ No se pudo guardar el precio: '+(err instanceof Error?err.message:String(err)))}
   finally{setGuardando(false)}
  }
- return <section className="card" style={{marginBottom:20,padding:18}}>
+ return <section className="card planning-assistant" style={{marginBottom:20,padding:18}}>
   <h3>🧠 Asistente de la semana</h3>
   <p>Las propuestas no cambian el calendario hasta que confirmes. La compra se recalcula a partir del menú aprobado.</p>
   <details><summary>🥘 Aprovechar sobras ({sobras.length})</summary>
