@@ -1,0 +1,194 @@
+/* Rayku 2.0 — un mismo lenguaje visual en las áreas nuevas. */
+.rayku-planning, .supermercados-rayku, .rayku-calendar-actions, .rayku-inventory-bulk {
+  --rayku-ink: #574657;
+  --rayku-accent: #ab7d98;
+  --rayku-line: #e9dce4;
+}
+.rayku-planning > div:first-child {
+  padding: 16px 18px;
+  border: 1px solid var(--rayku-line);
+  background: linear-gradient(115deg, #fff9fb, #f6f0fa);
+  border-radius: 22px;
+  box-shadow: 0 8px 25px rgba(79,49,74,.05);
+}
+.rayku-planning > div:first-child h2 {
+  color: var(--rayku-ink) !important;
+  font-size: clamp(17px, 2.4vw, 22px) !important;
+  letter-spacing: -.02em;
+}
+.planning-replanner, .planning-assistant, .planning-proposals {
+  border: 1px solid var(--rayku-line) !important;
+  border-radius: 24px !important;
+  box-shadow: 0 10px 32px rgba(83,58,80,.055);
+}
+.planning-replanner {
+  background: linear-gradient(115deg, #fbf3f6, #f6eff9) !important;
+  padding: 16px 20px !important;
+}
+.planning-assistant {
+  background: linear-gradient(160deg, #fffdfc, #fffbfe) !important;
+  padding: clamp(18px,3vw,26px) !important;
+  position: relative;
+}
+.planning-assistant::before, .planning-proposals::before {
+  content: '';
+  display: block;
+  width: 48px;
+  height: 4px;
+  background: linear-gradient(90deg, #b49bc8, #d89cb5);
+  border-radius: 9px;
+  margin-bottom: 13px;
+}
+.planning-assistant > h3, .planning-proposals > h3 {
+  font-size: clamp(20px,3vw,24px);
+  font-weight: 900;
+  color: var(--rayku-ink);
+  letter-spacing: -.025em;
+  margin-bottom: 7px;
+}
+.planning-assistant > p, .planning-proposals > p {
+  color: var(--txt2);
+  line-height: 1.55;
+  margin: 0 0 14px;
+}
+.planning-proposals {
+  background: linear-gradient(145deg,#fffdfc,#fff8fb) !important;
+  padding: clamp(18px,3vw,26px) !important;
+}
+.rayku-planning details:not(.planning-replanner),
+.supermercados-rayku details {
+  border: 1px solid var(--rayku-line);
+  background: #fdf8fa;
+  padding: 12px 15px;
+  border-radius: 16px;
+  margin: 10px 0;
+}
+.rayku-planning details:not(.planning-replanner)[open],
+.supermercados-rayku details[open] {
+  background: #fffafc;
+  border-color: #d6bccd;
+  box-shadow: 0 6px 17px rgba(92,64,86,.055);
+}
+.rayku-planning details > summary, .supermercados-rayku details > summary {
+  list-style: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  cursor: pointer;
+  font-weight: 850;
+  color: #725168;
+  line-height: 1.35;
+  min-height: 24px;
+}
+.rayku-planning details > summary::-webkit-details-marker,
+.supermercados-rayku details > summary::-webkit-details-marker {display:none}
+.rayku-planning details > summary::after,
+.supermercados-rayku details > summary::after {
+  content:'＋';
+  color:#936f89;
+  border:1px solid #e8d7e2;
+  background:#fff;
+  border-radius:9px;
+  font-size:18px;
+  line-height:25px;
+  text-align:center;
+  width:30px;
+  height:30px;
+  flex:none;
+}
+.rayku-planning details[open] > summary::after,
+.supermercados-rayku details[open] > summary::after {content:'−'}
+.rayku-planning details > :not(summary), .supermercados-rayku details > :not(summary) {margin-top:12px}
+.rayku-planning label, .supermercados-rayku label {
+  color: var(--rayku-ink);
+  font-size:13px;
+  font-weight:800;
+  line-height:1.4;
+}
+.rayku-planning label:has(> select), .rayku-planning label:has(> input:not([type=checkbox])),
+.supermercados-rayku label:has(> select), .supermercados-rayku label:has(> input:not([type=checkbox])) {
+  display:grid;
+  gap:7px;
+  min-width:min(100%,170px);
+}
+.rayku-planning label:has(> input[type=checkbox]),
+.supermercados-rayku label:has(> input[type=checkbox]) {
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+.rayku-planning input[type=checkbox], .supermercados-rayku input[type=checkbox] {
+  accent-color:#ad7f98;
+  width:19px;
+  height:19px;
+  flex:none;
+}
+.rayku-planning input:not([type=checkbox]), .rayku-planning select,
+.supermercados-rayku input:not([type=checkbox]), .supermercados-rayku select {
+  border:1.5px solid #e6d7e0;
+  border-radius:13px;
+  background: #fff;
+  min-height:44px;
+  max-width:100%;
+}
+.rayku-planning .btn-principal, .supermercados-rayku .btn-principal {border-radius:13px}
+.supermercados-rayku {gap:16px !important}
+.supermercados-rayku > header.card {
+  padding:clamp(20px,3vw,28px);
+  background: linear-gradient(125deg, #f8edf4, #f2edf8 65%, #fffafc);
+  border-color:#ead7e4;
+  position:relative;
+}
+.supermercados-rayku > header h1 {
+  color:#6a4a68;
+  font-size:clamp(23px,3vw,30px);
+  letter-spacing:-.03em;
+  margin-bottom:8px;
+}
+.supermercados-rayku > header p {color:#765f70;line-height:1.6}
+.supermercados-rayku > section.card {
+  border-radius:23px;
+  background:#fffdfc;
+  padding:clamp(18px,2.7vw,25px);
+  gap:13px !important;
+}
+.supermercados-rayku > section.card > h2 {
+  padding-bottom:12px;
+  border-bottom:1px solid #f0e5ea;
+  font-size:clamp(18px,2.5vw,22px);
+  font-weight:900;
+  color:#6f526b;
+  letter-spacing:-.025em;
+}
+.supermercados-rayku > section.card > p {line-height:1.55;color:var(--txt2)}
+.supermercados-rayku > section.card > div[style*="grid"] {min-width:0}
+.supermercados-rayku a {color:#986b86;font-weight:800;text-decoration-thickness:1px;text-underline-offset:3px}
+.supermercados-rayku a:hover {color:#805670}
+.rayku-calendar-actions, .rayku-inventory-bulk {
+  background:linear-gradient(120deg,#fffafc,#f8f0f7)!important;
+  border:1px solid #e9d6e3!important;
+  padding:17px 19px!important;
+}
+.rayku-bulk-title {display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.rayku-bulk-title strong, .rayku-bulk-title h2 {display:block;font-size:18px;font-weight:900;color:#674e67;margin:0 0 4px}
+.rayku-bulk-title p {font-size:13px;color:var(--txt2);line-height:1.5;margin:0}
+.rayku-bulk-controls {display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-top:15px;padding-top:13px;border-top:1px solid #e9dce5}
+.rayku-bulk-controls .pill {font-size:12px;padding:9px 11px}
+.rayku-bulk-controls .rayku-helper {flex-basis:100%;font-size:12px;line-height:1.4;color:#886e80;margin:0}
+.rayku-danger {background:#a95467!important;color:white!important}
+.rayku-danger:hover {background:#873e53!important}
+.rayku-danger:disabled {opacity:.45!important;cursor:not-allowed}
+.rayku-day-select {min-height:32px;min-width:32px;padding:3px 6px;border:1px solid #a97e9a;background:#fffafc;border-radius:9px;color:#7a4e6d;font-weight:900;font-family:inherit;cursor:pointer;font-size:clamp(10px,2vw,14px)}
+.rayku-day-select[aria-pressed=true] {background:#a77c97;color:#fff}
+.rayku-day-number {font-size:clamp(9px,2vw,13px);font-weight:900;color:#806f7c}
+@media(max-width:600px) {
+ .rayku-planning > div:first-child {padding:12px;gap:8px}
+ .rayku-planning > div:first-child .btn-secundario {font-size:12px;padding:8px 10px}
+ .planning-assistant,.planning-proposals {padding:17px!important}
+ .planning-replanner {padding:14px!important}
+ .rayku-bulk-title > button {width:100%;justify-content:center}
+ .rayku-bulk-controls .btn-secundario,.rayku-bulk-controls .btn-principal {flex:1 1 auto;justify-content:center}
+ .supermercados-rayku > header.card,.supermercados-rayku > section.card {padding:17px}
+ .rayku-day-select {min-height:26px;min-width:26px;padding:2px}
+}
