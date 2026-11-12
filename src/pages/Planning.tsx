@@ -382,7 +382,7 @@ export default function Planning({
   }
 
   return (
-    <div>
+    <div className="rayku-planning">
       <div
         style={{
           display: 'flex',
@@ -463,7 +463,7 @@ export default function Planning({
           <button className="btn-secundario" type="button" onClick={()=>setPropuestaRapida(null)}>Cancelar</button>
         </div>
       </section>}
-      <section className="card" style={{ padding: 18, marginBottom: 20 }}>
+      <section className="card planning-proposals" style={{ padding: 18, marginBottom: 20 }}>
         <h3>✨ Propuestas de Rayku</h3>
         <details style={{ marginBottom: 14, display: householdId ? 'none' : undefined }}>
           <summary style={{ cursor: 'pointer', fontWeight: 700 }}>💜 Preferencias del menú</summary>
