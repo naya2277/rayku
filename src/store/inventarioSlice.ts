@@ -10,6 +10,7 @@ import {
   normalizarInventario,
 } from './normalizers'
 import { combinarEntradaInventario } from '../lib/inventario/combinarLotes'
+import { quitarRegistrosPorId } from '../lib/borradoMasivo'
 
 import {
   guardarInventarioLocal,
@@ -40,6 +41,8 @@ export type InventarioSlice = {
   eliminarItemInventario: (
     id: string
   ) => void
+
+  eliminarItemsInventario: (ids: string[]) => number
 }
 
 export const crearInventarioSlice = (
@@ -96,6 +99,17 @@ export const crearInventarioSlice = (
           nuevoInventario,
       })
     },
+
+  eliminarItemsInventario: (ids) => {
+    const anterior = get().inventario
+    const nuevo = quitarRegistrosPorId(anterior, ids)
+    const eliminados = anterior.length - nuevo.length
+    if (eliminados > 0) {
+      guardarInventarioLocal(nuevo)
+      set({ inventario: nuevo })
+    }
+    return eliminados
+  },
 
   eliminarItemInventario:
     (id) => {
