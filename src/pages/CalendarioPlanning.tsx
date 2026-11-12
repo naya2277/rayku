@@ -40,8 +40,24 @@ export default function CalendarioPlanning({
 }: Props) {
   const [fechaBase, setFechaBase] = useState(new Date())
   const [vista, setVista] = useState<'semana' | 'mes'>('mes')
+  const [seleccionando, setSeleccionando] = useState(false)
+  const [diasSeleccionados, setDiasSeleccionados] = useState<string[]>([])
+  const [avisoBorrado, setAvisoBorrado] = useState('')
 
-  const { recetas, planning } = useRaykuStore()
+  const { recetas, planning, limpiarDiasPlanning } = useRaykuStore()
+
+  const toggleDia = (fecha: string) => setDiasSeleccionados(actual =>
+    actual.includes(fecha) ? actual.filter(x => x !== fecha) : [...actual, fecha])
+  const entradasSeleccionadas = planning.filter(p => diasSeleccionados.includes(p.fecha) && !p.cocinado)
+  const cocinadasProtegidas = planning.filter(p => diasSeleccionados.includes(p.fecha) && p.cocinado).length
+  const confirmarBorrado = () => {
+    if (!entradasSeleccionadas.length) return
+    if (!window.confirm(`¿Eliminar ${entradasSeleccionadas.length} comidas/cenas de ${diasSeleccionados.length} días seleccionados? Los platos ya cocinados se conservarán. Esta acción se sincronizará con el hogar compartido.`)) return
+    const borradas = limpiarDiasPlanning(diasSeleccionados)
+    setDiasSeleccionados([])
+    setSeleccionando(false)
+    setAvisoBorrado(`Se han eliminado ${borradas} comidas/cenas. Las recetas guardadas y el inventario no se han borrado.`)
+  }
 
   const hoy = format(new Date(), 'yyyy-MM-dd')
 
@@ -100,6 +116,8 @@ export default function CalendarioPlanning({
       </>
     )
 
+    if (seleccionando) return <div style={estilosBase}>{contenido}</div>
+
     if (resumen.receta && onAbrirReceta) {
       return (
         <button
@@ -122,12 +140,13 @@ export default function CalendarioPlanning({
     const fecha = format(dia, 'yyyy-MM-dd')
     const esHoy = fecha === hoy
     const fueraDelMes = !isSameMonth(dia, fechaBase)
+    const elegido = diasSeleccionados.includes(fecha)
 
     return (
       <div
         key={fecha}
         style={{
-          background: COLORES_DIA[indice % 7],
+          background: elegido ? '#f0e3ee' : COLORES_DIA[indice % 7],
           borderRadius: 10,
           minHeight: 'clamp(58px, 14vw, 132px)',
           padding: 'clamp(3px, 1vw, 8px)',
@@ -135,7 +154,7 @@ export default function CalendarioPlanning({
           display: 'flex',
           flexDirection: 'column',
           gap: 'clamp(3px, 0.9vw, 7px)',
-          border: esHoy ? '2px solid #c45b86' : '1px solid transparent',
+          border: elegido ? '2px solid #a97696' : esHoy ? '2px solid #c45b86' : '1px solid transparent',
           minWidth: 0,
           overflow: 'hidden',
         }}
@@ -149,15 +168,11 @@ export default function CalendarioPlanning({
             minWidth: 0,
           }}
         >
-          <span
-            style={{
-              fontSize: 'clamp(8px, 2vw, 13px)',
-              fontWeight: 900,
-              color: '#8f7080',
-            }}
-          >
-            {format(dia, 'd')}
-          </span>
+          {seleccionando ? <button type="button" aria-pressed={elegido}
+            aria-label={`${elegido ? 'Quitar' : 'Seleccionar'} ${format(dia, "d 'de' MMMM", {locale:es})}`}
+            className="rayku-day-select" onClick={() => toggleDia(fecha)}>
+            {elegido ? '✓ ' : '○ '}{format(dia,'d')}
+          </button> : <span className="rayku-day-number">{format(dia, 'd')}</span>}
 
           {esHoy && (
             <span
@@ -189,13 +204,15 @@ export default function CalendarioPlanning({
   const renderDiaSemanal = (dia: Date, indice: number) => {
     const fecha = format(dia, 'yyyy-MM-dd')
     const esHoy = fecha === hoy
+    const elegido = diasSeleccionados.includes(fecha)
 
     return (
       <div
         key={fecha}
         className="card"
         style={{
-          background: COLORES_DIA[indice % 7],
+          background: elegido ? '#f0e3ee' : COLORES_DIA[indice % 7],
+          border: elegido ? '2px solid #a97696' : undefined,
         }}
       >
         <div
@@ -207,14 +224,12 @@ export default function CalendarioPlanning({
           }}
         >
           <div>
-            <h3
-              style={{
-                color: '#8f7080',
-                textTransform: 'capitalize',
-              }}
-            >
-              {format(dia, 'EEEE', { locale: es })}
-            </h3>
+            {seleccionando ? <button type="button" className="rayku-day-select"
+              aria-pressed={elegido} onClick={() => toggleDia(fecha)}>
+              {elegido ? '☑' : '☐'} {format(dia,'EEEE',{locale:es})}
+            </button> : <h3 style={{color:'#806f7c',textTransform:'capitalize'}}>
+              {format(dia, 'EEEE', {locale:es})}
+            </h3>}
 
             <p
               style={{
@@ -293,6 +308,28 @@ export default function CalendarioPlanning({
         </div>
       </div>
 
+      <section className="card rayku-calendar-actions" style={{marginBottom:18}}>
+        <div className="rayku-bulk-title">
+          <div><strong>🗓️ Organizar varios días</strong><p>Elige uno o varios días y borra sus comidas y cenas de una vez.</p></div>
+          <button type="button" className={seleccionando ? 'btn-principal' : 'btn-secundario'}
+            onClick={() => { setSeleccionando(!seleccionando); setDiasSeleccionados([]); setAvisoBorrado('') }}>
+            {seleccionando ? 'Cancelar selección' : '☑ Seleccionar días'}
+          </button>
+        </div>
+        {seleccionando && <div className="rayku-bulk-controls">
+          <span className="pill pill-malva">{diasSeleccionados.length} días elegidos · {entradasSeleccionadas.length} platos que se pueden borrar</span>
+          <button type="button" className="btn-secundario" onClick={() => setDiasSeleccionados(
+            (vista === 'semana' ? diasSemana : diasMes.filter(d => isSameMonth(d, fechaBase)))
+            .map(d => format(d,'yyyy-MM-dd')).filter(fecha => planning.some(p => p.fecha === fecha && !p.cocinado))
+          )}>Seleccionar días con menú de {vista === 'semana' ? 'esta semana' : 'este mes'}</button>
+          <button type="button" className="btn-secundario" onClick={() => setDiasSeleccionados([])}>Deseleccionar</button>
+          <button type="button" className="btn-principal rayku-danger" disabled={entradasSeleccionadas.length === 0}
+            onClick={confirmarBorrado}>🗑️ Borrar {entradasSeleccionadas.length} comidas/cenas</button>
+          {cocinadasProtegidas > 0 && <p className="rayku-helper">🔒 {cocinadasProtegidas} platos cocinados se conservarán para proteger su historial.</p>}
+          <p className="rayku-helper">Toca el número del día (o el nombre en vista semanal) para marcarlo. Se pedirán confirmación antes de borrar.</p>
+        </div>}
+        {avisoBorrado && <p role="status">{avisoBorrado}</p>}
+      </section>
       <div
         className="card"
         style={{
