@@ -29,7 +29,7 @@ export default function Replanificador({planning,recetas,inventario,replanificar
   setOrigenId('')
   setMensaje('✅ Comida trasladada. La lista de compra se adapta a su nueva fecha.')
  }
- return <details className="card" style={{marginBottom:16}}>
+ return <details className="card planning-replanner" style={{marginBottom:16}}>
   <summary style={{cursor:'pointer',fontWeight:800}}>🔁 Replanificar una comida sin perderla</summary>
   <div style={{display:'grid',gap:12,marginTop:12}}>
    <p>Prueba otro día sin cambiar el calendario. No se sobrescriben comidas existentes ni platos ya cocinados.</p>
